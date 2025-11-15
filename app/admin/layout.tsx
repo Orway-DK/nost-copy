@@ -14,19 +14,19 @@ function parseAuth(raw?: string): AuthCookie | null {
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const raw = (await cookies()).get("auth")?.value;
   const auth = parseAuth(raw);
-  const isAuthed = Boolean(auth?.email);           // ✅ oturum var mı?
+  const isAuthed = Boolean(auth?.email);
   const userEmail = auth?.email ?? "";
 
   return (
-    <section className="flex min-h-screen flex-col">
-      {isAuthed && (                                  // ✅ sadece login sonrası
+    <section className="flex min-h-screen flex-col bg-background">
+      {isAuthed && (
         <header className="sticky top-0 z-10">
           <Header userEmail={userEmail} />
         </header>
       )}
       <div className="w-full flex flex-row">
-        <Sidebar />
-        <main className="flex-1">
+        {isAuthed && <Sidebar />}
+        <main className="flex-1 px-6 py-4">
           {children}
         </main>
       </div>

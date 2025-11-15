@@ -1,23 +1,32 @@
 import TopbandForm from "./_components/TopBandForm";
-import { readDB, type Language } from "@/lib/db";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 export const metadata = { title: "Admin • Settings • Top Band" };
 
+type Language = { code: string; name: string; is_default: boolean };
+type Banner = { lang_code: string; promo_text: string; promo_cta: string; promo_url: string | null };
+
 export default async function TopbandSettingsPage() {
-  const db = await readDB();
+  const supabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const { data: bannersData, error } = await supabase
+    .from("banner_translations")
+    .select("lang_code,promo_text,promo_cta,promo_url")
+    .order("lang_code");
+
+  const banners: Banner[] = bannersData ?? [];
 
   let languages: Language[] =
-    db.languages ??
-    Array.from(new Set((db.banners ?? []).map(b => b.lang_code))).map((code, idx) => ({
+    Array.from(new Set(banners.map(b => b.lang_code))).map((code, idx) => ({
       code,
       name: code.toUpperCase(),
-      is_default: idx === 0
+      is_default: idx === 0,
     }));
 
-  // İsteğe bağlı: default dil en başta gelsin
   languages = [...languages].sort((a, b) => Number(b.is_default) - Number(a.is_default));
-
-  const banners = db.banners ?? [];
 
   return (
     <>

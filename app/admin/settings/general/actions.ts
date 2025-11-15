@@ -1,53 +1,50 @@
 // @/app/admin/settings/general/actions.ts
 "use server";
-
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+function str(v: FormDataEntryValue | null | undefined): string {
+  return typeof v === "string" ? v.trim() : "";
+}
+function nullIfEmpty(v: FormDataEntryValue | null | undefined): string | null {
+  const s = str(v);
+  return s ? s : null;
+}
+
 export async function updateSiteSettings(formData: FormData) {
+  const site_name = str(formData.get("site_name"));
+  if (!site_name) throw new Error("site_name zorunlu.");
+
   const supabase = await createSupabaseServerClient();
 
   const {
     data: { user },
-    error: userError,
+    error: uerr,
   } = await supabase.auth.getUser();
-
-  console.log("🔎 Supabase user in updateSiteSettings:", { user, userError });
+  if (uerr || !user) throw new Error("Oturum bulunamadı.");
 
   const payload = {
-    id: 1, // tek satır config için sabit
-    site_name: formData.get("site_name")?.toString() || null,
-    logo_url: formData.get("logo_url")?.toString() || null,
-    favicon_url: formData.get("favicon_url")?.toString() || null,
-    phone: formData.get("phone")?.toString() || null,
-    email: formData.get("email")?.toString() || null,
-    address: formData.get("address")?.toString() || null,
-    store_location_url: formData.get("store_location_url")?.toString() || null,
-    facebook_url: formData.get("facebook_url")?.toString() || null,
-    instagram_url: formData.get("instagram_url")?.toString() || null,
-    twitter_url: formData.get("twitter_url")?.toString() || null,
-    linkedin_url: formData.get("linkedin_url")?.toString() || null,
-    whatsapp_url: formData.get("whatsapp_url")?.toString() || null,
-    working_hours: formData.get("working_hours")?.toString() || null,
-    footer_text: formData.get("footer_text")?.toString() || null,
-    updated_at: new Date().toISOString(),
+    id: 1,
+    site_name,
+    logo_url: nullIfEmpty(formData.get("logo_url")),
+    favicon_url: nullIfEmpty(formData.get("favicon_url")),
+    phone: nullIfEmpty(formData.get("phone")),
+    email: nullIfEmpty(formData.get("email")),
+    address: nullIfEmpty(formData.get("address")),
+    store_location_url: nullIfEmpty(formData.get("store_location_url")),
+    facebook_url: nullIfEmpty(formData.get("facebook_url")),
+    instagram_url: nullIfEmpty(formData.get("instagram_url")),
+    twitter_url: nullIfEmpty(formData.get("twitter_url")),
+    linkedin_url: nullIfEmpty(formData.get("linkedin_url")),
+    whatsapp_url: nullIfEmpty(formData.get("whatsapp_url")),
+    working_hours: nullIfEmpty(formData.get("working_hours")),
+    footer_text: str(formData.get("footer_text")),
+    updated_by: user.id,
   };
 
-  console.log("updateSiteSettings payload:", payload);
-
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("site_settings")
-    .upsert(payload, {
-      onConflict: "id",
-    })
-    .select()
-    .single();
+    .upsert(payload, { onConflict: "id" });
 
-  console.log("updateSiteSettings result:", { data, error });
-
-  if (error) {
-    console.error("site_settings upsert error:", error.message);
-    throw new Error(error.message);
-  }
-
-  return { ok: true, updated_at: data.updated_at };
+  if (error) throw new Error(error.message);
+  return { ok: true };
 }

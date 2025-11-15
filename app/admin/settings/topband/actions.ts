@@ -1,36 +1,37 @@
 // app/admin/settings/topband/actions.ts
 "use server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-import { readBanners, writeBanners } from "@/lib/db";
-import type { Banner } from "@/lib/dbTypes";
+function str(v: FormDataEntryValue | null | undefined): string {
+  return typeof v === "string" ? v.trim() : "";
+}
+function nullIfEmpty(v: FormDataEntryValue | null | undefined): string | null {
+  const s = str(v);
+  return s ? s : null;
+}
 
 export async function upsertBannerTranslation(formData: FormData) {
-  const lang_code = formData.get("lang_code")?.toString().trim() || "";
-  const promo_text = formData.get("promo_text")?.toString() ?? "";
-  const promo_cta = formData.get("promo_cta")?.toString() ?? "";
-  const promo_urlV = formData.get("promo_url")?.toString().trim();
-  const promo_url = promo_urlV ? promo_urlV : null; // type: string | null
+  const lang_code = str(formData.get("lang_code"));
+  if (!lang_code) throw new Error("lang_code zorunludur.");
 
-  if (!lang_code) {
-    throw new Error("lang_code zorunludur.");
-  }
+  const payload = {
+    lang_code,
+    promo_text: str(formData.get("promo_text")),
+    promo_cta: str(formData.get("promo_cta")),
+    promo_url: nullIfEmpty(formData.get("promo_url")),
+  };
 
-  const incoming: Banner = { lang_code, promo_text, promo_cta, promo_url };
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+    error: uerr,
+  } = await supabase.auth.getUser();
+  if (uerr || !user) throw new Error("Oturum bulunamadı.");
 
-  try {
-    const { banners = [] } = await readBanners();
+  const { error } = await supabase
+    .from("banner_translations")
+    .upsert({ ...payload, updated_by: user.id }, { onConflict: "lang_code" });
 
-    const idx = banners.findIndex((b) => b.lang_code === lang_code);
-    if (idx >= 0) {
-      banners[idx] = { ...banners[idx], ...incoming };
-    } else {
-      banners.push(incoming);
-    }
-
-    await writeBanners({ banners });
-
-    return { ok: true };
-  } catch (err) {
-    return { ok: false, error: (err as Error).message };
-  }
+  if (error) throw new Error(error.message);
+  return { ok: true };
 }

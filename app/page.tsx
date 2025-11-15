@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 
 export const dynamic = "force-dynamic";
@@ -14,16 +14,14 @@ const heroImages: string[] = (() => {
 })();
 
 export default function Home() {
-    // SSR'da rastgelelik yok → mismatch yok
-    const [picked, setPicked] = useState<string | null>(null);
-    const [loaded, setLoaded] = useState(false);
-
-    useEffect(() => {
+    const [picked] = useState<string | null>(() => {
         if (heroImages.length > 0) {
             const idx = Math.floor(Math.random() * heroImages.length);
-            setPicked(heroImages[idx]);
+            return heroImages[idx];
         }
-    }, []);
+        return null;
+    });
+    const [loaded, setLoaded] = useState(false);
 
     return (
         <div className="w-screen h-screen bg-black">

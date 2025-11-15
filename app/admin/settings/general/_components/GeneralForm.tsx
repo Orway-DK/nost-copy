@@ -30,19 +30,34 @@ export default function GeneralForm({
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  const s = initialSettings || ({} as any);
+  const s: NonNullable<Settings> = initialSettings ?? {
+    site_name: null,
+    logo_url: null,
+    favicon_url: null,
+    phone: null,
+    email: null,
+    address: null,
+    store_location_url: null,
+    facebook_url: null,
+    instagram_url: null,
+    twitter_url: null,
+    linkedin_url: null,
+    whatsapp_url: null,
+    working_hours: null,
+    footer_text: null,
+  };
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setPending(true);
     setMsg(null);
     try {
-      const formData = new FormData(e.currentTarget);
-      await updateSiteSettings(formData);
-      setMsg("General settings güncellendi.");
+      const fd = new FormData(e.currentTarget);
+      await updateSiteSettings(fd);
+      setMsg("Genel ayarlar güncellendi.");
       router.refresh();
-    } catch (err: any) {
-      setMsg(`Hata: ${err.message || err}`);
+    } catch (err: unknown) {
+      setMsg("Hata: " + (err instanceof Error ? err.message : String(err)));
     } finally {
       setPending(false);
     }
