@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   const form = await req.formData();
   const email = String(form.get("email") || "");
   const password = String(form.get("password") || "");
-
+ // test
   // Supabase JS client (SSR cookie helper KULLANMADAN)
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
