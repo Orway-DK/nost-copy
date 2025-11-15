@@ -1,0 +1,24 @@
+// settings oku
+const { site_settings } = await readSiteSettings();
+
+// banner ekle
+const bannersDb = await readBanners();
+bannersDb.banners.push({ lang_code: "en", promo_text: "New!", promo_cta: "See", promo_url: "/new" });
+await writeBanners(bannersDb);
+
+// navigation güncelle
+const navDb = await readNavigation();
+navDb.navigation.tr.push({ label: "Blog", href: "/blog" });
+await writeNavigation(navDb);
+
+// carousel diline slide ekle
+const carDb = await readCarousel();
+(carDb.landingCarousel["en"] ??= []).push({
+  title1: "Fast",
+  title2: "Printing",
+  imageLink: "/slider/new.png",
+  subText: "From small batches to mass production.",
+  tips: ["Tip1", "Tip2", "Tip3", "Tip4"],
+  buttonLink: "/contact"
+});
+await writeCarousel(carDb);
