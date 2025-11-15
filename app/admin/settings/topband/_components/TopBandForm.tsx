@@ -29,58 +29,82 @@ export default function TopbandForm({
     setPending(true);
     setMsg(null);
     try {
-      const formData = new FormData(e.currentTarget);
-      await upsertBannerTranslation(formData);
-      setMsg("Banner çevirisi güncellendi.");
+      const fullForm = new FormData(e.currentTarget);
+
+      // Her dil için ayrı FormData oluşturup aynı server action'u çağırıyoruz.
+      await Promise.all(
+        languages.map(async (lang) => {
+          const fd = new FormData();
+          fd.append("lang_code", lang.code);
+          fd.append(
+            "promo_text",
+            String(fullForm.get(`promo_text_${lang.code}`) || "")
+          );
+          fd.append(
+            "promo_cta",
+            String(fullForm.get(`promo_cta_${lang.code}`) || "")
+          );
+          fd.append(
+            "promo_url",
+            String(fullForm.get(`promo_url_${lang.code}`) || "")
+          );
+          await upsertBannerTranslation(fd);
+        })
+      );
+
+      setMsg("Tüm banner çevirileri güncellendi.");
       router.refresh();
-      (e.target as HTMLFormElement).reset(); // istersen formu temizlemezsin
-    } catch (err: any) {
-      setMsg(`Hata: ${err.message || err}`);
+      (e.target as HTMLFormElement).reset();
+    } catch (err: unknown) {
+      setMsg(`Hata: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setPending(false);
     }
   }
 
   return (
-    <div className="space-y-6">
-      {languages.map((lang) => {
-        const b = initialBanners.find((x) => x.lang_code === lang.code);
-        return (
-          <form
-            key={lang.code}
-            onSubmit={onSubmit}
-            className="grid grid-cols-1 md:grid-cols-2 gap-4 border rounded-lg p-4"
-          >
-            <input type="hidden" name="lang_code" value={lang.code} />
-            <Text
-              className="md:col-span-2"
-              name="promo_text"
-              label={`[${lang.code}] Promo Text`}
-              defaultValue={b?.promo_text || ""}
-            />
-            <Text
-              name="promo_cta"
-              label="CTA"
-              defaultValue={b?.promo_cta || ""}
-            />
-            <Text
-              name="promo_url"
-              label="URL"
-              defaultValue={b?.promo_url || ""}
-            />
-            <div className="md:col-span-2">
-              <button
-                disabled={pending}
-                className="rounded bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-60"
-              >
-                {pending ? "Kaydediliyor..." : `Kaydet (${lang.name})`}
-              </button>
-            </div>
-          </form>
-        );
-      })}
+    <form onSubmit={onSubmit} className="space-y-8">
+      <div className="space-y-2">
+        {languages.map((lang) => {
+          const b = initialBanners.find((x) => x.lang_code === lang.code);
+          return (
+            <fieldset
+              key={lang.code}
+              className="border rounded-md p-4 space-y-2"
+            >
+              <legend className="px-2 text-sm font-medium">
+                {lang.name} ({lang.code})
+              </legend>
+              <Text
+                name={`promo_text_${lang.code}`}
+                label="Promo Text"
+                defaultValue={b?.promo_text || ""}
+              />
+              <Text
+                name={`promo_cta_${lang.code}`}
+                label="CTA"
+                defaultValue={b?.promo_cta || ""}
+              />
+              <Text
+                name={`promo_url_${lang.code}`}
+                label="URL"
+                defaultValue={b?.promo_url || ""}
+              />
+            </fieldset>
+          );
+        })}
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          disabled={pending}
+          className="rounded bg-blue-600 text-white px-6 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-60"
+        >
+          {pending ? "Kaydediliyor..." : "Tümünü Kaydet"}
+        </button>
+      </div>
       {msg && <p className="text-sm">{msg}</p>}
-    </div>
+    </form>
   );
 }
 
@@ -93,7 +117,7 @@ function Text(props: {
   const { name, label, defaultValue, className } = props;
   return (
     <label className={`block ${className || ""}`}>
-      <span className="block text-sm mb-1">{label}</span>
+      <span className="block text-xs mb-1 font-medium">{label}</span>
       <input
         name={name}
         defaultValue={defaultValue}

@@ -26,7 +26,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       )}
       <div className="w-full flex flex-row">
         {isAuthed && <Sidebar />}
-        <main className="flex-1 px-6 py-4">
+        <main className="flex-1 ml-70 my-4 mr-4">
           {children}
         </main>
       </div>

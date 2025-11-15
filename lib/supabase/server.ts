@@ -12,12 +12,16 @@ export async function createSupabaseServerClient() {
       getAll() {
         return cookieStore.getAll();
       },
-      setAll(
-        cookiesToSet: { name: string; value: string; options: CookieOptions }[]
-      ) {
-        cookiesToSet.forEach(({ name, value, options }) =>
-          cookieStore.set({ name, value, ...options })
+      // Don't call cookieStore.set during a Server Component render — Next.js disallows mutations.
+      // No-op here to avoid the runtime error. If you need cookies written, call this helper
+      // from a Server Action or Route Handler where cookie mutations are permitted.
+      setAll() {
+        console.warn(
+          "Supabase attempted to set cookies during a Server Component render. " +
+            "Cookie mutations are only allowed in Server Actions or Route Handlers. " +
+            "Call createSupabaseServerClient from a Server Action / Route Handler to enable cookie writes."
         );
+        // intentionally no-op
       },
     },
   });
