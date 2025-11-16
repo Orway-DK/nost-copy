@@ -1,5 +1,5 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import CarouselForm from "./_components/CarouselForm.tsx";
+import CarouselForm from "./_components/CarouselForm";
 
 export const metadata = { title: "Admin • Settings • Carousel" };
 

@@ -33,9 +33,8 @@ export default function CarouselForm({
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
 
-    // Yeni: hangi dili filtreleyeceğimizi tutar
-    const [selectedLang, setSelectedLang] = useState<string>("tr");
-
+    // Yeni: hangi dili filtreleyeceğimizi tutar (default TR)
+    const [selectedLang, setSelectedLang] = useState<string>("TR");
 
     // Helpers
     const updateRow = (index: number, patch: Partial<Carousel>) => {
@@ -47,7 +46,7 @@ export default function CarouselForm({
     };
 
     const addRow = () => {
-        const defaultLang = selectedLang || languages[0]?.code || "tr";
+        const defaultLang = selectedLang || languages[0]?.code || "en";
         const newRow: Carousel = {
             lang_code: defaultLang,
             title1: "",
@@ -101,7 +100,7 @@ export default function CarouselForm({
         try {
             const payload = rows.map((r) => ({
                 ...r,
-                tips: Array.isArray(r.tips) ? r.tips : (r.tips || []).map(String),
+                tips: Array.isArray(r.tips) ? r.tips : ([] as string[]),
             }));
             const fd = new FormData();
             fd.append("items", JSON.stringify(payload));
@@ -123,24 +122,20 @@ export default function CarouselForm({
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <div className="flex flex-row gap-4">
-                    <h1 className="text-2xl font-medium">Carousel Items</h1>
-                    <div className="flex items-end gap-2">
-                        <label className="text-lg mr-1">Dil : </label>
-                        <select
-                            value={selectedLang}
-                            onChange={(e) => setSelectedLang(e.target.value)}
-                            className="rounded border px-2 py-1 text-sm"
-                        >
-                            {languages.map((l) => (
-                                <option key={l.code} value={l.code}>
-                                    {l.name} ({l.code})
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
+                <h2 className="text-lg font-medium">Carousel Items</h2>
+
                 <div className="flex gap-2 items-center">
+                    <label className="text-sm mr-1">Dil</label>
+                    <select
+                        value={selectedLang}
+                        onChange={(e) => setSelectedLang(e.target.value)}
+                        className="rounded border px-2 py-1 text-sm"
+                    >
+                        <option value="DE">DE</option>
+                        <option value="EN">EN</option>
+                        <option value="TR">TR</option>
+                    </select>
+
                     <button
                         type="button"
                         onClick={addRow}
