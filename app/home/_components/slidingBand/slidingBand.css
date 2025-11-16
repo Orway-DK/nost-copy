@@ -1,0 +1,51 @@
+/* slidingBand.css */
+
+/* İç bant YALNIZCA yatayda maskelensin */
+.marquee-mask {
+  overflow-x: hidden;
+  overflow-y: visible;
+  width: 100%;
+}
+
+/* Ray: strip'leri taşıyan satır */
+.marquee-track {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+/* Strip: shrink olmasın, aralarında ekstra boşluk olsun */
+.marquee-strip {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 2.5rem;           /* Kartlar arası boşluk (gap-10) */
+  align-items: center;
+  margin-right: 2.5rem;  /* STRIP'LER ARASI BOŞLUK – birleşme sorununu çözer */
+}
+
+/* Sonsuz kaydırma animasyonu */
+@keyframes marquee {
+  from {
+    transform: translateX(0%);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 22s linear infinite;
+}
+
+/* Hover'da durdur */
+.group:hover .animate-marquee {
+  animation-play-state: paused;
+}
+
+/* Mobilde biraz daha yavaş */
+@media (max-width: 640px) {
+  .animate-marquee {
+    animation-duration: 28s;
+  }
+}

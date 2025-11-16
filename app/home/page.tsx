@@ -2,6 +2,8 @@ import TopHorizontalBanner from "./_components/TopHorizontalBanner/topHorizontal
 import NavigationBar from "./_components/NavigationBar/NavigationBar";
 import LandingSlider from "./_components/LandingSlider/LandingSlider";
 import AdsBanner from "./_components/AdsBannerBelowSlider/AdsBelowLanding";
+import WhyUs from "./_components/WhyUsBanner/WhyUsBanner";
+import DualScrollingCategories from "./_components/slidingBand/slidingBandReverse";
 
 export default function Home() {
   return (
@@ -10,6 +12,8 @@ export default function Home() {
       <NavigationBar />
       <LandingSlider />
       <AdsBanner />
+      <DualScrollingCategories />
+      <WhyUs />
     </div>
   );
 }

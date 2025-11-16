@@ -1,9 +1,9 @@
 "use client";
 
 export default function Header({ userEmail }: { userEmail: string }) {
-  
+
   return (
-    <nav className="flex flex-row justify-end items-center bg-gray-300 shadow-md shadow-black/20 w-full min-h-8 px-8">
+    <nav className="flex flex-row justify-end items-center admin-header w-full min-h-8 px-8">
       <div className="flex flex-row gap-4">
         <span className="text-sm text-foreground">{userEmail}</span>
         <a

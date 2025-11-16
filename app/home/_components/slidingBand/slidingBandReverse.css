@@ -1,0 +1,67 @@
+/* slidingBands.css */
+
+/* Sadece yatay overflow gizlensin, dikey serbest kalsın */
+.marquee-mask {
+  overflow-x: hidden;
+  overflow-y: visible;
+  width: 100%;
+}
+
+/* Ray (track): strip'leri taşıyor */
+.marquee-track {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+/* Strip: shrink olmasın, aralarında ve sonlarında boşluk olsun */
+.marquee-strip {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 2.5rem; /* gap-10 */
+  align-items: center;
+  margin-right: 2.5rem; /* strip'ler birleşmesin diye ekstra boşluk */
+}
+
+/* Sağdan sola kayan (klasik) marquee */
+@keyframes marquee {
+  from {
+    transform: translateX(0%);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 22s linear infinite;
+}
+
+/* Soldan sağa kayan ters yön marquee */
+@keyframes marquee-reverse {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0%);
+  }
+}
+
+.animate-marquee-reverse {
+  animation: marquee-reverse 22s linear infinite;
+}
+
+/* Hover'da her iki animasyonu da durdur */
+.group:hover .animate-marquee,
+.group:hover .animate-marquee-reverse {
+  animation-play-state: paused;
+}
+
+/* Mobilde biraz daha yavaş */
+@media (max-width: 640px) {
+  .animate-marquee,
+  .animate-marquee-reverse {
+    animation-duration: 28s;
+  }
+}

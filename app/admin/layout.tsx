@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import Header from "./_components/Header";
 import Sidebar from "./_components/Sidebar";
 
+import "./admin.css"
+
 type AuthCookie = { email?: string };
 
 function parseAuth(raw?: string): AuthCookie | null {
@@ -18,7 +20,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const userEmail = auth?.email ?? "";
 
   return (
-    <section className="flex min-h-screen flex-col bg-background">
+    <section className="flex min-h-screen flex-col admin-main">
       {isAuthed && (
         <header className="sticky top-0 z-10">
           <Header userEmail={userEmail} />
@@ -26,7 +28,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       )}
       <div className="w-full flex flex-row">
         {isAuthed && <Sidebar />}
-        <main className="flex-1 ml-70 my-4 mr-4">
+        <main className="flex-1 ml-70 my-4 mr-4 ">
           {children}
         </main>
       </div>

@@ -3,7 +3,7 @@
 
 export default function Sidebar() {
   return (
-    <aside className="hidden md:block fixed left-0 top-0 h-screen p-4 w-64 bg-gray-200 shadow-sm shadow-black z-0 overflow-auto mt-8">
+    <aside className="hidden md:block fixed left-0 top-0 h-screen p-4 w-64 admin-sidebar z-0 overflow-auto mt-8">
       <nav className="space-y-4">
         <ul>
           <li>
@@ -38,6 +38,14 @@ export default function Sidebar() {
                 className="block px-6 py-1 rounded hover:bg-gray-700/20"
               >
                 2. Resim Slider
+              </a>
+            </li>
+            <li>
+              <a
+                href="/admin/settings/adsBelowBanner"
+                className="block px-6 py-1 rounded hover:bg-gray-700/20"
+              >
+                3. Ads
               </a>
             </li>
           </ul>

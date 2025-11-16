@@ -6,7 +6,7 @@ import Dropdown from "./LanguageDropdown";
 import { useLanguage } from "@/components/LanguageProvider";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useAppLoading } from "@/components/AppLoadingProvider";
 
 type Settings = {
@@ -51,7 +51,7 @@ export default function TopHorizontalBanner() {
   const { lang } = useLanguage();
 
   const { start, stop } = useAppLoading();
-  const [registered, setRegistered] = useState(false);
+  const registeredRef = useRef(false);
 
   const { data, isLoading, error } = useSWR(
     `top-banner-${lang}`,
@@ -61,20 +61,20 @@ export default function TopHorizontalBanner() {
     }
   );
 
-  // 🔹 NEW: Global loading overlay yönetimi
+  // 🔹 Global loading overlay yönetimi
   useEffect(() => {
     // İlk kez loading’e girdiğinde global counter’ı artır
-    if (isLoading && !registered) {
+    if (isLoading && !registeredRef.current) {
       start();
-      setRegistered(true);
+      registeredRef.current = true;
     }
 
     // Loading bittiğinde (ve daha önce register olduysa) counter’ı azalt
-    if (!isLoading && registered) {
+    if (!isLoading && registeredRef.current) {
       stop();
-      setRegistered(false);
+      registeredRef.current = false;
     }
-  }, [isLoading, registered, start, stop]);
+  }, [isLoading, start, stop]);
 
   if (error) {
     return (
@@ -90,7 +90,7 @@ export default function TopHorizontalBanner() {
   if (!settings && !banner) return null;
 
   return (
-    <div className="bg-gradient-to-r from-blue-800 to-blue-300 px-4 py-2 h-10 w-full flex justify-center font-poppins font-medium text-foreground">
+    <div className="bg-linear-to-r from-blue-800 to-blue-300 px-4 py-2 h-10 w-full flex justify-center font-poppins font-medium text-foreground">
       <div className="flex flex-row justify-between items-center w-full max-w-7xl text-sm text-white">
         <div className="flex flex-row gap-8">
           {settings?.phone && (

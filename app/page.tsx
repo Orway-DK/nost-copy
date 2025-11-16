@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 
 export const dynamic = "force-dynamic";
@@ -14,32 +14,14 @@ const heroImages: string[] = (() => {
 })();
 
 export default function Home() {
-    const [picked, setPicked] = useState<string | null>(null);
-    const [loaded, setLoaded] = useState(false);
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
+    const [picked] = useState<string | null>(() => {
         if (heroImages.length > 0) {
             const idx = Math.floor(Math.random() * heroImages.length);
-            setPicked(heroImages[idx]);
+            return heroImages[idx];
         }
-    }, []);
-
-    if (!mounted) {
-        return (
-            <div className="w-screen h-screen bg-black">
-                <div className="absolute flex flex-col justify-center items-center w-full h-screen text-white z-20">
-                    <Image src="/nost.png" width={200} height={200} alt="Logo" className="spin-slow z-50" />
-                    <p className="text-4xl font-poppins mt-10">Sitemiz yapım aşamasındadır.</p>
-                    <p className="text-xl font-poppins mt-5">Kısa süre içinde yayında olacağız.</p>
-                </div>
-                <div>
-                    <div className="absolute inset-0 z-10 bg-black" />
-                </div>
-            </div>
-        );
-    }
+        return null;
+    });
+    const [loaded, setLoaded] = useState(false);
 
     return (
         <div className="w-screen h-screen bg-black">

@@ -3,6 +3,8 @@
 // CircularText.tsx
 import { FaFacebookF } from "react-icons/fa";
 import { FaInstagram } from "react-icons/fa";
+import { RiInstagramFill } from "react-icons/ri";
+
 import { BsYoutube } from "react-icons/bs";
 
 export default function SocialPart() {
@@ -16,7 +18,7 @@ export default function SocialPart() {
             <li className="w-12 h-12 rounded-full flex items-center justify-center 
             border-2 border-blue-400 text-blue-500
             hover:text-white hover:fill-white hover:bg-blue-400
-            cursor-pointer"><FaInstagram size={20} /></li>
+            cursor-pointer"><RiInstagramFill size={20} /></li>
             <li className="w-12 h-12 rounded-full flex items-center justify-center 
             border-2 border-blue-400 text-blue-500
             hover:text-white hover:fill-white hover:bg-blue-400

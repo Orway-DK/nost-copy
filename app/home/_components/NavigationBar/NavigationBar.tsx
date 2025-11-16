@@ -1,7 +1,7 @@
 // @/app/_components/NavigationBar/NavigationBar.tsx
 "use client";
 
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import Link from "next/link";
 import useSWR from "swr";
 import { SlUser, SlBasket } from "react-icons/sl";
@@ -57,6 +57,19 @@ const fetcher = async (lang: string) => {
   return tree;
 };
 
+// Yeni: site_name çekici
+const fetchSiteName = async () => {
+  const supabase = createSupabaseBrowserClient();
+  const { data, error } = await supabase
+    .from("site_settings")
+    .select("site_name")
+    .limit(1)
+    .single();
+
+  if (error) throw error;
+  return (data?.site_name as string) ?? "Nost Copy";
+};
+
 export default function NavigationBar() {
   const { lang } = useLanguage();
 
@@ -69,34 +82,31 @@ export default function NavigationBar() {
     { revalidateOnFocus: false }
   );
 
-  const [registered, setRegistered] = useState(false);
+  // site_name için SWR
+  const { data: siteName = "Nost Copy" } = useSWR("site_name", fetchSiteName, { revalidateOnFocus: false });
 
   useEffect(() => {
-    if (isLoading && !registered) {
+    if (isLoading) {
       start();
-      setRegistered(true);
-    }
-
-    if (!isLoading && registered) {
+    } else {
       stop();
-      setRegistered(false);
     }
-  }, [isLoading, registered, start, stop]);
+  }, [isLoading, start, stop]);
 
   return (
     <div className="relative w-full max-w-7xl h-24 flex items-center justify-between font-onest font-semibold">
       <div className="text-3xl font-poppins font-bold">
-        <Link href={"/"}>Nost Copy</Link>
+        <Link href={"/"}>{siteName}</Link>
       </div>
 
       <ul className="flex space-x-8 items-center">
-        {nav?.map((item: any) =>
-          item.children?.length > 0 ? (
+        {nav?.map((item: NavNode) =>
+          item.children.length > 0 ? (
             <li key={item.id}>
               <Dropdown
                 label={item.label}
-                items={item.children.map((c: any) => ({
-                  label: c.label,      // ✅ Artık label gönderiyoruz
+                items={item.children.map((c: NavNode) => ({
+                  label: c.label,
                   href: c.href,
                 }))}
               />

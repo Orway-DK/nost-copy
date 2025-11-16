@@ -2,31 +2,27 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { upsertCarousels } from "../actions";
+import { upsertAds } from "../actions";
 
 type Language = { code: string; name: string; is_default: boolean };
-export type Carousel = {
+export type Ads = {
     id?: number;
     lang_code: string;
-    title1: string;
-    title2: string;
-    image_link: string;
-    sub_text: string;
-    tips: string[]; // array of strings
-    button_link: string;
+    text: string;
+    icon: string;
     order_no?: number;
 };
 
-export default function CarouselForm({
+export default function AdsForm({
     languages,
-    initialBanners,
+    initialAds,
 }: {
     languages: Language[];
-    initialBanners: Carousel[];
+    initialAds: Ads[];
 }) {
     const router = useRouter();
-    const safeInitial = (initialBanners ?? []) as Carousel[];
-    const [rows, setRows] = useState<Carousel[]>(
+    const safeInitial = (initialAds ?? []) as Ads[];
+    const [rows, setRows] = useState<Ads[]>(
         // ensure rows are sorted by order_no for the initial UI
         [...safeInitial].sort((a, b) => (a.order_no ?? 0) - (b.order_no ?? 0))
     );
@@ -34,25 +30,36 @@ export default function CarouselForm({
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
 
-    // Yeni: hangi dili filtreleyeceğimizi tutar (varsayılan: TR ya da languages içinde TR yoksa ilk dil)
-    const initialDefaultLang =
-        (languages ?? []).find((l) => l.code === "TR")?.code ??
-        (languages && languages[0]?.code) ??
-        "TR";
+    // normalize and sort languages by custom order: TR -> EN -> DE -> others
+    const customOrder = ["TR", "EN", "DE"];
+    const safeLanguages = (languages ?? [])
+        .map((l) => ({ ...l, code: String(l.code) }))
+        .sort((a, b) => {
+            const ia = customOrder.indexOf(a.code.toUpperCase());
+            const ib = customOrder.indexOf(b.code.toUpperCase());
+            if (ia === -1 && ib === -1) return a.code.localeCompare(b.code);
+            if (ia === -1) return 1;
+            if (ib === -1) return -1;
+            return ia - ib;
+        });
+
+    // default selection: prefer TR, then is_default flag, then first item, then "TR"
+    const trLang = safeLanguages.find((l) => l.code.toUpperCase() === "TR")?.code;
+    const defaultByFlag = safeLanguages.find((l) => l.is_default === true)?.code;
+    const initialDefaultLang = (trLang ?? defaultByFlag ?? safeLanguages[0]?.code ?? "TR") as string;
     const [selectedLang, setSelectedLang] = useState<string>(initialDefaultLang);
 
     // Eğer languages prop değişirse selectedLang geçerli değilse default'a çek
     useEffect(() => {
-        const codes = (languages ?? []).map((l) => l.code);
+        const codes = safeLanguages.map((l) => String(l.code));
         if (codes.length === 0) return;
-        if (!codes.includes(selectedLang)) {
-            const newDefault = codes.includes("TR") ? "TR" : codes[0];
-            setSelectedLang(newDefault);
-        }
+        const tr = safeLanguages.find((l) => String(l.code).toUpperCase() === "TR")?.code;
+        const def = tr ?? safeLanguages.find((l) => l.is_default === true)?.code ?? codes[0];
+        setSelectedLang((prev) => (codes.includes(prev) ? prev : def));
     }, [languages]);
 
     // Helpers
-    const updateRow = (index: number, patch: Partial<Carousel>) => {
+    const updateRow = (index: number, patch: Partial<Ads>) => {
         setRows((prev) => {
             const newRows = [...prev];
             newRows[index] = { ...newRows[index], ...patch };
@@ -61,15 +68,11 @@ export default function CarouselForm({
     };
 
     const addRow = () => {
-        const defaultLang = selectedLang || languages[0]?.code || "en";
-        const newRow: Carousel = {
+        const defaultLang = selectedLang || safeLanguages[0]?.code || "TR";
+        const newRow: Ads = {
             lang_code: defaultLang,
-            title1: "",
-            title2: "",
-            image_link: "",
-            sub_text: "",
-            tips: [],
-            button_link: "",
+            text: "",
+            icon: "",
             order_no:
                 rows.length > 0
                     ? Math.max(...rows.map((r) => r.order_no ?? 0)) + 1
@@ -82,28 +85,38 @@ export default function CarouselForm({
         setRows((prev) => {
             const newRows = [...prev];
             newRows.splice(index, 1);
+            // renumber globally to keep order_no deterministic
             return newRows.map((r, idx) => ({ ...r, order_no: idx }));
         });
     };
 
-    const moveUp = (index: number) => {
-        if (index <= 0) return;
+    // move within the filtered (same-language) items
+    const moveUp = (origIdx: number) => {
         setRows((prev) => {
+            const indexed = prev.map((r, i) => ({ r, i }));
+            const filtered = indexed.filter(({ r }) => r.lang_code === selectedLang);
+            const pos = filtered.findIndex((f) => f.i === origIdx);
+            if (pos <= 0) return prev;
+            const prevIdx = filtered[pos - 1].i;
             const newRows = [...prev];
-            const tmp = newRows[index - 1];
-            newRows[index - 1] = newRows[index];
-            newRows[index] = tmp;
+            const tmp = newRows[prevIdx];
+            newRows[prevIdx] = newRows[origIdx];
+            newRows[origIdx] = tmp;
             return newRows.map((r, idx) => ({ ...r, order_no: idx }));
         });
     };
 
-    const moveDown = (index: number) => {
+    const moveDown = (origIdx: number) => {
         setRows((prev) => {
-            if (index >= prev.length - 1) return prev;
+            const indexed = prev.map((r, i) => ({ r, i }));
+            const filtered = indexed.filter(({ r }) => r.lang_code === selectedLang);
+            const pos = filtered.findIndex((f) => f.i === origIdx);
+            if (pos === -1 || pos >= filtered.length - 1) return prev;
+            const nextIdx = filtered[pos + 1].i;
             const newRows = [...prev];
-            const tmp = newRows[index + 1];
-            newRows[index + 1] = newRows[index];
-            newRows[index] = tmp;
+            const tmp = newRows[nextIdx];
+            newRows[nextIdx] = newRows[origIdx];
+            newRows[origIdx] = tmp;
             return newRows.map((r, idx) => ({ ...r, order_no: idx }));
         });
     };
@@ -113,14 +126,15 @@ export default function CarouselForm({
         setError(null);
         setSuccess(null);
         try {
-            const payload = rows.map((r) => ({
+            // ensure order_no stable (global index)
+            const payload = rows.map((r, idx) => ({
                 ...r,
-                tips: Array.isArray(r.tips) ? r.tips : ([] as string[]),
+                order_no: typeof r.order_no === "number" ? r.order_no : idx,
             }));
             const fd = new FormData();
             fd.append("items", JSON.stringify(payload));
-            await upsertCarousels(fd);
-            setSuccess("Carousel öğeleri kaydedildi.");
+            await upsertAds(fd);
+            setSuccess("Ads öğeleri kaydedildi.");
             router.refresh();
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : String(err));
@@ -137,7 +151,7 @@ export default function CarouselForm({
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <h2 className="text-lg font-medium">Carousel Items</h2>
+                <h2 className="text-lg font-medium">Ads Items (Sadece üst 4 görünür)</h2>
 
                 <div className="flex gap-2 items-center">
                     <label className="text-sm mr-1">Dil</label>
@@ -147,17 +161,17 @@ export default function CarouselForm({
                         className="rounded border px-2 py-1 text-sm"
                     >
                         {/* Eğer languages varsa onlardan üret, yoksa fallback üç seçenek */}
-                        {(languages && languages.length > 0) ? (
-                            languages.map((l) => (
+                        {safeLanguages.length > 0 ? (
+                            safeLanguages.map((l) => (
                                 <option key={l.code} value={l.code}>
                                     {l.name} ({l.code})
                                 </option>
                             ))
                         ) : (
                             <>
-                                <option value="DE">DE</option>
-                                <option value="EN">EN</option>
                                 <option value="TR">TR</option>
+                                <option value="EN">EN</option>
+                                <option value="DE">DE</option>
                             </>
                         )}
                     </select>
@@ -185,41 +199,27 @@ export default function CarouselForm({
                     <p className="text-sm italic text-gray-600">Seçili dil için öğe yok.</p>
                 )}
 
-                {filtered.map(({ row, idx: origIdx }) => (
+                {filtered.map(({ row, idx: origIdx }, localIdx) => (
                     <div
                         key={origIdx}
-                        className="border rounded p-3 grid grid-cols-1 md:grid-cols-6 gap-2 items-start"
+                        className="border rounded p-3 grid grid-cols-1 md:grid-cols-6 gap-2 justify-items-stretch text-sm"
                     >
-                        <div className="md:col-span-1">
-                            <label className="block text-xs mb-1">Dil</label>
-                            <select
-                                value={row.lang_code}
-                                onChange={(e) => updateRow(origIdx, { lang_code: e.target.value })}
-                                className="w-full rounded border px-2 py-1 text-sm"
-                            >
-                                {languages.map((l) => (
-                                    <option key={l.code} value={l.code}>
-                                        {l.name} ({l.code})
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
 
                         <div className="md:col-span-2">
-                            <label className="block text-xs mb-1">Title 1</label>
+                            <label className="block text-xs mb-1">Text</label>
                             <input
-                                className="w-full rounded border px-2 py-1 text-sm"
-                                value={row.title1}
-                                onChange={(e) => updateRow(origIdx, { title1: e.target.value })}
+                                className="w-full rounded border px-2 py-1 text-sm admin-input"
+                                value={row.text}
+                                onChange={(e) => updateRow(origIdx, { text: e.target.value })}
                             />
                         </div>
 
                         <div className="md:col-span-2">
-                            <label className="block text-xs mb-1">Title 2</label>
+                            <label className="block text-xs mb-1">Icon ( REACT ICONS )</label>
                             <input
-                                className="w-full rounded border px-2 py-1 text-sm"
-                                value={row.title2}
-                                onChange={(e) => updateRow(origIdx, { title2: e.target.value })}
+                                className="w-full rounded border px-2 py-1 text-sm admin-input"
+                                value={row.icon}
+                                onChange={(e) => updateRow(origIdx, { icon: e.target.value })}
                             />
                         </div>
 
@@ -229,7 +229,7 @@ export default function CarouselForm({
                                 <button
                                     type="button"
                                     onClick={() => moveUp(origIdx)}
-                                    disabled={origIdx === 0}
+                                    disabled={localIdx === 0}
                                     className="rounded bg-gray-200 px-2 text-sm"
                                 >
                                     ↑
@@ -237,7 +237,7 @@ export default function CarouselForm({
                                 <button
                                     type="button"
                                     onClick={() => moveDown(origIdx)}
-                                    disabled={origIdx === rows.length - 1}
+                                    disabled={localIdx === filtered.length - 1}
                                     className="rounded bg-gray-200 px-2 text-sm"
                                 >
                                     ↓
@@ -250,49 +250,6 @@ export default function CarouselForm({
                                     Sil
                                 </button>
                             </div>
-                        </div>
-
-                        <div className="md:col-span-3">
-                            <label className="block text-xs mb-1">Image Link</label>
-                            <input
-                                className="w-full rounded border px-2 py-1 text-sm"
-                                value={row.image_link}
-                                onChange={(e) => updateRow(origIdx, { image_link: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="md:col-span-3">
-                            <label className="block text-xs mb-1">Button Link</label>
-                            <input
-                                className="w-full rounded border px-2 py-1 text-sm"
-                                value={row.button_link}
-                                onChange={(e) => updateRow(origIdx, { button_link: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="md:col-span-6">
-                            <label className="block text-xs mb-1">Sub Text</label>
-                            <input
-                                className="w-full rounded border px-2 py-1 text-sm"
-                                value={row.sub_text}
-                                onChange={(e) => updateRow(origIdx, { sub_text: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="md:col-span-6">
-                            <label className="block text-xs mb-1">Tips (virgülle ayır)</label>
-                            <input
-                                className="w-full rounded border px-2 py-1 text-sm"
-                                value={(row.tips || []).join(", ")}
-                                onChange={(e) =>
-                                    updateRow(origIdx, {
-                                        tips: e.target.value
-                                            .split(",")
-                                            .map((s) => s.trim())
-                                            .filter(Boolean),
-                                    })
-                                }
-                            />
                         </div>
                     </div>
                 ))}
