@@ -61,6 +61,6 @@
 @media (max-width: 640px) {
   .dk-marquee,
   .dk-marquee-reverse {
-    animation-duration: 30s;
+    animation-duration: 60s;
   }
 }

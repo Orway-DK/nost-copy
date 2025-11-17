@@ -2,9 +2,30 @@
 
 /* Dönen halka */
 .spin {
-  animation: spin 5s linear infinite;
+  display: inline-block;
+  /* örnek dönüş; mevcut projede farklı isimlendirme olabilir, uyarlayın */
+  animation: spin 8s linear infinite;
   transform-origin: center;
-  will-change: transform;
+}
+
+/* hover ile durma (CSS side) */
+.spin:hover {
+  animation-play-state: paused;
+}
+
+/* JS ile paused class'ı uygulandığında kesin pause */
+.paused {
+  animation-play-state: paused !important;
+}
+
+/* Örnek keyframes (mevcut projede varsa çakışmayı önleyin veya kullanın) */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Kullanıcı hareket tercihine saygı */
@@ -14,4 +35,40 @@
       transform: rotate(360deg);
     }
   }
+}
+
+/* container: remove inline gaps from inline elements, ensure centered */
+.container {
+  line-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* wrapper: sabit kare boyut, padding ile iç boşluk, dönüşte kırpma için overflow hidden */
+.wrapper {
+  width: 6rem; /* ihtiyaca göre ayarla (ör. 6rem = 96px) */
+  height: 6rem;
+  padding: 0.4rem; /* önceki p-2 yerine burada kontrol */
+  box-sizing: border-box;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* spin: tam wrapper'ı kaplasın, blok davranışı olsun */
+.spin {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: center center;
+  animation: spin 8s linear infinite;
+}
+
+/* svg içeriği tam sığsın, baseline boşluğu olmasın */
+.svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
