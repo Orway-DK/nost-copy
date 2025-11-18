@@ -17,7 +17,7 @@
 .marquee-strip {
   flex: 0 0 auto;
   display: flex;
-  gap: 2.5rem; /* gap-10 */
+  gap: 10px; /* gap-10 */
   align-items: center;
   margin-right: 2.5rem; /* strip'ler birleşmesin */
 }
@@ -43,12 +43,20 @@
 
 /* Sağdan sola (alt siyah bant) */
 .dk-marquee {
-  animation: dk-marquee-keyframes 24s linear infinite;
+  animation: dk-marquee-keyframes 30s linear infinite;
+}
+/* Sağdan sola (alt siyah bant) */
+.dk-marquee-fast {
+  animation: dk-marquee-keyframes 5s linear infinite;
 }
 
 /* Soldan sağa (üst beyaz bant) */
 .dk-marquee-reverse {
-  animation: dk-marquee-reverse-keyframes 24s linear infinite;
+  animation: dk-marquee-reverse-keyframes 30s linear infinite;
+}
+/* Soldan sağa (üst beyaz bant) */
+.dk-marquee-reverse-fast {
+  animation: dk-marquee-reverse-keyframes 5s linear infinite;
 }
 
 /* Hover'da ikisini de durdur */

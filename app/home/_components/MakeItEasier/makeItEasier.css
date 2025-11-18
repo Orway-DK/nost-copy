@@ -1,0 +1,38 @@
+.reveal {
+  position: relative;
+  display: inline-block;
+  overflow: visible;
+}
+
+/* the animated wrapper sits in-flow so origin is the current position */
+.reveal .reveal-inner {
+  display: inline-block;
+  position: relative;
+  transform: translate3d(var(--rv-offset, 0px), 0, 0);
+  opacity: 0;
+  transition-property: transform, opacity;
+  transition-duration: var(--rv-duration, 700ms);
+  transition-timing-function: cubic-bezier(0.2, 0.9, 0.2, 1);
+  transition-delay: var(--rv-delay, 0ms);
+  will-change: transform, opacity;
+}
+
+/* visible state */
+.reveal .reveal-inner.reveal-visible {
+  transform: translate3d(0, 0, 0);
+  opacity: 1;
+}
+
+/* direction presets: offsets are relative to the element's current position */
+.reveal .reveal-from-right {
+  --rv-offset: 500px;
+} /* image: +500 from current x */
+.reveal .reveal-from-left {
+  --rv-offset: -100px;
+} /* circle: -100 from current x */
+
+/* ensure no width/height transitions (prevent circle resize) */
+.reveal .reveal-inner,
+.reveal {
+  box-sizing: border-box;
+}

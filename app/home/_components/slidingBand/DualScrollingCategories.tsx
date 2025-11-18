@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-// import { useLocale } from "next-intl"; // removed: project doesn't use next-intl
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/components/LanguageProvider";
+
 import "./slidingBands.css";
 
 type Category = {
@@ -28,9 +29,7 @@ export default function DualScrollingCategories() {
     // useLocale must be called directly (like LandingSlider). Fallback router.locale
     const router = useRouter();
     // prefer router.locale (Next i18n), fallback to browser locale, then 'en'
-    const localeRaw = (router.locale ?? (typeof navigator !== "undefined" ? navigator.language : undefined) ?? "en").toString();
-    const lang = localeRaw.slice(0, 2).toLowerCase(); // 'tr','en','de'
-    console.debug("DualScrollingCategories localeRaw, lang:", localeRaw, lang);
+    const { lang } = useLanguage();
     const [categories, setCategories] = useState<Category[]>(FALLBACK);
     const supabase = createSupabaseBrowserClient();
 
@@ -93,16 +92,15 @@ export default function DualScrollingCategories() {
     return (
         <div className="relative w-full overflow-hidden py-20">
             {/* ALT BANT */}
-            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 -mx-10 bg-fuchsia-100 text-black py-3 rotate-3">
-                <div className="px-6 group marquee-mask">
-                    <div className="marquee-track dk-marquee">
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 -mx-20 bg-fuchsia-100 text-black py-3 rotate-6 lg:rotate-3">
+                <div className="px-24 group marquee-mask">
+                    <div className="marquee-track -md:dk-marquee-fast dk-marquee">
                         <div className="marquee-strip">
                             <CategoryStrip items={categories} />
-                        </div>
-                        <div className="marquee-strip" aria-hidden="true">
                             <CategoryStrip items={categories} />
                         </div>
                         <div className="marquee-strip" aria-hidden="true">
+                            <CategoryStrip items={categories} />
                             <CategoryStrip items={categories} />
                         </div>
                     </div>
@@ -110,16 +108,15 @@ export default function DualScrollingCategories() {
             </div>
 
             {/* ÜST BANT */}
-            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 -mx-10 bg-yellow-50 text-black py-3 -rotate-2 z-10">
-                <div className="px-6 group marquee-mask">
-                    <div className="marquee-track dk-marquee-reverse">
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 bg-yellow-50 text-black py-3 -rotate-4 lg:-rotate-2 z-10">
+                <div className="px-24 group marquee-mask">
+                    <div className="marquee-track -md:dk-marquee-reverse-fast dk-marquee-reverse">
                         <div className="marquee-strip">
                             <CategoryStrip items={categories} />
-                        </div>
-                        <div className="marquee-strip" aria-hidden="true">
                             <CategoryStrip items={categories} />
                         </div>
                         <div className="marquee-strip" aria-hidden="true">
+                            <CategoryStrip items={categories} />
                             <CategoryStrip items={categories} />
                         </div>
                     </div>
@@ -131,16 +128,20 @@ export default function DualScrollingCategories() {
 
 function CategoryStrip({ items }: { items: Category[] }) {
     return (
-        <div className="flex gap-5 items-center">
-            {items.map((cat) => (
+        <div className="flex  gap-2 items-center">
+            {items.map((cat, idx) => (
                 <div key={cat.id ?? cat.label} className="flex items-center gap-2">
                     <Link
                         href={cat.link ?? "#"}
                         title={cat.label}
-                        className="text-xs sm:text-sm font-semibold tracking-wide uppercase hover:underline hover:text-amber-500 transition-colors inline-block"
+                        className="text-xs sm:text-sm 
+                        font-semibold tracking-wide uppercase 
+                        hover:underline hover:text-amber-500 
+                        transition-colors inline-block"
                     >
                         {cat.label}
                     </Link>
+                    {/* always render separator after each item (including last) so seam shows dot */}
                     <span className="pb-1">●</span>
                 </div>
             ))}
