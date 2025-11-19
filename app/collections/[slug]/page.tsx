@@ -8,14 +8,21 @@ type Props = {
   }>;
 };
 
+// List of valid collection slugs
+const VALID_SLUGS = ["product-labels", "packaging-labels", "barcode-labels"];
+
+// Generate static params for known collection pages
+export async function generateStaticParams() {
+  return VALID_SLUGS.map((slug) => ({
+    slug,
+  }));
+}
+
 export default async function CollectionPage({ params }: Props) {
   const { slug } = await params;
   
-  // List of valid collection slugs
-  const validSlugs = ["product-labels", "packaging-labels", "barcode-labels"];
-  
   // Check if the slug is valid
-  if (!validSlugs.includes(slug)) {
+  if (!VALID_SLUGS.includes(slug)) {
     notFound();
   }
 
