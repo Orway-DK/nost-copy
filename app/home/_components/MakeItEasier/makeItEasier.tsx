@@ -49,31 +49,30 @@ export default function MakeItEasier() {
                     <p className="text-lg sm:text-xl mt-6 max-w-prose">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis.</p>
                 </div>
                 <div className="relative h-[50vh] flex items-center justify-center px-6 ">
-                    {/* Circle: starts 100px left + opacity 0 */}
                     <div
                         ref={circleRef}
-                        className="absolute overflow-hidden bg-[#47597b] rounded-full w-100 h-100 top-60 -right-70 -translate-x-1/2 -translate-y-1/2 z-0 transition-all duration-1700 ease-out"
+                        className="absolute overflow-hidden bg-[#47597b] rounded-full w-100 h-100 top-60 -right-70 -translate-x-1/2 -translate-y-1/2 z-0 transition-all duration-2000 ease-out"
                         style={{
                             transform: circleVisible ? 'translateX(0)' : 'translateX(-100px)',
                             opacity: circleVisible ? 1 : 0,
                         }}
                     />
 
-                    {/* Image: starts 500px right + opacity 0 */}
                     <div
                         ref={imageRef}
-                        className="z-10 transition-all duration-2700 ease-out"
+                        className="z-10 transition-all duration-1000 ease-out"
                         style={{
-                            transform: imageVisible ? 'translateX(0)' : 'translateX(1750px)',
+                            transform: imageVisible ? 'translateX(0)' : 'translateX(750px)',
                             opacity: imageVisible ? 1 : 0,
                         }}
                     >
                         <Image
                             src={"/h1-banner3.png"}
                             alt="broshure-sample"
-                            width={500}
-                            height={500}
-                            className="w-150 h-100 object-contain"
+                            width={1000}
+                            height={1000}
+                            className="w-150 h-auto object-contain z-50"
+                            loading="lazy"
                         />
                     </div>
                 </div>

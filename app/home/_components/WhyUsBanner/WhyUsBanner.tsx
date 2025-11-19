@@ -8,8 +8,8 @@ export default function WhyUs() {
         <>
             <div className="flex flex-row w-full max-w-7xl h-[60vh] my-20">
                 <div className="w-4xl relative">
-                    <Image src={"/h1-banner01.jpg"} alt="bannerImage1" width={500} height={500} className="rounded-3xl absolute" />
-                    <Image src={"/h1-banner02.jpg"} alt="bannerImage2" width={400} height={400} className="rounded-3xl absolute bottom-0 right-0" />
+                    <Image src={"/h1-banner01.jpg"} alt="bannerImage1" width={500} height={500} className="rounded-3xl w-auto absolute" />
+                    <Image src={"/h1-banner02.jpg"} alt="bannerImage2" width={400} height={400} className="rounded-3xl w-auto absolute bottom-0 right-0" />
                     <div className="absolute bottom-15 flex flex-col ml-10">
                         <span className="text-5xl text-blue-700">24+</span>
                         <span className="text-lg">Years Of Experience</span>

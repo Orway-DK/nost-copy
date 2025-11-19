@@ -13,7 +13,7 @@ export default function LandingSlider() {
             alt="Landing Slider Background"
             width={500}
             height={500}
-            className="object-cover object-center select-none"
+            className="object-cover w-auto object-center select-none"
             draggable={false}
             priority
           />
@@ -24,7 +24,7 @@ export default function LandingSlider() {
             alt="Landing Slider Background"
             width={1000}
             height={1000}
-            className="object-cover object-center select-none"
+            className="object-cover w-auto object-center select-none"
             draggable={false}
             priority
           />
@@ -35,7 +35,7 @@ export default function LandingSlider() {
             alt="Landing Slider Background"
             width={700}
             height={700}
-            className="object-cover object-center select-none"
+            className="object-cover w-auto object-center select-none"
             draggable={false}
             priority
           />

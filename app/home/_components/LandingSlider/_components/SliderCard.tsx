@@ -94,7 +94,7 @@ export default function SliderCard({
               alt={imageAlt}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-contain"
+              className="object-contain w-auto"
               priority={isActive}
               draggable={false}
             />

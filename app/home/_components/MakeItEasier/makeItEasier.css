@@ -1,10 +1,11 @@
+/* Reveal animasyonları (global veya component CSS'inize ekleyin) */
 .reveal {
   position: relative;
   display: inline-block;
   overflow: visible;
 }
 
-/* the animated wrapper sits in-flow so origin is the current position */
+/* animated wrapper */
 .reveal .reveal-inner {
   display: inline-block;
   position: relative;
@@ -26,10 +27,10 @@
 /* direction presets: offsets are relative to the element's current position */
 .reveal .reveal-from-right {
   --rv-offset: 500px;
-} /* image: +500 from current x */
+}
 .reveal .reveal-from-left {
   --rv-offset: -100px;
-} /* circle: -100 from current x */
+}
 
 /* ensure no width/height transitions (prevent circle resize) */
 .reveal .reveal-inner,
