@@ -32,7 +32,7 @@ export default function MakeItEasier() {
         if (imageEl) observer.observe(imageEl);
         if (circleEl) observer.observe(circleEl);
 
-        return () => observer.disconnect();
+        //return () => observer.disconnect();
     }, []);
 
     return (
