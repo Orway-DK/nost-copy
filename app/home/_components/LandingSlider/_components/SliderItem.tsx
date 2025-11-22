@@ -60,7 +60,7 @@ export default function SliderItem() {
             imageSrc: s.image_link,
             imageAlt: `${s.title1} ${s.title2}`,
             href: s.button_link,
-            tips: s.tips ?? [],            // ✅ EKLENDİ
+            tips: s.tips ?? [],
           };
           return (
             <SwiperSlide key={`slide-${i}`}>

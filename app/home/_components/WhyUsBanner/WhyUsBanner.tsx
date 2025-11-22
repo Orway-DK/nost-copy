@@ -65,7 +65,7 @@ export default function WhyUs() {
             {/* Sol blok */}
             <div className="w-4xl relative">
                 <div
-                    className="z-10 transition-transform transition-opacity duration-1000 ease-out"
+                    className="z-10 transition-transform duration-1000 ease-out"
                     style={{
                         transform: visible ? "translateX(0)" : "translateX(-750px)",
                         opacity: visible ? 1 : 0,
@@ -82,7 +82,7 @@ export default function WhyUs() {
                 </div>
 
                 <div
-                    className="z-10 transition-transform transition-opacity duration-1000 ease-out"
+                    className="z-10 transition-transform duration-1000 ease-out"
                     style={{
                         transform: visible ? "translateY(0)" : "translateY(300px)",
                         opacity: visible ? 1 : 0,
@@ -94,7 +94,7 @@ export default function WhyUs() {
                         width={400}
                         height={400}
                         className="rounded-3xl w-auto absolute top-50 right-0"
-                        loading="lazy"
+                        loading="eager"
                     />
                 </div>
 

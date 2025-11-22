@@ -43,7 +43,7 @@ export default function DualScrollingCategories() {
                     .select("id, label, link, order_no, lang_code")
                     .eq("lang_code", lang)
                     .order("order_no", { ascending: true });
-                console.debug("sliding_categories fetched:", data?.length);
+                //console.debug("sliding_categories fetched:", data?.length);
 
                 if (error) {
                     console.error("sliding_categories fetch error:", error);
