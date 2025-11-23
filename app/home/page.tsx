@@ -6,6 +6,8 @@ import WhyUs from "./_components/WhyUsBanner/WhyUsBanner";
 import DualScrollingCategories from "./_components/slidingBand/DualScrollingCategories";
 import MakeItEasier from "./_components/MakeItEasier/makeItEasier";
 import MainFooter from "./_components/mainFooter/mainFooter";
+import ReadyProducts from "./_components/ReadyProducts/ReadyProducts";
+import MarqueeScroller from "./_components/MarqueeScroller/MarqueeScroller";
 
 export default function Home() {
   return (
@@ -17,6 +19,8 @@ export default function Home() {
       <WhyUs />
       <DualScrollingCategories />
       <MakeItEasier />
+      <ReadyProducts />
+      <MarqueeScroller />
       <MainFooter />
     </div>
   );

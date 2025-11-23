@@ -9,8 +9,10 @@ import type { Variants } from "framer-motion";
 import { useState, useCallback } from "react";
 import { Icon } from "@iconify/react";
 
-// Framer Motion ile Next Image animasyonu
-const MotionImage = motion(Image);
+import MakeItEasierSliderPart from "./makeItEasierSliderPart";
+
+// Framer Motion v11+: motion() deprecated -> motion.create()
+const MotionImage = motion.create(Image);
 
 type Tip = { icon?: string; title: string; text: string };
 type ApiMakeItEasier = {
@@ -36,11 +38,13 @@ const fetcher = async (lang: string): Promise<ApiMakeItEasier[]> => {
 
 export default function MakeItEasier() {
     const { lang } = useLanguage();
-    const { data: details, error, isLoading } = useSWR(
-        `make-it-easier-${lang}`,
-        () => fetcher(lang),
-        { revalidateOnFocus: false }
-    );
+    const {
+        data: details,
+        error,
+        isLoading
+    } = useSWR(`make-it-easier-${lang}`, () => fetcher(lang), {
+        revalidateOnFocus: false
+    });
 
     const prefersReduced = useReducedMotion();
     const [imgLoaded, setImgLoaded] = useState(false);
@@ -67,7 +71,6 @@ export default function MakeItEasier() {
     const data = details[0];
     const imageUrl = data.image_link || "";
 
-    // Reduced motion varsa animasyonları minimize ediyoruz:
     const circleVariants: Variants = {
         hidden: prefersReduced
             ? { x: "0%", opacity: 1 }
@@ -98,11 +101,8 @@ export default function MakeItEasier() {
             }
     };
 
-    // i parametresi için fonksiyon kullanan tipVariants
     const tipVariants: Variants = {
-        hidden: prefersReduced
-            ? { y: 0, opacity: 1 }
-            : { y: 30, opacity: 0 },
+        hidden: prefersReduced ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 },
         visible: (i: number) =>
             prefersReduced
                 ? { y: 0, opacity: 1 }
@@ -138,7 +138,9 @@ export default function MakeItEasier() {
                 {/* Sol metin */}
                 <div className="w-full max-w-xl h-[50vh] flex flex-col justify-center text-[#ecf2ff] px-6">
                     <h2 className="text-4xl sm:text-5xl font-semibold">{data.title}</h2>
-                    <p className="text-lg sm:text-xl mt-6 max-w-prose">{data.titletext}</p>
+                    <p className="text-lg sm:text-xl mt-6 max-w-prose">
+                        {data.titletext}
+                    </p>
                 </div>
 
                 {/* Görsel ve dekor alanı */}
@@ -169,7 +171,6 @@ export default function MakeItEasier() {
                         style={{ willChange: "transform, opacity" }}
                     />
 
-                    {/* Fallback / debug overlay */}
                     {!imageUrl && (
                         <div className="absolute inset-0 flex items-center justify-center text-sm text-red-400">
                             Görsel linki boş
@@ -204,13 +205,20 @@ export default function MakeItEasier() {
                                 )}
                             </span>
                             <div>
-                                <h3 className="text-white text-lg font-semibold">{tip.title}</h3>
-                                <p className="font-normal text-sm text-[#d1d7e6]">{tip.text}</p>
+                                <h3 className="text-white text-lg font-semibold">
+                                    {tip.title}
+                                </h3>
+                                <p className="font-normal text-sm text-[#d1d7e6]">
+                                    {tip.text}
+                                </p>
                             </div>
                         </motion.div>
                     ))}
                 </div>
             </div>
+
+            <MakeItEasierSliderPart />
+
 
             {/* Alt kıvrım */}
             <div className="block border-none w-full overflow-hidden">
@@ -225,7 +233,9 @@ export default function MakeItEasier() {
                         d="M500,97C126.7,96.3,0.8,19.8,0,0v100l1000,0V1C1000,19.4,873.3,97.8,500,97z"
                     ></path>
                 </svg>
+
             </div>
+
         </div>
     );
 }
