@@ -2,6 +2,8 @@
 import type { Metadata } from "next";
 import { Geist, Oswald, Poppins, Onest } from "next/font/google";
 import "./globals.css";
+import "./styles/marquee.css"; // global marquee styles imported at layout
+
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { AppLoadingProvider } from "@/components/AppLoadingProvider";
 
@@ -49,7 +51,9 @@ export default function RootLayout({
             >
                 <LanguageProvider>
                     <AppLoadingProvider>
+
                         {children}
+
                     </AppLoadingProvider>
                 </LanguageProvider>
             </body>

@@ -5,10 +5,8 @@ import useSWR from "swr";
 import { useLanguage } from "@/components/LanguageProvider";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
-
 import "swiper/css";
 
 type RawImageLink =
@@ -16,26 +14,105 @@ type RawImageLink =
     | { url?: string; src?: string; image?: string }
     | null;
 
-type ApiMakeItEasierSlider = {
-    id: number;
-    lang_code: string | null;
+type TranslationRow = {
+    lang_code: string;
     title: string | null;
     text: string | null;
-    image_links: RawImageLink[] | null;
     button_name: string | null;
     button_link: string | null;
 };
 
-const fetcher = async (lang: string): Promise<ApiMakeItEasierSlider[]> => {
+type ApiSection = {
+    id: number;
+    order_no: number | null;
+    active: boolean;
+    image_links: RawImageLink[] | null;
+    make_it_easier_slider_translations: TranslationRow[];
+};
+
+type UiData = {
+    title: string | null;
+    text: string | null;
+    image_links: string[];
+    button_name: string | null;
+    button_link: string | null;
+};
+
+const normalizeEntry = (entry: RawImageLink): string | null => {
+    if (!entry) return null;
+    if (typeof entry === "string") return entry.trim();
+    if (typeof entry === "object") {
+        return entry.url?.trim() || entry.src?.trim() || entry.image?.trim() || null;
+    }
+    return null;
+};
+
+// Yeni şema: make_it_easier_slider_sections + make_it_easier_slider_translations
+const fetcher = async (lang: string): Promise<UiData[]> => {
     const supabase = createSupabaseBrowserClient();
     const { data, error } = await supabase
-        .from("make_it_easier_slider")
-        .select("id, lang_code, title, text, image_links, button_name, button_link")
-        .eq("lang_code", lang)
-        .order("id", { ascending: true });
+        .from("make_it_easier_slider_sections")
+        .select(
+            "id, order_no, active, image_links, make_it_easier_slider_translations(lang_code, title, text, button_name, button_link)"
+        )
+        .eq("active", true)
+        .order("order_no", { ascending: true });
 
     if (error) throw new Error(error.message);
-    return data || [];
+
+    const rows = (data ?? []) as ApiSection[];
+
+    const localized = rows
+        .map((row) => {
+            const tr = row.make_it_easier_slider_translations.find(
+                (t) => t.lang_code === lang
+            );
+            const images = (row.image_links ?? [])
+                .map(normalizeEntry)
+                .filter((x): x is string => !!x);
+
+            return {
+                title: tr?.title ?? null,
+                text: tr?.text ?? null,
+                image_links: images,
+                button_name: tr?.button_name ?? null,
+                button_link: tr?.button_link ?? null,
+            } as UiData;
+        })
+        // En az bir görseli olan bölümleri göster
+        .filter((s) => s.image_links.length > 0);
+
+    // Dil bulunmazsa EN diline düş
+    if (!localized.length) {
+        const { data: enData } = await supabase
+            .from("make_it_easier_slider_sections")
+            .select(
+                "id, order_no, active, image_links, make_it_easier_slider_translations(lang_code, title, text, button_name, button_link)"
+            )
+            .eq("active", true)
+            .order("order_no", { ascending: true });
+
+        const enRows = (enData ?? []) as ApiSection[];
+        return enRows
+            .map((row) => {
+                const tr = row.make_it_easier_slider_translations.find(
+                    (t) => t.lang_code === "en"
+                );
+                const images = (row.image_links ?? [])
+                    .map(normalizeEntry)
+                    .filter((x): x is string => !!x);
+                return {
+                    title: tr?.title ?? null,
+                    text: tr?.text ?? null,
+                    image_links: images,
+                    button_name: tr?.button_name ?? null,
+                    button_link: tr?.button_link ?? null,
+                } as UiData;
+            })
+            .filter((s) => s.image_links.length > 0);
+    }
+
+    return localized;
 };
 
 const MAX_ATTEMPTS = 3;
@@ -46,17 +123,13 @@ const FALLBACK_DATA_URI =
 
 export default function MakeItEasierSliderPart() {
     const { lang } = useLanguage();
-    const {
-        data: details,
-        error,
-        isLoading
-    } = useSWR(`make-it-easier-slider-${lang}`, () => fetcher(lang), {
-        revalidateOnFocus: false
-    });
-
-    const [imageAttempts, setImageAttempts] = useState<Record<string, number>>(
-        {}
+    const { data: sections, error, isLoading } = useSWR(
+        ["make-it-easier-slider", lang],
+        () => fetcher(lang),
+        { revalidateOnFocus: false }
     );
+
+    const [imageAttempts, setImageAttempts] = useState<Record<string, number>>({});
     const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
     const sliderRef = useRef<HTMLDivElement | null>(null);
@@ -64,26 +137,9 @@ export default function MakeItEasierSliderPart() {
 
     // Orijinal görseller (normalize + flatten)
     const allImages: string[] = useMemo(() => {
-        if (!details?.length) return [];
-        return details.flatMap((row) => {
-            if (!row.image_links || !Array.isArray(row.image_links)) return [];
-            return row.image_links
-                .map((entry): string | null => {
-                    if (typeof entry === "string") return entry.trim();
-                    if (entry && typeof entry === "object") {
-                        return (
-                            entry.url?.trim() ||
-                            entry.src?.trim() ||
-                            entry.image?.trim() ||
-                            null
-                        );
-                    }
-                    return null;
-                })
-                .filter((x): x is string => !!x);
-        });
-    }, [details]);
-    console.log(details)
+        if (!sections?.length) return [];
+        return sections.flatMap((s) => s.image_links);
+    }, [sections]);
 
     // Azsa çoğalt
     const duplicatedImages = useMemo(() => {
@@ -96,20 +152,13 @@ export default function MakeItEasierSliderPart() {
         return buff;
     }, [allImages]);
 
-    const header = details?.[0];
+    // Sağ tarafta başlık/metin için ilk section
+    const header = sections?.[0];
 
     const handleImageError = useCallback((url: string) => {
         setImageAttempts((prev) => {
             const current = prev[url] ?? 0;
-            if (current >= MAX_ATTEMPTS) return prev;
             const next = current + 1;
-
-            if (next <= MAX_ATTEMPTS) {
-                console.warn(
-                    `[ImageError] ${url} (deneme ${next}/${MAX_ATTEMPTS}) başarısız.`
-                );
-            }
-
             if (next >= MAX_ATTEMPTS) {
                 setFailedImages((prevSet) => {
                     if (!prevSet.has(url)) {
@@ -158,7 +207,7 @@ export default function MakeItEasierSliderPart() {
                 Bir hata oluştu: {error.message}
             </div>
         );
-    if (!details?.length)
+    if (!sections?.length)
         return <div className="py-8 text-center">İçerik bulunamadı.</div>;
 
     return (
@@ -178,7 +227,7 @@ export default function MakeItEasierSliderPart() {
                             autoplay={{
                                 delay: 3000,
                                 disableOnInteraction: true,
-                                pauseOnMouseEnter: true
+                                pauseOnMouseEnter: true,
                             }}
                             loop={duplicatedImages.length > 1}
                             speed={500}
@@ -187,7 +236,7 @@ export default function MakeItEasierSliderPart() {
                                 640: { slidesPerView: 2, spaceBetween: 10 },
                                 768: { slidesPerView: 2, spaceBetween: 12 },
                                 1024: { slidesPerView: 2, spaceBetween: 14 },
-                                1280: { slidesPerView: 3, spaceBetween: 16 }
+                                1280: { slidesPerView: 3, spaceBetween: 16 },
                             }}
                             className="select-none"
                         >
@@ -251,36 +300,32 @@ export default function MakeItEasierSliderPart() {
                             {header.text}
                         </p>
                     )}
-                    <div className="mt-8 ml-16">
-                        <a
-                            href={header?.button_link || ""}
-                            className="inline-flex items-center gap-2 bg-[#47597b] hover:bg-[#5b6e94] text-white text-sm font-medium px-6 py-3 rounded-full transition-colors"
-                        >
-                            {header?.text && (
-                                <span>{header.button_name}</span>
-                            )}
-                            <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="opacity-80"
+                    {(header?.button_name || header?.button_link) && (
+                        <div className="mt-8 ml-16">
+                            <a
+                                href={header?.button_link || ""}
+                                className="inline-flex items-center gap-2 bg-[#47597b] hover:bg-[#5b6e94] text-white text-sm font-medium px-6 py-3 rounded-full transition-colors"
                             >
-                                <line x1="5" y1="12" x2="19" y2="12" />
-                                <polyline points="12 5 19 12 12 19" />
-                            </svg>
-                        </a>
-                    </div>
-
-
+                                {header?.button_name && <span>{header.button_name}</span>}
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="opacity-80"
+                                >
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                    <polyline points="12 5 19 12 12 19" />
+                                </svg>
+                            </a>
+                        </div>
+                    )}
                 </div>
-
             </div>
-
         </div>
     );
 }

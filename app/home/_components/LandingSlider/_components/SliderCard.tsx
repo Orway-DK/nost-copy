@@ -1,4 +1,3 @@
-// @/app/_components/LandingSlider/_components/SliderCard.tsx
 "use client";
 
 import Image from "next/image";
@@ -10,11 +9,11 @@ type SliderCardProps = {
   title2: string;
   description: string;
   ctaText?: string;
-  stats?: Array<{ label: string; value: string }>;
   imageSrc: string;
   imageAlt?: string;
   isActive?: boolean;
-  tips?: string[];           // ✅ EKLENDİ
+  href?: string;
+  tips?: string[];
 };
 
 export default function SliderCard({
@@ -25,7 +24,8 @@ export default function SliderCard({
   imageSrc,
   imageAlt = "",
   isActive = false,
-  tips = [],                 // ✅ EKLENDİ (varsayılan boş dizi)
+  href = "#",
+  tips = [],
 }: SliderCardProps) {
   return (
     <section className="w-full flex justify-center px-4">
@@ -59,12 +59,13 @@ export default function SliderCard({
             once={false}
             className="flex flex-row gap-4 w-full items-center"
           >
-            <button
+            <a
+              href={href}
               className="mt-2 min-w-32 inline-flex items-center justify-center rounded-full border px-5 py-2
-            text-sm font-medium hover:bg-black hover:text-white transition-colors"
+              text-sm font-medium hover:bg-black hover:text-white transition-colors"
             >
               {ctaText}
-            </button>
+            </a>
 
             <ul className="flex flex-row gap-4 w-full mt-2 justify-evenly items-center">
               {tips.map((tip, idx) => (
@@ -88,7 +89,6 @@ export default function SliderCard({
         <Reveal direction="right" delayMs={0} once={false} className="w-full">
           <div className="relative w-full aspect-[4/3] md:aspect-auto md:h-[min(60vh,40rem)] min-h-full min-w-0 flex items-center justify-center">
             <div className="z-0 absolute bg-white/40 w-[600px] h-[600px] rounded-full origin-center animate-pulse-scale"></div>
-
             <Image
               src={imageSrc}
               alt={imageAlt}

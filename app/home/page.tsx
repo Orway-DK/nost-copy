@@ -6,8 +6,9 @@ import WhyUs from "./_components/WhyUsBanner/WhyUsBanner";
 import DualScrollingCategories from "./_components/slidingBand/DualScrollingCategories";
 import MakeItEasier from "./_components/MakeItEasier/makeItEasier";
 import MainFooter from "./_components/mainFooter/mainFooter";
-import ReadyProducts from "./_components/ReadyProducts/ReadyProducts";
-import MarqueeScroller from "./_components/MarqueeScroller/MarqueeScroller";
+import ReadyProducts from "./_components/ReadyProducts";
+import TestimonialsCarousel from "./_components/Testimonials/TestimonialsCarousel";
+import KeywordMarquee from "./_components/Testimonials/KeywordMarquee";
 
 export default function Home() {
   return (
@@ -20,7 +21,8 @@ export default function Home() {
       <DualScrollingCategories />
       <MakeItEasier />
       <ReadyProducts />
-      <MarqueeScroller />
+      <KeywordMarquee />
+      <TestimonialsCarousel />
       <MainFooter />
     </div>
   );
