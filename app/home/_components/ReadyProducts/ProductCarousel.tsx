@@ -19,13 +19,14 @@ type RawItemRow = {
   id: number;
   order_no: number;
   image_override: string | null;
+  // NOTE: Supabase is returning an array for the aliased relationship; handle as array and pick first.
   products: {
     id: number;
     slug: string;
     active: boolean;
     product_localizations: RawLocalization[] | null;
     product_media: RawMedia[] | null;
-  } | null;
+  }[] | null;
   ready_products_showcase_prices: { currency_code: string; price_min: number; price_max: number }[] | null;
 };
 
@@ -102,7 +103,8 @@ async function fetch_showcase_items(): Promise<RawItemRow[]> {
     .order("order_no", { ascending: true });
 
   if (error) throw new Error(error.message);
-  return data || [];
+  // Return typed array; Supabase may yield products as [] even for 1-1 relation.
+  return (data ?? []) as unknown as RawItemRow[];
 }
 
 interface ProductCarouselProps {
@@ -111,7 +113,7 @@ interface ProductCarouselProps {
   className?: string;
 }
 
-export default function ProductCarousel({ title = "Öne Çıkan Ürünler", showTitle = false, className = "" }: ProductCarouselProps) {
+export default function ProductCarousel({ title = "Öne Çıkan Ürünler", showTitle = true, className = "" }: ProductCarouselProps) {
   const ctx = useLanguage() as { lang?: string; lang_code?: string; currency?: string; currency_code?: string };
   const lang_code = normalize_lang(ctx.lang_code ?? ctx.lang);
   const user_currency = normalize_currency(ctx.currency_code ?? ctx.currency);
@@ -125,7 +127,8 @@ export default function ProductCarousel({ title = "Öne Çıkan Ürünler", show
     if (!raw_items) return [];
     return raw_items
       .map((row) => {
-        const p = row.products;
+        const pArr = row.products ?? [];
+        const p = pArr[0]; // pick first if array
         if (!p || !p.active) return null;
 
         // Görsel seçimi
@@ -155,7 +158,7 @@ export default function ProductCarousel({ title = "Öne Çıkan Ürünler", show
 
         // Fiyat seçimi
         const prices = row.ready_products_showcase_prices || [];
-        let priceMatch =
+        const priceMatch =
           prices.find((pr) => pr.currency_code === effective_currency) ||
           prices.find((pr) => pr.currency_code === "USD") ||
           prices[0] ||
@@ -193,7 +196,6 @@ export default function ProductCarousel({ title = "Öne Çıkan Ürünler", show
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
               {title}
             </h2>
-            {/* İstersen buraya “Tümünü Gör” linki koyabilirsin */}
           </div>
         )}
 
@@ -241,7 +243,7 @@ export default function ProductCarousel({ title = "Öne Çıkan Ürünler", show
               disableOnInteraction: true,
               pauseOnMouseEnter: true,
             }}
-            navigation={{ prevEl: prevRef.current, nextEl: nextRef.current }}
+            navigation={true}
             onBeforeInit={(swiper) => {
               const nav = swiper.params.navigation as any;
               nav.prevEl = prevRef.current;
