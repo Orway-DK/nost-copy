@@ -68,7 +68,7 @@ export function AppLoadingProvider({ children }: { children: ReactNode }) {
                 <div
                     className={`
             fixed inset-0 z-[9999] flex items-center justify-center
-            bg-white backdrop-blur-sm
+            bg-black backdrop-blur-sm
             transition-opacity duration-400
             ${fadeOut ? "opacity-0" : "opacity-100"}
           `}

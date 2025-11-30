@@ -7,7 +7,7 @@ import React, {
   type HTMLAttributes,
 } from "react";
 import clsx from "clsx";
-import { useIntersectOnce } from "@/app/home/_hooks/useIntersectOnce";
+import { useIntersectOnce } from "@/app/_hooks/useIntersectOnce";
 
 type Direction = "up" | "down" | "left" | "right";
 

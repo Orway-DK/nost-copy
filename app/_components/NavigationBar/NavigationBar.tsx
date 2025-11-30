@@ -102,51 +102,53 @@ export default function NavigationBar() {
         : "Categories";
 
   return (
-    <nav className="relative w-full max-w-7xl h-24 flex items-center justify-between font-onest font-semibold">
-      <div className="text-3xl font-poppins font-bold">
-        <Link href="/">{siteName}</Link>
-      </div>
+    <div className="w-full flex justify-center">
+      <nav className="relative w-full max-w-7xl h-24 flex items-center justify-between font-onest font-semibold">
+        <div className="text-3xl font-poppins font-bold">
+          <Link href="/">{siteName}</Link>
+        </div>
 
-      <ul className="flex space-x-8 items-center">
-        {staticMenu.map((item, i) =>
-          item.children ? (
-            <li key={i}>
-              <Dropdown label={item.label} items={item.children} />
-            </li>
-          ) : (
-            <li key={i} className="text-gray-700 hover:text-blue-500 transition-colors">
-              <Link href={item.href}>{item.label}</Link>
-            </li>
-          )
-        )}
-        <li>
-          <Dropdown
-            label={categoriesLabel}
-            items={categoryItems}
-            loading={catLoading}
-            error={!!catError}
-            emptyLabel={
-              lang === "tr"
-                ? "Kategori Yok"
-                : lang === "de"
-                  ? "Keine Kategorie"
-                  : "No category"
-            }
-            errorLabel={
-              lang === "tr"
-                ? "Yüklenemedi"
-                : lang === "de"
-                  ? "Fehler beim Laden"
-                  : "Load failed"
-            }
-          />
-        </li>
-      </ul>
+        <ul className="flex space-x-8 items-center">
+          {staticMenu.map((item, i) =>
+            item.children ? (
+              <li key={i}>
+                <Dropdown label={item.label} items={item.children} />
+              </li>
+            ) : (
+              <li key={i} className="text-gray-700 hover:text-blue-500 transition-colors">
+                <Link href={item.href}>{item.label}</Link>
+              </li>
+            )
+          )}
+          <li>
+            <Dropdown
+              label={categoriesLabel}
+              items={categoryItems}
+              loading={catLoading}
+              error={!!catError}
+              emptyLabel={
+                lang === "tr"
+                  ? "Kategori Yok"
+                  : lang === "de"
+                    ? "Keine Kategorie"
+                    : "No category"
+              }
+              errorLabel={
+                lang === "tr"
+                  ? "Yüklenemedi"
+                  : lang === "de"
+                    ? "Fehler beim Laden"
+                    : "Load failed"
+              }
+            />
+          </li>
+        </ul>
 
-      <div className="flex flex-row text-xl gap-4">
-        <SlUser className="cursor-pointer" />
-        <SlBasket className="cursor-pointer" />
-      </div>
-    </nav>
+        <div className="flex flex-row text-xl gap-4">
+          <SlUser className="cursor-pointer" />
+          <SlBasket className="cursor-pointer" />
+        </div>
+      </nav>
+    </div>
   );
 }
