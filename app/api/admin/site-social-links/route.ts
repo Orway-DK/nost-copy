@@ -42,8 +42,10 @@ async function requireUser() {
   return { user };
 }
 
-async function getSettingsId(admin: ReturnType<typeof createClient>) {
-  const { data, error } = await (admin as any)
+// DÜZELTME: 'ReturnType<typeof createClient>' yerine 'any' kullanıldı.
+// Bu, "Type 'public' is not assignable to type 'never'" hatasını çözer.
+async function getSettingsId(admin: any) {
+  const { data, error } = await admin
     .from("site_settings")
     .select("id")
     .order("id", { ascending: true })

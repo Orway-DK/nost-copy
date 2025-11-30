@@ -1,192 +1,71 @@
+// orway-dk/nost-copy/nost-copy-d541a3f124d8a8bc7c3eeea745918156697a239e/app/_components/ReadyProducts/ProductCarousel.tsx
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import useSWR from "swr";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import { IoIosArrowDroprightCircle, IoIosArrowDropleftCircle } from "react-icons/io";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/components/LanguageProvider";
 
-type RawLocalization = { lang_code: string; name: string | null };
-type RawMedia = { kind: string | null; url: string; alt: string | null };
-
-type RawItemRow = {
-  id: number;
-  order_no: number;
-  image_override: string | null;
-  // NOTE: Supabase is returning an array for the aliased relationship; handle as array and pick first.
-  products: {
-    id: number;
-    slug: string;
-    active: boolean;
-    product_localizations: RawLocalization[] | null;
-    product_media: RawMedia[] | null;
-  }[] | null;
-  ready_products_showcase_prices: { currency_code: string; price_min: number; price_max: number }[] | null;
-};
-
-type ProductResolved = {
-  id: number;
-  slug: string;
-  image_url: string;
-  image_alt: string;
+// Anasayfadan (index.tsx) gelen veri tipi
+export type CarouselProduct = {
+  id: string;
   name: string;
-  personalize_url: string | null;
-  price_min: number;
-  price_max: number;
-  currency_code: string;
+  image: string;
+  price: {
+    try: number | null;
+    usd: number | null;
+    eur: number | null;
+  };
+  url: string;
 };
 
-const default_currency_by_lang: Record<string, string> = { tr: "TRY", en: "USD", de: "EUR" };
+interface ProductCarouselProps {
+  title?: string;
+  showTitle?: boolean;
+  className?: string;
+  products: CarouselProduct[]; // Artık veriyi dışarıdan alıyoruz
+}
 
-function normalize_lang(raw?: string) {
-  const two = (raw || "en").slice(0, 2).toLowerCase();
-  return ["tr", "en", "de"].includes(two) ? two : "en";
-}
-function normalize_currency(raw?: string) {
-  const up = (raw || "").toUpperCase();
-  if (up === "TL") return "TRY";
-  return ["TRY", "USD", "EUR"].includes(up) ? up : "";
-}
-function format_price_range(min: number, max: number, currency_code: string) {
-  if (min === 0 && max === 0) return "—";
+// Para birimi formatlayıcı
+function formatPrice(amount: number | null, currency: string) {
+  if (!amount) return "—";
   try {
-    const f = new Intl.NumberFormat(undefined, { style: "currency", currency: currency_code });
-    return min === max ? f.format(min) : `${f.format(min)} – ${f.format(max)}`;
+    return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(amount);
   } catch {
-    return `${min} - ${max} ${currency_code}`;
+    return `${amount} ${currency}`;
   }
 }
 
-// Dil kodu normalize edip localizations karşılaştırmak için
-function normalizeLocalizationLang(code: string | null | undefined) {
-  if (!code) return "";
-  return normalize_lang(code);
-}
+export default function ProductCarousel({
+  title = "",
+  showTitle = true,
+  className = "",
+  products = []
+}: ProductCarouselProps) {
 
-async function fetch_showcase_items(): Promise<RawItemRow[]> {
-  const supabase = createSupabaseBrowserClient();
+  // Dil ve Para birimi kontrolü
+  const ctx = useLanguage() as { currency?: string; currency_code?: string };
 
-  // Section id tek sorgu
-  const { data: sectionRow, error: sectionErr } = await supabase
-    .from("ready_products_showcase_sections")
-    .select("id")
-    .eq("code", "home_featured")
-    .maybeSingle();
+  // Varsayılan para birimi belirle (USD fallback)
+  const currencyCode = (ctx.currency_code || ctx.currency || "USD").toUpperCase();
 
-  if (sectionErr) throw new Error(sectionErr.message);
-  const sectionId = sectionRow?.id;
-  if (!sectionId) return [];
-
-  const { data, error } = await supabase
-    .from("ready_products_showcase_items")
-    .select(`
-      id,
-      order_no,
-      image_override,
-      products:product_id (
-        id,
-        slug,
-        active,
-        product_localizations (lang_code, name),
-        product_media (kind, url, alt)
-      ),
-      ready_products_showcase_prices (currency_code, price_min, price_max)
-    `)
-    .eq("active", true)
-    .eq("section_id", sectionId)
-    .order("order_no", { ascending: true });
-
-  if (error) throw new Error(error.message);
-  // Return typed array; Supabase may yield products as [] even for 1-1 relation.
-  return (data ?? []) as unknown as RawItemRow[];
-}
-
-interface ProductCarouselProps {
-  title?: string; // üst başlık
-  showTitle?: boolean; // default true
-  className?: string;
-}
-
-export default function ProductCarousel({ title = "Öne Çıkan Ürünler", showTitle = true, className = "" }: ProductCarouselProps) {
-  const ctx = useLanguage() as { lang?: string; lang_code?: string; currency?: string; currency_code?: string };
-  const lang_code = normalize_lang(ctx.lang_code ?? ctx.lang);
-  const user_currency = normalize_currency(ctx.currency_code ?? ctx.currency);
-  const effective_currency = user_currency || default_currency_by_lang[lang_code] || "USD";
-
-  const { data: raw_items, error, isLoading } = useSWR("ready_products_showcase_home_featured", fetch_showcase_items, {
-    revalidateOnFocus: false,
-  });
-
-  const products: ProductResolved[] = useMemo(() => {
-    if (!raw_items) return [];
-    return raw_items
-      .map((row) => {
-        const pArr = row.products ?? [];
-        const p = pArr[0]; // pick first if array
-        if (!p || !p.active) return null;
-
-        // Görsel seçimi
-        const overrideUrl = row.image_override || undefined;
-        const mediaArr = p.product_media || [];
-        const mainMedia =
-          mediaArr.find((m) => (m.kind || "").toUpperCase() === "MAIN") ||
-          mediaArr[0] ||
-          null;
-        const image_url = overrideUrl || mainMedia?.url || "/placeholder.png";
-        const image_alt = mainMedia?.alt || p.slug || "";
-
-        // İsim lokalizasyon fallback sırası
-        const locs = p.product_localizations || [];
-        const preferredOrder = [lang_code, "tr", "en", "de"];
-        let chosenName: string | null = null;
-        for (const code of preferredOrder) {
-          const found = locs.find(
-            (l) => normalizeLocalizationLang(l.lang_code) === code && l.name && l.name.trim().length > 0
-          );
-          if (found) {
-            chosenName = found.name!;
-            break;
-          }
-        }
-        const name = chosenName || p.slug || "(Ürün)";
-
-        // Fiyat seçimi
-        const prices = row.ready_products_showcase_prices || [];
-        const priceMatch =
-          prices.find((pr) => pr.currency_code === effective_currency) ||
-          prices.find((pr) => pr.currency_code === "USD") ||
-          prices[0] ||
-          null;
-        const price_min = priceMatch?.price_min ?? 0;
-        const price_max = priceMatch?.price_max ?? 0;
-        const currency_code = priceMatch?.currency_code || effective_currency;
-
-        return {
-          id: p.id,
-          slug: p.slug,
-          image_url,
-          image_alt,
-          name,
-          personalize_url: null,
-          price_min,
-          price_max,
-          currency_code,
-        };
-      })
-      .filter(Boolean) as ProductResolved[];
-  }, [raw_items, lang_code, effective_currency]);
+  // TRY, USD, EUR dışında bir şey gelirse USD yap
+  const effectiveCurrency = ["TRY", "USD", "EUR"].includes(currencyCode) ? currencyCode : "USD";
 
   const prevRef = useRef<HTMLButtonElement | null>(null);
   const nextRef = useRef<HTMLButtonElement | null>(null);
 
   const initialSlidesPerView = 2;
   const shouldLoop = products.length > initialSlidesPerView;
+
+  if (!products || products.length === 0) {
+    return null;
+  }
 
   return (
     <div className={`w-full h-auto relative ${className}`}>
@@ -199,103 +78,103 @@ export default function ProductCarousel({ title = "Öne Çıkan Ürünler", show
           </div>
         )}
 
+        {/* Navigasyon Butonları */}
         <button
           ref={prevRef}
-          className="absolute z-10 top-1/2 -translate-y-1/2 -left-10 xl:-left-16 text-[#5137ff] hover:text-[#3725b3] transition-colors"
+          className="absolute z-10 top-1/2 -translate-y-1/2 -left-4 md:-left-10 xl:-left-16 text-[#5137ff] hover:text-[#3725b3] transition-colors disabled:opacity-30"
           aria-label="previous"
           type="button"
         >
-          <IoIosArrowDropleftCircle className="w-11 h-11 drop-shadow-md" />
+          <IoIosArrowDropleftCircle className="w-8 h-8 md:w-11 md:h-11 drop-shadow-md" />
         </button>
         <button
           ref={nextRef}
-          className="absolute z-10 top-1/2 -translate-y-1/2 -right-10 xl:-right-16 text-[#5137ff] hover:text-[#3725b3] transition-colors"
+          className="absolute z-10 top-1/2 -translate-y-1/2 -right-4 md:-right-10 xl:-right-16 text-[#5137ff] hover:text-[#3725b3] transition-colors disabled:opacity-30"
           aria-label="next"
           type="button"
         >
-          <IoIosArrowDroprightCircle className="w-11 h-11 drop-shadow-md" />
+          <IoIosArrowDroprightCircle className="w-8 h-8 md:w-11 md:h-11 drop-shadow-md" />
         </button>
 
-        {isLoading && (
-          <div className="flex items-center justify-center h-40 text-gray-500">
-            yükleniyor...
-          </div>
-        )}
-        {error && (
-          <div className="flex items-center justify-center h-40 text-red-500">
-            hata: {error.message}
-          </div>
-        )}
-        {!isLoading && !error && products.length === 0 && (
-          <div className="flex items-center justify-center h-40 text-gray-400">
-            ürün bulunamadı
-          </div>
-        )}
+        <Swiper
+          modules={[Autoplay, Navigation]}
+          slidesPerView={initialSlidesPerView}
+          spaceBetween={20}
+          loop={shouldLoop}
+          autoplay={{
+            delay: 3500,
+            disableOnInteraction: true,
+            pauseOnMouseEnter: true,
+          }}
+          navigation={{
+            prevEl: prevRef.current,
+            nextEl: nextRef.current,
+          }}
+          onBeforeInit={(swiper) => {
+            // @ts-ignore
+            if (typeof swiper.params.navigation !== 'boolean') {
+              // @ts-ignore
+              swiper.params.navigation.prevEl = prevRef.current;
+              // @ts-ignore
+              swiper.params.navigation.nextEl = nextRef.current;
+            }
+          }}
+          breakpoints={{
+            640: { slidesPerView: 2, spaceBetween: 24 },
+            768: { slidesPerView: 3, spaceBetween: 24 },
+            1024: { slidesPerView: 4, spaceBetween: 28 },
+            1280: { slidesPerView: 4, spaceBetween: 32 },
+          }}
+          className="product-carousel select-none !pb-10" // Gölge kesilmesin diye padding
+        >
+          {products.map((p) => {
+            // Seçili kura göre fiyatı al
+            let priceVal: number | null = 0;
+            if (effectiveCurrency === "TRY") priceVal = p.price.try;
+            else if (effectiveCurrency === "EUR") priceVal = p.price.eur;
+            else priceVal = p.price.usd;
 
-        {!isLoading && !error && products.length > 0 && (
-          <Swiper
-            modules={[Autoplay, Navigation]}
-            slidesPerView={initialSlidesPerView}
-            spaceBetween={20}
-            loop={shouldLoop}
-            autoplay={{
-              delay: 3000,
-              disableOnInteraction: true,
-              pauseOnMouseEnter: true,
-            }}
-            navigation={true}
-            onBeforeInit={(swiper) => {
-              const nav = swiper.params.navigation as any;
-              nav.prevEl = prevRef.current;
-              nav.nextEl = nextRef.current;
-            }}
-            breakpoints={{
-              640: { slidesPerView: 2, spaceBetween: 24 },
-              768: { slidesPerView: 3, spaceBetween: 24 },
-              1024: { slidesPerView: 4, spaceBetween: 28 },
-              1280: { slidesPerView: 4, spaceBetween: 32 },
-            }}
-            className="product-carousel select-none"
-          >
-            {products.map((p) => (
-              <SwiperSlide key={p.id}>
-                <div className="group relative rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg my-8 bg-white min-h-[420px] flex flex-col">
+            return (
+              <SwiperSlide key={p.id} className="h-auto">
+                <div className="group relative rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl bg-white border border-transparent hover:border-blue-100 flex flex-col h-full">
                   {/* Görsel */}
-                  <div className="relative w-full aspect-square">
+                  <div className="relative w-full aspect-square bg-gray-50">
                     <Link
-                      href={`/product/${p.slug}`}
+                      href={p.url}
                       title={p.name}
                       className="block w-full h-full relative"
                     >
                       <Image
-                        src={p.image_url}
-                        alt={p.image_alt || p.name}
+                        src={p.image}
+                        alt={p.name}
                         fill
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 300px"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        unoptimized // Supabase bucket için
                       />
                     </Link>
+                    {/* Hızlı Bakış / Sepet vb. butonlar buraya gelebilir */}
                   </div>
 
-                  {/* Caption */}
-                  <div className="flex flex-col gap-3 p-5 pt-6 flex-grow">
-                    <h3 className="text-lg font-semibold leading-snug text-center line-clamp-2">
-                      {p.name}
+                  {/* İçerik */}
+                  <div className="flex flex-col gap-2 p-5 flex-grow">
+                    <h3 className="text-base md:text-lg font-semibold leading-tight text-center line-clamp-2 text-gray-800 group-hover:text-blue-600 transition-colors">
+                      <Link href={p.url}>
+                        {p.name}
+                      </Link>
                     </h3>
-                    <div className="mt-auto flex flex-col items-center text-blue-600 font-semibold">
-                      <span className="text-lg font-medium">
-                        {format_price_range(p.price_min, p.price_max, p.currency_code)}
+
+                    <div className="mt-auto pt-2 flex flex-col items-center">
+                      <span className="text-lg md:text-xl font-bold text-blue-600">
+                        {formatPrice(priceVal, effectiveCurrency)}
                       </span>
                     </div>
                   </div>
-
-                  {/* Hover ring */}
-                  <div className="absolute inset-0 pointer-events-none rounded-xl ring-0 group-hover:ring-2 group-hover:ring-blue-500/40 transition-all" />
                 </div>
               </SwiperSlide>
-            ))}
-          </Swiper>
-        )}
+            );
+          })}
+        </Swiper>
       </div>
     </div>
   );

@@ -1,13 +1,10 @@
+// orway-dk/nost-copy/nost-copy-d541a3f124d8a8bc7c3eeea745918156697a239e/app/admin/(protected)/settings/page.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-);
+// DÜZELTME: Ortak istemci importu
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type SiteSettingsRow = {
     id: number | string;
@@ -37,6 +34,8 @@ const emptyForm = {
 };
 
 export default function SettingsForm() {
+    // DÜZELTME: createClient yerine ortak fonksiyon kullanımı
+    const supabase = createSupabaseBrowserClient();
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -79,7 +78,6 @@ export default function SettingsForm() {
                         store_location_url: data.store_location_url ?? "",
                     });
                 } else {
-                    // hiç kayıt yok -> yeni kayıt oluşturulacak
                     setRow(null);
                     setForm({ ...emptyForm });
                 }
@@ -93,7 +91,7 @@ export default function SettingsForm() {
         return () => {
             mounted = false;
         };
-    }, []);
+    }, [supabase]); // Düzeltme: dependency'e supabase eklendi (gerçi referans değişmez)
 
     function onChange<K extends keyof typeof form>(key: K, value: string) {
         setForm(f => ({ ...f, [key]: value }));
@@ -112,7 +110,6 @@ export default function SettingsForm() {
                 return;
             }
 
-            // RLS/izin sorunları yaşamamak için server route üzerinden patch
             const res = await fetch("/api/admin/site-settings", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
@@ -148,7 +145,6 @@ export default function SettingsForm() {
 
     return (
         <div className="grid gap-6">
-            {/* Üst Status + Aksiyonlar */}
             <div className="flex items-start justify-between gap-4">
                 <div className="text-sm text-admin-muted">
                     {loading ? "Yükleniyor..." : row ? `Kayıt ID: ${row.id}` : "Yeni kayıt oluşturulacak"}
@@ -169,9 +165,7 @@ export default function SettingsForm() {
                 </div>
             </div>
 
-            {/* Form Kartı */}
             <form onSubmit={onSubmit} className="card-admin grid gap-8">
-                {/* Grup: Genel */}
                 <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <label className="admin-label">Site Adı</label>
@@ -198,7 +192,6 @@ export default function SettingsForm() {
                     </div>
                 </section>
 
-                {/* Grup: İletişim */}
                 <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <label className="admin-label">Telefon</label>
@@ -221,7 +214,6 @@ export default function SettingsForm() {
                     </div>
                 </section>
 
-                {/* Grup: Çalışma saatleri + Konum */}
                 <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <label className="admin-label">Çalışma Saatleri</label>
@@ -244,7 +236,6 @@ export default function SettingsForm() {
                     </div>
                 </section>
 
-                {/* Grup: Adres */}
                 <section className="space-y-2">
                     <label className="admin-label">Adres</label>
                     <textarea
@@ -255,7 +246,6 @@ export default function SettingsForm() {
                     />
                 </section>
 
-                {/* Grup: Görseller */}
                 <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <label className="admin-label">Logo URL</label>
@@ -308,7 +298,6 @@ export default function SettingsForm() {
                     </div>
                 </section>
 
-                {/* Actions */}
                 <section className="flex items-center gap-2">
                     <button type="submit" className="btn-admin btn-admin-primary" disabled={saving}>
                         {saving ? "Kaydediliyor..." : row ? "Güncelle" : "Ekle"}

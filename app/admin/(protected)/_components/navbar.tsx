@@ -1,14 +1,11 @@
+// orway-dk/nost-copy/nost-copy-d541a3f124d8a8bc7c3eeea745918156697a239e/app/admin/(protected)/_components/navbar.tsx
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { CgProfile } from "react-icons/cg";
-import { createClient } from "@supabase/supabase-js";
+// DÜZELTME: Doğrudan createClient yerine ortak istemciyi kullan
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-);
 
 export default function AdminNavbar() {
     const [open, setOpen] = useState(false);
@@ -16,6 +13,9 @@ export default function AdminNavbar() {
     const menuRef = useRef<HTMLDivElement | null>(null);
     const router = useRouter();
     const [loggingOut, setLoggingOut] = useState(false);
+
+    // DÜZELTME: İstemciyi bileşen içinde veya dışında bu şekilde oluşturun
+    const supabase = createSupabaseBrowserClient();
 
     const toggle = () => setOpen(o => !o);
     const close = useCallback(() => setOpen(false), []);
@@ -48,19 +48,18 @@ export default function AdminNavbar() {
         };
     }, [open, close]);
 
-    // Menü ok tuşları (ilk itemi focus'lamıyoruz ki açılışta "hep hover" görünümü olmasın)
+    // Menü ok tuşları
     useEffect(() => {
         if (!open) return;
         const items = Array.from(
             menuRef.current?.querySelectorAll<HTMLButtonElement>('button[data-menu-item="true"]') || []
         );
-        let idx = -1; // başlangıçta hiçbirine odak yok
+        let idx = -1;
         function onKey(e: KeyboardEvent) {
             if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) return;
             e.preventDefault();
             if (items.length === 0) return;
             if (idx === -1) {
-                // İlk yön tuşu ile başla
                 idx = 0;
                 items[idx]?.focus();
                 return;

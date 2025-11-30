@@ -1,5 +1,3 @@
-"use client";
-
 import LandingSlider from "@/app/_components/LandingSlider/LandingSlider";
 import AdsBanner from "@/app/_components/AdsBannerBelowSlider/AdsBelowLanding";
 import WhyUs from "@/app/_components/WhyUsBanner/WhyUsBanner";

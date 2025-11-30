@@ -28,8 +28,17 @@ const envVars: Record<string, string> = {
 
 const nextConfig: NextConfig = {
   env: envVars,
-  // İstersen kalite uyarısı için şunu açabilirsin:
-  // images: { qualities: [70, 75] },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        // Hata mesajında belirtilen Supabase proje host adınız:
+        hostname: "fdhmxyqxkezkfmcjaanz.supabase.co",
+        port: "",
+        pathname: "/storage/v1/object/public/**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

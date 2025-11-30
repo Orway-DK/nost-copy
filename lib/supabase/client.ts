@@ -1,17 +1,12 @@
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-// Eğer veritabanı tiplerini tanımladıysan import et:
-// import type { Database } from "@/types/supabase";
+// lib/supabase/client.ts
+import { createBrowserClient } from "@supabase/ssr";
 
 /**
- * Tarayıcı tarafında (Client Component, useEffect, form submit, SWR vb.)
- * kullanılacak Supabase client.
- *
- * Yeni publishable key env:
- * NEXT_PUBLIC_SUPABASE_URL
- * NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+ * Tarayıcı tarafında kullanılacak Supabase client.
+ * @supabase/ssr kullanarak cookie'leri otomatik yönetir.
  */
 export const createSupabaseBrowserClient = () =>
-  createClientComponentClient({
-    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-  });
+  createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+  );

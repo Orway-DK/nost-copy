@@ -1,3 +1,4 @@
+// orway-dk/nost-copy/nost-copy-d541a3f124d8a8bc7c3eeea745918156697a239e/app/admin/(protected)/_components/sidebar.tsx
 "use client";
 
 import Link from "next/link";
@@ -40,6 +41,18 @@ export default function AdminSidebar() {
                     // İleride ekleyebileceğin diğer alt menüler:
                     // { label: "Footer", href: "/admin/settings/footer", match: "startsWith" },
                     // { label: "Theme", href: "/admin/settings/theme", match: "startsWith" },
+                ],
+            },
+            {
+                key: "products",
+                label: "Products",
+                href: "/admin/products",
+                match: "startsWith",
+                children: [
+                    { label: "All Products", href: "/admin/products", match: "exact" },
+                    { label: "Add New Product", href: "/admin/products/new", match: "exact" },
+                    { label: "Ready Products", href: "/admin/ready-products", match: "exact" },
+                    // Not: Categories, Attributes gibi sayfalar ileride eklenebilir.
                 ],
             },
             // Diğer üst menüler (şimdilik örnek, route ekleyince aktif hale getir)

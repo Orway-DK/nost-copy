@@ -1,3 +1,4 @@
+/* orway-dk/nost-copy/nost-copy-d541a3f124d8a8bc7c3eeea745918156697a239e/app/admin/admin-theme.css */
 /* Admin theme tokens + components (Tailwind v4, config-less)
    - This file defines admin color tokens and ready-to-use component classes.
    - It MUST be processed by Tailwind. Ensure this file is imported by a routed layout.
@@ -209,20 +210,64 @@
   padding: 0.5rem 0.75rem;
   border: 1px solid transparent;
 }
+/* NOTE: Alerts use light BG and Dark Text for contrast */
 .alert-admin-error {
-  background-color: color-mix(in oklab, var(--admin-danger), #000 10%);
-  color: white;
-  border-color: color-mix(in oklab, var(--admin-danger), #fff 70%);
+  background-color: color-mix(
+    in oklab,
+    var(--admin-danger),
+    #fff 70%
+  ); /* Light BG tint */
+  color: color-mix(
+    in oklab,
+    var(--admin-danger),
+    #000 50%
+  ); /* Dark Text tint */
+  border-color: color-mix(in oklab, var(--admin-danger), #fff 50%);
 }
 .alert-admin-success {
-  background-color: color-mix(in oklab, var(--admin-success), #000 10%);
-  color: white;
-  border-color: color-mix(in oklab, var(--admin-success), #fff 70%);
+  background-color: color-mix(
+    in oklab,
+    var(--admin-success),
+    #fff 70%
+  ); /* Light BG tint */
+  color: color-mix(
+    in oklab,
+    var(--admin-success),
+    #000 50%
+  ); /* Dark Text tint */
+  border-color: color-mix(in oklab, var(--admin-success), #fff 50%);
 }
 .alert-admin-info {
-  background-color: color-mix(in oklab, var(--admin-info), #000 10%);
-  color: white;
-  border-color: color-mix(in oklab, var(--admin-info), #fff 70%);
+  background-color: color-mix(
+    in oklab,
+    var(--admin-info),
+    #fff 70%
+  ); /* Light BG tint */
+  color: color-mix(in oklab, var(--admin-info), #000 50%); /* Dark Text tint */
+  border-color: color-mix(in oklab, var(--admin-info), #fff 50%);
+}
+
+/* Dark mode alert overrides */
+@media (prefers-color-scheme: dark) {
+  .alert-admin-error {
+    background-color: color-mix(
+      in oklab,
+      var(--admin-danger),
+      #000 50%
+    ); /* Dark BG tint */
+    color: var(--admin-danger); /* Bright Text */
+    border-color: color-mix(in oklab, var(--admin-danger), #000 30%);
+  }
+  .alert-admin-success {
+    background-color: color-mix(in oklab, var(--admin-success), #000 50%);
+    color: var(--admin-success);
+    border-color: color-mix(in oklab, var(--admin-success), #000 30%);
+  }
+  .alert-admin-info {
+    background-color: color-mix(in oklab, var(--admin-info), #000 50%);
+    color: var(--admin-info);
+    border-color: color-mix(in oklab, var(--admin-info), #000 30%);
+  }
 }
 
 /* Table */
@@ -286,20 +331,45 @@
   color: var(--admin-fg);
   border-color: var(--admin-card-border);
 }
+/* DÜZELTME: Light BG, Vivid Text (Yüksek Kontrast) */
 .badge-admin-success {
-  background-color: color-mix(in oklab, var(--admin-success), #000 10%);
-  color: var(--admin-success);
+  background-color: color-mix(
+    in oklab,
+    var(--admin-success),
+    #fff 90%
+  ); /* %90 beyaz ile çok açık BG */
+  color: var(--admin-success); /* Ana renk ile koyu/canlı metin */
   border-color: color-mix(in oklab, var(--admin-success), #fff 70%);
 }
 .badge-admin-error {
-  background-color: color-mix(in oklab, var(--admin-danger), #000 10%);
+  background-color: color-mix(in oklab, var(--admin-danger), #fff 90%);
   color: var(--admin-danger);
   border-color: color-mix(in oklab, var(--admin-danger), #fff 70%);
 }
 .badge-admin-info {
-  background-color: color-mix(in oklab, var(--admin-info), #000 10%);
+  background-color: color-mix(in oklab, var(--admin-info), #fff 90%);
   color: var(--admin-info);
   border-color: color-mix(in oklab, var(--admin-info), #fff 70%);
+}
+
+/* Dark mode badge overrides */
+@media (prefers-color-scheme: dark) {
+  /* Dark modda, arka planı biraz daha koyu yapıp metni parlak bırakarak kontrastı sağlıyoruz */
+  .badge-admin-success {
+    background-color: color-mix(in oklab, var(--admin-success), #000 65%);
+    color: var(--admin-success);
+    border-color: color-mix(in oklab, var(--admin-success), #000 40%);
+  }
+  .badge-admin-error {
+    background-color: color-mix(in oklab, var(--admin-danger), #000 65%);
+    color: var(--admin-danger);
+    border-color: color-mix(in oklab, var(--admin-danger), #000 40%);
+  }
+  .badge-admin-info {
+    background-color: color-mix(in oklab, var(--admin-info), #000 65%);
+    color: var(--admin-info);
+    border-color: color-mix(in oklab, var(--admin-info), #000 40%);
+  }
 }
 
 /* Utility helpers */

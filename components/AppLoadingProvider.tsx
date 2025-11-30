@@ -1,4 +1,4 @@
-// /components/AppLoadingProvider.tsx
+// orway-dk/nost-copy/nost-copy-d541a3f124d8a8bc7c3eeea745918156697a239e/components/AppLoadingProvider.tsx
 "use client";
 
 import {
@@ -74,7 +74,8 @@ export function AppLoadingProvider({ children }: { children: ReactNode }) {
           `}
                 >
                     <div className="flex flex-col items-center gap-4">
-                        <Image src={"/nost.png"} alt="logo" width={100} height={100} className="spin-slow" />
+                        {/* DÜZELTME: priority eklendi */}
+                        <Image src={"/nost.png"} alt="logo" width={100} height={100} className="spin-slow" priority />
                     </div>
                 </div>
             )}
