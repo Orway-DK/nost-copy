@@ -1,3 +1,4 @@
+// C:\Projects\soner\app\_components\LandingSlider\_components\SliderItem.tsx
 "use client";
 
 import useSWR from "swr";

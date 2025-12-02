@@ -1,5 +1,4 @@
 import LandingSlider from "@/app/_components/LandingSlider/LandingSlider";
-import AdsBanner from "@/app/_components/AdsBannerBelowSlider/AdsBelowLanding";
 import WhyUs from "@/app/_components/WhyUsBanner/WhyUsBanner";
 import DualScrollingCategories from "@/app/_components/slidingBand/DualScrollingCategories";
 import MakeItEasier from "@/app/_components/MakeItEasier/makeItEasier";
@@ -13,7 +12,7 @@ export default function HomeWorking() {
     return (
         <div className="flex flex-col w-full items-center">
             <LandingSlider />
-            <AdsBanner />
+
             <WhyUs />
             <DualScrollingCategories />
             <MakeItEasier />

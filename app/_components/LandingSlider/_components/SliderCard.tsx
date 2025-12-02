@@ -1,3 +1,5 @@
+// C:\Projects\soner\app\_components\LandingSlider\_components\SliderCard.tsx
+
 "use client";
 
 import Image from "next/image";
