@@ -30,3 +30,4 @@ export async function translateTextAction(
     return { success: false, error: "Çeviri servisi yanıt vermedi." };
   }
 }
+// TEST
