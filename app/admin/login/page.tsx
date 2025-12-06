@@ -1,25 +1,22 @@
-// app/login/page.tsx
 "use client";
 
-import { useActionState } from "react"; // Next.js 15 (veya useFormState)
-// Eğer Next.js 14 kullanıyorsan: import { useFormState } from "react-dom";
+import { useActionState } from "react"; 
+// NOT: Eğer Next.js 14 kullanıyorsan üstteki satırı silip şunu aç:
+// import { useFormState as useActionState } from "react-dom";
+
 import { loginAction } from "@/app/auth/actions";
-import { IoLogInOutline } from "react-icons/io5";
+import { IoLogInOutline, IoWarningOutline } from "react-icons/io5";
 
 const initialState = {
     error: "",
 };
 
 export default function LoginPage() {
-    // useActionState ile form durumunu yönetiyoruz
-    const [state, formAction, isPending] = useActionState(async (prev: any, formData: FormData) => {
-        const res = await loginAction(formData);
-        // Eğer loginAction redirect yapmazsa (hata varsa) buraya düşer
-        return res || { error: "" };
-    }, initialState);
+    // Form durumunu yönetiyoruz
+    const [state, formAction, isPending] = useActionState(loginAction, initialState);
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4 font-sans">
             <div className="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Admin Giriş</h1>
@@ -50,7 +47,8 @@ export default function LoginPage() {
                     </div>
 
                     {state?.error && (
-                        <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm text-center border border-red-200">
+                        <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 text-red-600 text-sm border border-red-200 animate-in fade-in">
+                            <IoWarningOutline size={20} />
                             {state.error}
                         </div>
                     )}
@@ -60,7 +58,11 @@ export default function LoginPage() {
                         disabled={isPending}
                         className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                        {isPending ? "Giriş yapılıyor..." : <><IoLogInOutline size={20} /> Giriş Yap</>}
+                        {isPending ? (
+                            <span className="animate-pulse">Giriş yapılıyor...</span>
+                        ) : (
+                            <><IoLogInOutline size={20} /> Giriş Yap</>
+                        )}
                     </button>
                 </form>
             </div>

@@ -230,14 +230,7 @@ export default function AdminSidebar() {
                 </ul>
             </nav>
 
-            <div className="absolute bottom-0 left-0 w-full p-4 border-t" style={{ borderColor: "var(--admin-card-border)", backgroundColor: "var(--admin-card)" }}>
-                <form action={logoutAction}>
-                    <button type="submit" className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg text-red-500 hover:bg-red-50 transition-colors">
-                        <IoLogOutOutline size={18} />
-                        <span>{t("logout")}</span>
-                    </button>
-                </form>
-            </div>
+
         </aside>
     );
 }
