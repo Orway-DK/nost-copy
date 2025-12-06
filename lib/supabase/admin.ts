@@ -8,11 +8,11 @@ import { createClient } from "@supabase/supabase-js";
  * - Asla client bundle içine girmemeli.
  */
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const secretKey = process.env.SUPABASE_SECRET_KEY!;
+const secretKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 if (!secretKey) {
   console.warn(
-    "[Supabase] SUPABASE_SECRET_KEY tanımlı değil. Admin client devre dışı."
+    "[Supabase] SUPABASE_SERVICE_ROLE_KEY tanımlı değil. Admin client devre dışı."
   );
 }
 

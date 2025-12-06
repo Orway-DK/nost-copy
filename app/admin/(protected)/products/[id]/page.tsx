@@ -1,30 +1,68 @@
-// orway-dk/nost-copy/nost-copy-d541a3f124d8a8bc7c3eeea745918156697a239e/app/admin/(protected)/products/[id]/page.tsx
-import ProductForm from "../[id]/_components/ProductForm";
-import { Suspense } from "react";
+// app/admin/(protected)/products/[id]/page.tsx
+import { adminSupabase } from "@/lib/supabase/admin";
+import ProductForm from "./product-form";
 
-// Next.js 15+ için params bir Promise'dir. Tip tanımını buna göre güncelliyoruz.
+export const dynamic = "force-dynamic";
+
 interface PageProps {
     params: Promise<{ id: string }>;
 }
 
 export default async function ProductDetailPage(props: PageProps) {
-    // 1. Önce params Promise'ini çözüyoruz (await)
     const params = await props.params;
-
-    // 2. Artık id'ye güvenle erişebiliriz
     const idString = params.id;
     const isNew = idString === "new";
-
     const productId = isNew ? null : parseInt(idString);
-    const title = isNew ? "Add New Product" : `Edit Product (ID: ${idString})`;
+
+    // 1. Kategoriler
+    const categoryQuery = adminSupabase.from("categories").select("slug");
+
+    // 2. Ürün Detayı (Media ile birlikte)
+    const productQuery = !isNew && productId
+        ? adminSupabase
+            .from("products")
+            .select(`*, product_media (image_key, sort_order)`)
+            .eq("id", productId)
+            .single()
+        : Promise.resolve({ data: null });
+
+    // 3. Varyasyonlar & Çeviriler
+    const variantsQuery = !isNew && productId
+        ? adminSupabase.from("product_variants").select("*").eq("product_id", productId).order("id")
+        : Promise.resolve({ data: [] });
+
+    const localizationsQuery = !isNew && productId
+        ? adminSupabase.from("product_localizations").select("*").eq("product_id", productId)
+        : Promise.resolve({ data: [] });
+
+    const [catRes, prodRes, varRes, locRes] = await Promise.all([
+        categoryQuery, productQuery, variantsQuery, localizationsQuery
+    ]);
+
+    // Veriyi Hazırla: main_image_url'i çıkar
+    let initialProduct = null;
+    if (prodRes.data) {
+        const item = prodRes.data;
+        const media = item.product_media?.find((m: any) => m.sort_order === 0) || item.product_media?.[0];
+        initialProduct = {
+            ...item,
+            main_image_url: media?.image_key || null
+        };
+    }
 
     return (
         <div className="grid gap-6">
-            <h2 className="text-2xl font-semibold">{title}</h2>
+            <h2 className="text-2xl font-semibold" style={{ color: "var(--admin-fg)" }}>
+                {isNew ? "Yeni Ürün Ekle" : `Ürün Düzenle #${productId}`}
+            </h2>
 
-            <Suspense fallback={<div>Loading Product...</div>}>
-                <ProductForm productId={productId} isNew={isNew} />
-            </Suspense>
+            <ProductForm
+                isNew={isNew}
+                categories={catRes.data?.map(c => c.slug) || []}
+                initialProduct={initialProduct}
+                initialVariants={varRes.data || []}
+                initialLocalizations={locRes.data || []}
+            />
         </div>
     );
 }

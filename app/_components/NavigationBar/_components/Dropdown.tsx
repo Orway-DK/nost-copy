@@ -2,7 +2,13 @@
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 
-type NavItem = { label: string; href?: string | null };
+// Tip tanımını recursive hale getirdik
+type NavItem = {
+  label: string;
+  href?: string | null;
+  children?: NavItem[];
+};
+
 type DropdownProps = {
   label: string;
   items: NavItem[];
@@ -48,18 +54,20 @@ export default function Dropdown({
     };
   }, [hoverTrigger, open]);
 
+  // Ana container
   const containerClass = hoverTrigger
-    ? "relative group py-8"
-    : "relative py-8";
+    ? "relative group h-full flex items-center"
+    : "relative h-full flex items-center";
 
+  // Ana liste (Level 1)
   const listBase =
-    "absolute top-full -mt-4 left-0 bg-white border border-gray-200 shadow-lg rounded-md py-2 w-56 transition-all duration-300 z-10";
+    "absolute top-full mt-0 left-0 bg-white border border-gray-200 shadow-lg rounded-md py-2 w-56 transition-all duration-300 z-20";
 
   const visibilityClass = hoverTrigger
-    ? "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto"
+    ? "opacity-0 invisible group-hover:visible group-hover:opacity-100"
     : open
-      ? "opacity-100 pointer-events-auto"
-      : "opacity-0 pointer-events-none";
+      ? "opacity-100 visible"
+      : "opacity-0 invisible";
 
   return (
     <div className={containerClass}>
@@ -109,28 +117,77 @@ export default function Dropdown({
         {!loading &&
           !error &&
           items.map((item, index) => (
-            <li
+            <DropdownItem
               key={`${item.label}-${index}`}
-              className="px-4 py-2 whitespace-nowrap"
-              role="none"
-            >
-              {item.href ? (
-                <Link
-                  href={item.href}
-                  className="text-gray-700 hover:text-blue-500 block"
-                  role="menuitem"
-                  onClick={() => {
-                    if (!hoverTrigger) setOpen(false);
-                  }}
-                >
-                  {item.label}
-                </Link>
-              ) : (
-                <span className="text-gray-700">{item.label}</span>
-              )}
-            </li>
+              item={item}
+              hoverTrigger={hoverTrigger}
+              setOpen={setOpen}
+            />
           ))}
       </ul>
     </div>
+  );
+}
+
+// Alt Bileşen: Her bir liste elemanını ve alt menülerini yönetir (Recursive)
+function DropdownItem({
+  item,
+  hoverTrigger,
+  setOpen
+}: {
+  item: NavItem;
+  hoverTrigger: boolean;
+  setOpen: (v: boolean) => void
+}) {
+  const hasChildren = item.children && item.children.length > 0;
+
+  return (
+    <li className="relative group/item px-4 py-2 hover:bg-gray-50 cursor-pointer">
+      <div className="flex items-center justify-between w-full">
+        {item.href ? (
+          <Link
+            href={item.href}
+            className="text-gray-700 hover:text-blue-500 block flex-1"
+            onClick={() => {
+              // Eğer alt menü yoksa tıklandığında ana menüyü kapat
+              if (!hoverTrigger && !hasChildren) setOpen(false);
+            }}
+          >
+            {item.label}
+          </Link>
+        ) : (
+          <span className="text-gray-700 flex-1">{item.label}</span>
+        )}
+
+        {/* Alt kategori varsa ok işareti göster */}
+        {hasChildren && (
+          <svg
+            className="w-2.5 h-2.5 text-gray-400 -mr-2"
+            viewBox="0 0 6 10"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M1 1l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
+      </div>
+
+      {/* Alt Menü (Submenu) - Sağa doğru açılır */}
+      {hasChildren && (
+        <ul className="absolute left-full top-0 ml-0 bg-white border border-gray-200 shadow-lg rounded-md py-2 w-56 
+                       opacity-0 invisible group-hover/item:opacity-100 group-hover/item:visible transition-all duration-300 z-30">
+          {item.children!.map((child, idx) => (
+            // Kendini tekrar çağırır (Recursive)
+            <DropdownItem
+              key={`${child.label}-${idx}`}
+              item={child}
+              hoverTrigger={hoverTrigger}
+              setOpen={setOpen}
+            />
+          ))}
+        </ul>
+      )}
+    </li>
   );
 }

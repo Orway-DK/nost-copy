@@ -1,51 +1,41 @@
-// orway-dk/nost-copy/nost-copy-d541a3f124d8a8bc7c3eeea745918156697a239e/app/admin/(protected)/_components/sidebar.tsx
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { IoChevronDown } from "react-icons/io5";
+import {
+    IoChevronDown, IoLogOutOutline, IoSettingsOutline,
+    IoFolderOpenOutline, IoGridOutline, IoLayersOutline,
+    IoSpeedometerOutline, IoPeopleOutline
+} from "react-icons/io5";
+import { logoutAction } from "@/app/auth/actions";
 
 // --- TİP TANIMLAMALARI ---
-
 type Match = "exact" | "startsWith";
 type Lang = "tr" | "en";
 
-// Çeviri anahtarları
 type TranslationKey =
-    | "site_settings"
-    | "general"
-    | "social_links"
-    | "categories"
-    | "all_categories"
-    | "add_category"
-    | "products"
-    | "all_products"
-    | "add_product"
-    | "showcase"
-    | "ready_products"
-    | "management"
-    | "users"
-    | "homepage_settings"
-    | "landing_page";
+    | "dashboard" // YENİ
+    | "components" // YENİ (Eski homepage_settings yerine)
+    | "site_settings" | "general" | "social_links"
+    | "categories" | "all_categories" | "add_category"
+    | "products" | "all_products" | "add_product"
+    | "ready_products" | "management" | "users"
+    | "landing_page" | "why_us" | "logout";
 
-type ChildItem = {
-    labelKey: TranslationKey; // label yerine labelKey kullanıyoruz
-    href: string;
-    match?: Match;
-};
-
-type Section = {
+type MenuItem = {
     key: string;
-    labelKey: TranslationKey; // label yerine labelKey kullanıyoruz
+    labelKey: TranslationKey;
+    icon?: any;
     href?: string;
     match?: Match;
-    children?: ChildItem[];
+    children?: MenuItem[];
 };
 
 // --- ÇEVİRİ SÖZLÜĞÜ ---
-
 const DICTIONARY: Record<TranslationKey, { tr: string; en: string }> = {
+    dashboard: { tr: "Kontrol Paneli", en: "Dashboard" },
+    components: { tr: "Site Bileşenleri", en: "Components" }, // İsim değişti
     site_settings: { tr: "Site Ayarları", en: "Site Settings" },
     general: { tr: "Genel", en: "General" },
     social_links: { tr: "Sosyal Medya", en: "Social Links" },
@@ -55,280 +45,199 @@ const DICTIONARY: Record<TranslationKey, { tr: string; en: string }> = {
     products: { tr: "Ürünler", en: "Products" },
     all_products: { tr: "Tüm Ürünler", en: "All Products" },
     add_product: { tr: "Ürün Ekle", en: "Add New Product" },
-    showcase: { tr: "Vitrin", en: "Showcase" },
     ready_products: { tr: "Hazır Ürünler", en: "Ready Products" },
     management: { tr: "Yönetim", en: "Management" },
     users: { tr: "Kullanıcılar", en: "Users" },
-    homepage_settings: { tr: "Anasayfa Ayarları", en: "Homepage Settings" },
-    landing_page: { tr: "Açılış Sayfası", en: "Landing Page" }
+    landing_page: { tr: "Açılış Sayfası", en: "Landing Page" },
+    why_us: { tr: "Neden Biz", en: "Why Us" },
+    logout: { tr: "Çıkış Yap", en: "Logout" }
 };
 
 const STORAGE_KEY = "admin.sidebar.expanded";
 
 export default function AdminSidebar() {
     const pathname = usePathname();
-    const [lang, setLang] = useState<Lang>("en"); // Varsayılan İngilizce
+    const [lang, setLang] = useState<Lang>("en");
     const [mounted, setMounted] = useState(false);
+    const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
-    // Tarayıcı dilini algıla
     useEffect(() => {
         setMounted(true);
-        if (typeof window !== "undefined" && navigator.language) {
-            const browserLang = navigator.language.split("-")[0]; // "tr-TR" -> "tr"
-            if (browserLang === "tr") {
-                setLang("tr");
-            }
+        if (typeof window !== "undefined" && navigator.language?.startsWith("tr")) {
+            setLang("tr");
         }
-    }, []);
-
-    // Çeviri yardımcı fonksiyonu
-    const t = (key: TranslationKey) => DICTIONARY[key][lang];
-
-    // Sidebar yapısı
-    const sections = useMemo<Section[]>(
-        () => [
-            {
-                key: "site",
-                labelKey: "site_settings",
-                href: "/admin/settings",
-                match: "startsWith",
-                children: [
-                    { labelKey: "general", href: "/admin/settings", match: "exact" },
-                    { labelKey: "social_links", href: "/admin/settings-social", match: "startsWith" },
-                ],
-            },
-            {
-                key: "categories",
-                labelKey: "categories",
-                href: "/admin/categories",
-                match: "startsWith",
-                children: [
-                    { labelKey: "all_categories", href: "/admin/categories", match: "exact" },
-                    { labelKey: "add_category", href: "/admin/categories/new", match: "exact" },
-                ],
-            },
-            {
-                key: "products",
-                labelKey: "products",
-                href: "/admin/products",
-                match: "startsWith",
-                children: [
-                    { labelKey: "all_products", href: "/admin/products", match: "exact" },
-                    { labelKey: "add_product", href: "/admin/products/new", match: "exact" },
-                ],
-            },
-            {
-                key: "homepage_components",
-                labelKey: "homepage_settings",
-                href: "/admin/products",
-                match: "startsWith",
-                children: [
-                    { labelKey: "landing_page", href: "/admin/landing", match: "exact" },
-                    { labelKey: "ready_products", href: "/admin/ready-products", match: "exact" },
-                ],
-
-            },
-        ],
-        []
-    );
-
-    const defaultExpanded = useMemo<Record<string, boolean>>(
-        () =>
-            sections.reduce((acc, s) => {
-                if (s.children && s.children.length > 0) {
-                    acc[s.key] = true;
-                }
-                return acc;
-            }, {} as Record<string, boolean>),
-        [sections]
-    );
-
-    const [expanded, setExpanded] = useState<Record<string, boolean>>(defaultExpanded);
-
-    // LocalStorage yükle
-    useEffect(() => {
         try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (raw) {
-                const parsed = JSON.parse(raw) as Record<string, boolean>;
-                setExpanded({ ...defaultExpanded, ...parsed });
-            } else {
-                setExpanded(defaultExpanded);
-            }
-        } catch {
-            setExpanded(defaultExpanded);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    // Aktif route kontrolü
-    useEffect(() => {
-        setExpanded((prev) => {
-            const next = { ...prev };
-            let changed = false;
-
-            for (const section of sections) {
-                if (section.children && section.children.length > 0) {
-                    const hasActiveChild = section.children.some((c) =>
-                        c.match === "exact" ? pathname === c.href : pathname.startsWith(c.href)
-                    );
-
-                    if (hasActiveChild && !next[section.key]) {
-                        next[section.key] = true;
-                        changed = true;
-                    }
-                }
-            }
-
-            if (changed) {
-                try {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-                } catch { }
-                return next;
-            }
-            return prev;
-        });
-    }, [pathname, sections]);
-
-    // State kaydet
-    useEffect(() => {
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(expanded));
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) setExpanded(JSON.parse(stored));
         } catch { }
-    }, [expanded]);
+    }, []);
 
-    function toggle(key: string) {
-        setExpanded((prev) => {
+    const menuItems = useMemo<MenuItem[]>(() => [
+        // 1. DASHBOARD (En Üstte)
+        {
+            key: "dashboard",
+            labelKey: "dashboard",
+            icon: IoSpeedometerOutline,
+            href: "/admin",
+            match: "exact"
+        },
+        // 2. COMPONENTS (Eski Anasayfa)
+        {
+            key: "components",
+            labelKey: "components",
+            icon: IoLayersOutline, // İkon değişti
+            match: "startsWith",
+            children: [
+                { key: "landing", labelKey: "landing_page", href: "/admin/landing", match: "exact" },
+                { key: "ready", labelKey: "ready_products", href: "/admin/ready-products", match: "exact" },
+                { key: "whyus", labelKey: "why_us", href: "/admin/why-us", match: "exact" },
+            ]
+        },
+        // 3. PRODUCTS
+        {
+            key: "products",
+            labelKey: "products",
+            icon: IoGridOutline,
+            href: "/admin/products",
+            match: "startsWith",
+            children: [
+                { key: "prod_all", labelKey: "all_products", href: "/admin/products", match: "exact" },
+                { key: "prod_add", labelKey: "add_product", href: "/admin/products/new", match: "exact" },
+            ]
+        },
+        // 4. CATEGORIES
+        {
+            key: "categories",
+            labelKey: "categories",
+            icon: IoFolderOpenOutline,
+            href: "/admin/categories",
+            match: "startsWith",
+            children: [
+                { key: "cat_all", labelKey: "all_categories", href: "/admin/categories", match: "exact" },
+                { key: "cat_add", labelKey: "add_category", href: "/admin/categories/new", match: "exact" },
+            ]
+        },
+        // 5. SETTINGS
+        {
+            key: "settings",
+            labelKey: "site_settings",
+            icon: IoSettingsOutline,
+            match: "startsWith",
+            children: [
+                { key: "set_gen", labelKey: "general", href: "/admin/settings", match: "exact" },
+                { key: "set_soc", labelKey: "social_links", href: "/admin/social-settings", match: "exact" },
+            ]
+        },
+    ], []);
+
+    // ... (Geri kalan toggle, useEffect ve render mantığı aynı, sadece CSS variable'ları kullanmaya devam ediyoruz)
+
+    const toggle = (key: string) => {
+        setExpanded(prev => {
             const next = { ...prev, [key]: !prev[key] };
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-            } catch { }
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
             return next;
         });
-    }
+    };
 
-    const isActive = (href: string, match: Match = "startsWith") =>
-        match === "exact" ? pathname === href : pathname.startsWith(href);
+    const t = (key: TranslationKey) => DICTIONARY[key][lang];
+    const isActive = (href?: string, match: Match = "startsWith") =>
+        href ? (match === "exact" ? pathname === href : pathname.startsWith(href)) : false;
 
-    // Stiller
-    const itemBase = "group flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-admin-input-focus";
-    const parentInactive = "text-admin-fg/80 hover:bg-admin-input-bg hover:text-admin-fg";
-    const parentActive = "bg-admin-input-bg text-admin-fg border border-admin-border font-medium";
-    const singleLinkInactive = "text-admin-fg/80 hover:bg-admin-input-bg hover:text-admin-fg";
-    const singleLinkActive = "bg-admin-input-bg text-blue-600 font-medium border border-blue-200";
-    const childLinkBase = "block px-3 py-2 rounded-md text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-admin-input-focus";
-    const childInactive = "text-admin-fg/75 hover:bg-admin-input-bg hover:text-admin-fg";
-    const childActive = "bg-admin-input-bg text-admin-fg border border-admin-border";
-
-    // Hydration mismatch önlemek için mounted kontrolü (İsteğe bağlı, ama temiz görüntü için iyi)
     if (!mounted) return null;
 
     return (
-        <aside
-            className="fixed top-0 left-0 z-20 w-64 mt-[6vh] h-[94vh] overflow-y-auto bg-admin-fg/10 border-r border-admin-border"
-            aria-label="Admin sidebar"
-        >
-            <nav className="p-3 text-admin-fg/90">
-                <ul className="space-y-2">
-                    {sections.map((section) => {
-                        // 1. Durum: SINGLE LINK (Eğer children yoksa)
-                        if (!section.children || section.children.length === 0) {
-                            const active = section.href ? isActive(section.href, section.match || "startsWith") : false;
+        <aside className="fixed top-0 left-0 z-20 w-64 h-screen bg-[var(--admin-card)] border-r" style={{ borderColor: "var(--admin-card-border)" }}>
+            <div className="h-16 flex items-center px-6 border-b" style={{ borderColor: "var(--admin-card-border)" }}>
+                <span className="font-bold text-lg" style={{ color: "var(--admin-fg)" }}>Admin Panel</span>
+            </div>
 
-                            return (
-                                <li key={section.key}>
-                                    <Link
-                                        href={section.href || "#"}
-                                        className={`${itemBase} ${active ? singleLinkActive : singleLinkInactive}`}
-                                        title={t(section.labelKey)}
-                                    >
-                                        <span className="truncate">{t(section.labelKey)}</span>
-                                    </Link>
-                                </li>
-                            );
-                        }
-
-                        // 2. Durum: DROPDOWN MENU
-                        const activeParent =
-                            (section.href && isActive(section.href, section.match || "startsWith")) ||
-                            section.children.some((c) => isActive(c.href, c.match || "startsWith"));
-
-                        const open = expanded[section.key];
-                        const submenuId = `submenu-${section.key}`;
+            <nav className="p-3 overflow-y-auto h-[calc(100vh-8rem)]">
+                <ul className="space-y-1">
+                    {menuItems.map((item) => {
+                        const hasChildren = item.children && item.children.length > 0;
+                        const active = isActive(item.href, item.match);
+                        const open = expanded[item.key];
+                        const Icon = item.icon;
 
                         return (
-                            <li key={section.key}>
-                                <div className={`${itemBase} ${activeParent ? parentActive : parentInactive}`}>
-                                    {/* Sol Taraf: Başlık */}
-                                    {section.href ? (
-                                        <Link
-                                            href={section.href}
-                                            className="inline-flex items-center gap-2 truncate flex-1"
-                                            title={t(section.labelKey)}
-                                        >
-                                            <span className="truncate">{t(section.labelKey)}</span>
+                            <li key={item.key}>
+                                <div
+                                    className={`group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all cursor-pointer ${active && !hasChildren // Sadece tekil link ise aktif stil uygula
+                                        ? "bg-[var(--admin-input-bg)] text-[var(--admin-accent)] font-medium border border-[var(--admin-card-border)]"
+                                        : open // Açık parent
+                                            ? "text-[var(--admin-fg)] font-medium"
+                                            : "text-[var(--admin-muted)] hover:bg-[var(--admin-input-bg)] hover:text-[var(--admin-fg)]"
+                                        }`}
+                                    onClick={() => hasChildren ? toggle(item.key) : null}
+                                >
+                                    {/* Link varsa tıkla, yoksa (dropdown ise) sadece görsel */}
+                                    {item.href && !hasChildren ? (
+                                        <Link href={item.href} className="flex items-center gap-3 flex-1">
+                                            {Icon && <Icon size={18} className={active ? "text-[var(--admin-accent)]" : "opacity-70"} />}
+                                            <span>{t(item.labelKey)}</span>
                                         </Link>
                                     ) : (
-                                        <span className="inline-flex items-center gap-2 truncate flex-1 cursor-default">
-                                            {t(section.labelKey)}
-                                        </span>
+                                        <div className="flex items-center gap-3 flex-1">
+                                            {Icon && <Icon size={18} className="opacity-70" />}
+                                            <span>{t(item.labelKey)}</span>
+                                        </div>
                                     )}
 
-                                    {/* Sağ Taraf: Aç/Kapa Oku */}
-                                    <button
-                                        type="button"
-                                        aria-expanded={open}
-                                        aria-controls={submenuId}
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            toggle(section.key);
-                                        }}
-                                        className="p-1 hover:bg-black/5 rounded transition-colors"
-                                    >
+                                    {hasChildren && (
                                         <IoChevronDown
-                                            size={16}
-                                            className={`transition-transform duration-200 ${open ? "rotate-0" : "-rotate-90"}`}
+                                            size={14}
+                                            className={`transition-transform duration-200 opacity-50 ${open ? "rotate-180" : ""}`}
                                         />
-                                    </button>
+                                    )}
                                 </div>
 
-                                {/* Submenu */}
-                                <ul
-                                    id={submenuId}
-                                    className={`mt-1 pl-2 border-l border-admin-border/60 space-y-1 ${!open ? "hidden" : ""}`}
-                                >
-                                    {section.children.map((child) => {
-                                        const active = isActive(child.href, child.match || "startsWith");
-                                        return (
-                                            <li key={child.href}>
-                                                <Link
-                                                    href={child.href}
-                                                    className={`${childLinkBase} ${active ? childActive : childInactive}`}
-                                                    title={t(child.labelKey)}
-                                                >
-                                                    {t(child.labelKey)}
-                                                </Link>
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
+                                {hasChildren && open && (
+                                    <ul className="mt-1 ml-4 pl-3 border-l space-y-1" style={{ borderColor: "var(--admin-input-border)" }}>
+                                        {item.children!.map((child) => {
+                                            const childActive = isActive(child.href, child.match);
+                                            return (
+                                                <li key={child.key}>
+                                                    <Link
+                                                        href={child.href || "#"}
+                                                        className={`block px-3 py-2 rounded-md text-sm transition-colors ${childActive
+                                                            ? "text-[var(--admin-accent)] font-medium bg-[var(--admin-input-bg)]"
+                                                            : "text-[var(--admin-muted)] hover:text-[var(--admin-fg)]"
+                                                            }`}
+                                                    >
+                                                        {t(child.labelKey)}
+                                                    </Link>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                )}
                             </li>
                         );
                     })}
 
-                    {/* Statik Linkler */}
-                    <li className="mt-2 pt-2 border-t border-admin-border/50">
-                        <span className="block px-3 py-2 text-xs font-semibold text-admin-muted uppercase tracking-wider">
+                    <li className="pt-4 pb-2">
+                        <span className="px-3 text-xs font-bold uppercase tracking-wider opacity-40" style={{ color: "var(--admin-muted)" }}>
                             {t("management")}
                         </span>
                     </li>
                     <li>
-                        <Link href="/admin/users" className={`${itemBase} ${singleLinkInactive} opacity-50 cursor-not-allowed`}>
-                            {t("users")}
+                        <Link href="/admin/users" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--admin-muted)] hover:bg-[var(--admin-input-bg)] opacity-50 cursor-not-allowed">
+                            <IoPeopleOutline size={18} />
+                            <span>{t("users")}</span>
                         </Link>
                     </li>
                 </ul>
             </nav>
+
+            <div className="absolute bottom-0 left-0 w-full p-4 border-t" style={{ borderColor: "var(--admin-card-border)", backgroundColor: "var(--admin-card)" }}>
+                <form action={logoutAction}>
+                    <button type="submit" className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg text-red-500 hover:bg-red-50 transition-colors">
+                        <IoLogOutOutline size={18} />
+                        <span>{t("logout")}</span>
+                    </button>
+                </form>
+            </div>
         </aside>
     );
 }

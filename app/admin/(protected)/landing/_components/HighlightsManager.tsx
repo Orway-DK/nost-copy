@@ -1,35 +1,30 @@
+// app/admin/(protected)/landing/_components/HighlightsManager.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { IoAdd, IoPencil, IoTrash, IoClose, IoSave } from "react-icons/io5";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { upsertHighlightAction, deleteHighlightAction } from "../actions";
+import { IoAdd, IoPencil, IoTrash, IoClose, IoSave, IoFlash } from "react-icons/io5";
 
 const LANGS = ["tr", "en", "de"];
 
-export default function HighlightsManager() {
-    const [items, setItems] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+export default function HighlightsManager({ initialItems }: { initialItems: any[] }) {
+    const router = useRouter();
     const [editing, setEditing] = useState<any | null>(null);
     const [activeLang, setActiveLang] = useState("tr");
+    const [saving, setSaving] = useState(false);
 
-    const loadData = async () => {
-        setLoading(true);
-        const res = await fetch("/api/admin/landing/highlights");
-        const json = await res.json();
-        setItems(json.data || []);
-        setLoading(false);
+    const handleAddNew = () => {
+        setEditing({
+            id: null,
+            icon: "fa6-solid:truck-fast",
+            order_no: initialItems.length + 1,
+            active: true,
+            translations: LANGS.map(l => ({ lang_code: l, text: "" }))
+        });
     };
 
-    useEffect(() => { loadData(); }, []);
-
-    const createEmpty = () => ({
-        id: null,
-        icon: "fa6-solid:truck-fast",
-        order_no: items.length + 1,
-        active: true,
-        translations: LANGS.map(l => ({ lang_code: l, text: "" }))
-    });
-
-    const prepareForEdit = (item: any) => {
+    const handleEdit = (item: any) => {
         const transMap: any = {};
         item.landing_highlight_translations.forEach((t: any) => transMap[t.lang_code] = t);
 
@@ -44,23 +39,23 @@ export default function HighlightsManager() {
 
     const handleSave = async () => {
         if (!editing) return;
-        const method = editing.id ? "PATCH" : "POST";
-        const url = editing.id ? `/api/admin/landing/highlights/${editing.id}` : "/api/admin/landing/highlights";
+        setSaving(true);
+        const res = await upsertHighlightAction(editing);
+        setSaving(false);
 
-        await fetch(url, {
-            method,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(editing)
-        });
-
-        setEditing(null);
-        loadData();
+        if (res.success) {
+            setEditing(null);
+            router.refresh();
+        } else {
+            alert("Hata: " + res.message);
+        }
     };
 
     const handleDelete = async (id: number) => {
         if (!confirm("Silmek istediğinize emin misiniz?")) return;
-        await fetch(`/api/admin/landing/highlights/${id}`, { method: "DELETE" });
-        loadData();
+        const res = await deleteHighlightAction(id);
+        if (res.success) router.refresh();
+        else alert(res.message);
     };
 
     const updateMain = (k: string, v: any) => setEditing({ ...editing, [k]: v });
@@ -71,15 +66,18 @@ export default function HighlightsManager() {
         setEditing({ ...editing, translations: newTrans });
     };
 
-    if (loading) return <div>Yükleniyor...</div>;
-
+    // --- FORM VIEW ---
     if (editing) {
         const tData = editing.translations.find((t: any) => t.lang_code === activeLang);
         return (
-            <div className="card-admin p-6 space-y-6">
-                <div className="flex justify-between items-center border-b pb-4">
-                    <h3 className="text-lg font-bold">{editing.id ? "Highlight Düzenle" : "Yeni Highlight"}</h3>
-                    <button onClick={() => setEditing(null)}><IoClose size={24} /></button>
+            <div className="card-admin p-6 space-y-6 animate-in fade-in">
+                <div className="flex justify-between items-center border-b pb-4" style={{ borderColor: "var(--admin-card-border)" }}>
+                    <h3 className="text-lg font-bold" style={{ color: "var(--admin-fg)" }}>
+                        {editing.id ? "Highlight Düzenle" : "Yeni Highlight"}
+                    </h3>
+                    <button onClick={() => setEditing(null)} style={{ color: "var(--admin-muted)" }}>
+                        <IoClose size={24} />
+                    </button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -104,11 +102,12 @@ export default function HighlightsManager() {
                     </div>
                 </div>
 
-                <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
-                    <div className="flex gap-2 border-b mb-4">
+                <div className="border rounded-lg p-4" style={{ backgroundColor: "var(--admin-input-bg)", borderColor: "var(--admin-card-border)" }}>
+                    <div className="flex gap-2 border-b mb-4" style={{ borderColor: "var(--admin-card-border)" }}>
                         {LANGS.map(l => (
                             <button key={l} onClick={() => setActiveLang(l)}
-                                className={`px-4 py-2 text-sm font-bold ${activeLang === l ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500"}`}>
+                                className={`px-4 py-2 text-sm font-bold transition-colors border-b-2 ${activeLang === l ? "border-[var(--admin-accent)] text-[var(--admin-accent)]" : "border-transparent text-[var(--admin-muted)]"
+                                    }`}>
                                 {l.toUpperCase()}
                             </button>
                         ))}
@@ -122,37 +121,39 @@ export default function HighlightsManager() {
                     </div>
                 </div>
 
-                <div className="flex justify-end pt-4">
-                    <button onClick={handleSave} className="btn-admin btn-admin-primary px-8 flex gap-2">
-                        <IoSave /> Kaydet
+                <div className="flex justify-end pt-4 gap-3">
+                    <button onClick={() => setEditing(null)} className="btn-admin btn-admin-secondary">İptal</button>
+                    <button onClick={handleSave} disabled={saving} className="btn-admin btn-admin-primary px-8 flex items-center gap-2">
+                        <IoSave /> {saving ? "..." : "Kaydet"}
                     </button>
                 </div>
             </div>
         );
     }
 
+    // --- LIST VIEW ---
     return (
         <div className="space-y-4">
-            <button onClick={() => setEditing(createEmpty())} className="btn-admin btn-admin-primary flex items-center gap-2">
+            <button onClick={handleAddNew} className="btn-admin btn-admin-primary flex items-center gap-2">
                 <IoAdd /> Yeni Ekle
             </button>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {items.map(item => (
-                    <div key={item.id} className="bg-white dark:bg-gray-800 p-4 rounded-lg border shadow-sm flex items-center gap-4">
-                        <div className="p-3 bg-blue-50 text-blue-600 rounded-lg text-2xl font-bold">
-                            {/* Iconify componentini burada da kullanabilirsin, şimdilik text */}
-                            <span className="iconify" data-icon={item.icon}></span>
+                {initialItems.map(item => (
+                    <div key={item.id} className="card-admin p-4 flex items-center gap-4 hover:shadow-md transition-shadow">
+                        <div className="p-3 rounded-lg text-2xl font-bold flex items-center justify-center w-12 h-12"
+                            style={{ backgroundColor: "var(--admin-input-bg)", color: "var(--admin-accent)" }}>
+                            <IoFlash /> {/* Iconify yerine geçici */}
                         </div>
                         <div className="flex-1">
-                            <div className="text-sm font-bold truncate">
+                            <div className="text-sm font-bold truncate" style={{ color: "var(--admin-fg)" }}>
                                 {item.landing_highlight_translations?.find((t: any) => t.lang_code === 'tr')?.text || "-"}
                             </div>
-                            <div className="text-xs text-gray-400 font-mono">{item.icon}</div>
+                            <div className="text-xs font-mono" style={{ color: "var(--admin-muted)" }}>{item.icon}</div>
                         </div>
                         <div className="flex flex-col gap-2">
-                            <button onClick={() => prepareForEdit(item)} className="text-blue-600"><IoPencil /></button>
-                            <button onClick={() => handleDelete(item.id)} className="text-red-500"><IoTrash /></button>
+                            <button onClick={() => handleEdit(item)} className="text-[var(--admin-accent)] hover:bg-[var(--admin-input-bg)] p-1 rounded"><IoPencil /></button>
+                            <button onClick={() => handleDelete(item.id)} className="text-[var(--admin-danger)] hover:bg-[var(--admin-input-bg)] p-1 rounded"><IoTrash /></button>
                         </div>
                     </div>
                 ))}

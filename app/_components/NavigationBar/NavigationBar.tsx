@@ -9,17 +9,20 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useAppLoading } from "@/components/AppLoadingProvider";
 import Dropdown from "./_components/Dropdown";
 
+// 1. ADIM: parent_id eklendi
 type CategoryRow = {
   id: number;
+  parent_id: number | null;
   slug: string;
   category_translations: { name: string; lang_code: string }[];
 };
 
+// 2. ADIM: parent_id select sorgusuna eklendi
 const fetchCategories = async (lang: string) => {
   const supabase = createSupabaseBrowserClient();
   const { data, error } = await supabase
     .from("categories")
-    .select("id, slug, category_translations(name, lang_code)")
+    .select("id, parent_id, slug, category_translations(name, lang_code)")
     .eq("active", true)
     .eq("category_translations.lang_code", lang)
     .order("slug", { ascending: true });
@@ -85,14 +88,44 @@ export default function NavigationBar() {
     else stop();
   }, [catLoading, start, stop]);
 
-  const categoryItems =
-    categories?.map((c) => {
+  // 3. ADIM: Düz listeyi Parent-Child ağacına dönüştürme mantığı
+  const categoryItems = useMemo(() => {
+    if (!categories) return [];
+
+    // Önce her öğeyi standart bir formata sokuyoruz
+    // 'any' kullanımı burada recursive yapıyı kolay kurmak içindir
+    const mapped = categories.map((c) => {
       const tr = c.category_translations.find((t) => t.lang_code === lang);
       return {
+        id: c.id,
+        parentId: c.parent_id,
         label: tr?.name || c.slug,
-        href: `/collections/${c.slug}`, // DEĞİŞTİ: /category -> /collections
+        href: `/collections/${c.slug}`,
+        children: [] as any[], // Alt kategoriler buraya dolacak
       };
-    }) ?? [];
+    });
+
+    // ID'ye göre hızlı erişim haritası
+    const map: Record<number, any> = {};
+    mapped.forEach((item) => {
+      map[item.id] = item;
+    });
+
+    const roots: any[] = [];
+
+    // İlişkilendirme döngüsü
+    mapped.forEach((item) => {
+      if (item.parentId && map[item.parentId]) {
+        // Babası varsa, babasının children dizisine ekle
+        map[item.parentId].children.push(item);
+      } else {
+        // Babası yoksa (veya babası pasif/silinmişse) ana kök listesine ekle
+        roots.push(item);
+      }
+    });
+
+    return roots;
+  }, [categories, lang]);
 
   const categoriesLabel =
     lang === "tr"
@@ -116,7 +149,7 @@ export default function NavigationBar() {
               </li>
             ) : (
               <li key={i} className="text-gray-700 hover:text-blue-500 transition-colors">
-                <Link href={item.href}>{item.label}</Link>
+                <Link href={item.href!}>{item.label}</Link>
               </li>
             )
           )}

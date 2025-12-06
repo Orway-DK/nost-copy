@@ -1,11 +1,12 @@
-// orway-dk/nost-copy/nost-copy-d541a3f124d8a8bc7c3eeea745918156697a239e/app/admin/(protected)/_components/navbar.tsx
+// app/admin/(protected)/_components/navbar.tsx
 "use client";
+
 import { useState, useRef, useEffect, useCallback } from "react";
-import { CgProfile } from "react-icons/cg";
-// DÜZELTME: Doğrudan createClient yerine ortak istemciyi kullan
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { CgProfile } from "react-icons/cg";
+import { IoSettingsOutline, IoLogOutOutline } from "react-icons/io5";
+import { logoutAction } from "@/app/auth/actions"; // Server Action importu
 
 export default function AdminNavbar() {
     const [open, setOpen] = useState(false);
@@ -14,21 +15,45 @@ export default function AdminNavbar() {
     const router = useRouter();
     const [loggingOut, setLoggingOut] = useState(false);
 
-    // DÜZELTME: İstemciyi bileşen içinde veya dışında bu şekilde oluşturun
-    const supabase = createSupabaseBrowserClient();
-
-    const toggle = () => setOpen(o => !o);
+    const toggle = () => setOpen((o) => !o);
     const close = useCallback(() => setOpen(false), []);
 
+    // --- LOGOUT HANDLER ---
+    async function handleLogout() {
+        if (loggingOut) return;
+        setLoggingOut(true);
+
+        // 1. Client tarafı temizliği (LocalStorage)
+        try {
+            if (typeof window !== "undefined") {
+                Object.keys(localStorage)
+                    .filter((k) => k.startsWith("sb-"))
+                    .forEach((k) => localStorage.removeItem(k));
+            }
+        } catch { /* Ignore */ }
+
+        // 2. Server Action Çağrısı (Cookie siler ve Redirect eder)
+        try {
+            await logoutAction();
+        } catch (error) {
+            console.error("Çıkış hatası:", error);
+            setLoggingOut(false);
+        }
+    }
+
+    function handleSettings() {
+        router.push("/admin/settings");
+        close();
+    }
+
+    // --- KLAVYE & MOUSE ETKİLEŞİMLERİ (Eski kod korundu) ---
     useEffect(() => {
         if (!open) return;
         function handleClick(e: MouseEvent) {
             const t = e.target as Node;
             if (
-                menuRef.current &&
-                !menuRef.current.contains(t) &&
-                btnRef.current &&
-                !btnRef.current.contains(t)
+                menuRef.current && !menuRef.current.contains(t) &&
+                btnRef.current && !btnRef.current.contains(t)
             ) {
                 close();
             }
@@ -48,7 +73,6 @@ export default function AdminNavbar() {
         };
     }, [open, close]);
 
-    // Menü ok tuşları
     useEffect(() => {
         if (!open) return;
         const items = Array.from(
@@ -74,44 +98,19 @@ export default function AdminNavbar() {
         return () => document.removeEventListener("keydown", onKey);
     }, [open]);
 
-    async function handleLogout() {
-        if (loggingOut) return;
-        setLoggingOut(true);
-        try {
-            const res = await fetch("/api/admin/logout", { method: "POST" });
-            await supabase.auth.signOut().catch(() => { });
-            if (!res.ok) {
-                console.warn("Logout route error:", await res.json().catch(() => null));
-            }
-        } catch (e) {
-            console.error("Logout fetch error:", e);
-            await supabase.auth.signOut().catch(() => { });
-        } finally {
-            try {
-                Object.keys(localStorage)
-                    .filter(k => k.startsWith("sb-"))
-                    .forEach(k => localStorage.removeItem(k));
-            } catch { }
-            router.replace("/admin/login");
-            setLoggingOut(false);
-        }
-    }
-
-    function handleSettings() {
-        router.push("/admin/settings");
-        close();
-    }
-
     return (
         <header
-            className="w-full flex flex-row justify-between items-center px-4 py-2
-        bg-admin-input-bg text-admin-fg border border-admin-border font-admin-sans
-        sticky top-0 z-30
-      "
+            className="w-full flex flex-row justify-between items-center px-6 py-3
+            bg-[var(--admin-card)] text-[var(--admin-fg)] border-b border-[var(--admin-card-border)]
+            sticky top-0 z-30 shadow-sm"
         >
-            <h1 className="text-xl font-semibold">
-                <Link href={"/admin"}>Nost Copy</Link>{" "}
-                <span className="text-sm font-normal opacity-80">Admin Panel</span>
+            <h1 className="text-xl font-semibold flex items-center gap-2">
+                <Link href={"/admin"} className="hover:text-[var(--admin-accent)] transition-colors">
+                    Nost Copy
+                </Link>
+                <span className="text-xs font-normal px-2 py-0.5 rounded bg-[var(--admin-input-bg)] text-[var(--admin-muted)] border border-[var(--admin-input-border)]">
+                    Admin
+                </span>
             </h1>
 
             <div className="relative">
@@ -121,23 +120,17 @@ export default function AdminNavbar() {
                     aria-haspopup="true"
                     aria-expanded={open}
                     onClick={toggle}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            toggle();
-                        }
-                    }}
                     className="
-            inline-flex items-center justify-center
-            w-10 h-10 rounded-full
-            bg-admin-card text-admin-fg
-            border border-admin-border
-            transition
-            focus:outline-none focus:ring-2 focus:ring-admin-input-focus
-            hover:bg-admin-bg
-          "
+                        inline-flex items-center justify-center
+                        w-10 h-10 rounded-full
+                        bg-[var(--admin-input-bg)] text-[var(--admin-fg)]
+                        border border-[var(--admin-input-border)]
+                        transition-all duration-200
+                        focus:outline-none focus:ring-2 focus:ring-[var(--admin-ring)]
+                        hover:bg-[var(--admin-border)] hover:scale-105
+                    "
                 >
-                    <CgProfile size={22} aria-hidden="true" />
+                    <CgProfile size={24} aria-hidden="true" className="opacity-80" />
                     <span className="sr-only">Account menu</span>
                 </button>
 
@@ -147,46 +140,56 @@ export default function AdminNavbar() {
                         role="menu"
                         aria-label="Profile menu"
                         className="
-              absolute right-0 mt-2 w-48
-              bg-admin-card text-admin-fg
-              border border-admin-border rounded-md
-              shadow overflow-hidden
-              z-50
-            "
+                            absolute right-0 mt-2 w-56
+                            bg-[var(--admin-card)] text-[var(--admin-fg)]
+                            border border-[var(--admin-card-border)] rounded-xl
+                            shadow-xl overflow-hidden
+                            z-50 ring-1 ring-black ring-opacity-5
+                        "
                         style={{
                             animation: "admin-reveal 160ms cubic-bezier(0.33, 1, 0.68, 1) both",
                         }}
                     >
                         <div className="py-1 flex flex-col">
+                            {/* SETTINGS ITEM */}
                             <button
                                 data-menu-item="true"
                                 role="menuitem"
                                 onClick={handleSettings}
                                 className="
-                  text-left px-4 py-2 text-sm
-                  bg-transparent
-                  hover:bg-admin-input-bg
-                  focus:outline-none focus-visible:ring-2 focus-visible:ring-admin-input-focus
-                  transition
-                "
+                                    flex items-center gap-3 w-full
+                                    text-left px-4 py-3 text-sm
+                                    bg-transparent
+                                    hover:bg-[var(--admin-input-bg)]
+                                    focus:outline-none focus:bg-[var(--admin-input-bg)]
+                                    transition-colors
+                                "
                             >
-                                Settings
+                                <IoSettingsOutline size={18} className="text-[var(--admin-muted)]" />
+                                <span>Site Ayarları</span>
                             </button>
+
+                            <div className="h-px bg-[var(--admin-card-border)] my-1 mx-2" />
+
+                            {/* LOGOUT ITEM */}
                             <button
                                 data-menu-item="true"
                                 role="menuitem"
                                 onClick={handleLogout}
                                 disabled={loggingOut}
                                 className="
-                  text-left px-4 py-2 text-sm
-                  bg-transparent
-                  hover:bg-admin-input-bg
-                  focus:outline-none focus-visible:ring-2 focus-visible:ring-admin-input-focus
-                  transition
-                  disabled:opacity-50
-                "
+                                    flex items-center gap-3 w-full
+                                    text-left px-4 py-3 text-sm font-medium
+                                    bg-transparent
+                                    text-[var(--admin-danger)]
+                                    hover:bg-[var(--admin-danger)]/10
+                                    focus:outline-none focus:bg-[var(--admin-danger)]/10
+                                    transition-colors
+                                    disabled:opacity-50
+                                "
                             >
-                                {loggingOut ? "Logging out..." : "Logout"}
+                                <IoLogOutOutline size={18} />
+                                <span>{loggingOut ? "Çıkış Yapılıyor..." : "Güvenli Çıkış"}</span>
                             </button>
                         </div>
                     </div>
