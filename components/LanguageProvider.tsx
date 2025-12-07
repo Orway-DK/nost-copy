@@ -9,29 +9,15 @@ import React, {
     useMemo
 } from "react";
 
-/*
- Backwards compatible context tip:
- - Eski kullanım: lang, setLang
- - Yeni kullanım: lang_code, currency_code, setCurrencyCode vs.
-*/
 export type LanguageCtx = {
-    // Eski (backwards compatible)
     lang: string;
     setLang: (l: string) => void;
-
-    // Yeni snake_case alanlar
     lang_code: string;
     currency_code: string;
-
-    // Ayrıca same-value camelCase (istersen kaldırabilirsin)
     currency: string;
-
-    // Ayarlama fonksiyonları
     setLangCode: (l: string) => void;
     setCurrencyCode: (c: string) => void;
     setCurrency: (c: string) => void;
-
-    // Otomatik para birimi eşleme açık mı?
     autoCurrency: boolean;
     setAutoCurrency: (v: boolean) => void;
 };
@@ -46,7 +32,7 @@ function normalize_lang(raw?: string): string {
     if (!raw) return "tr";
     const two = raw.slice(0, 2).toLowerCase();
     if (["tr", "en", "de"].includes(two)) return two;
-    return "en"; // fallback
+    return "en";
 }
 
 function normalize_currency(raw?: string): string {
@@ -73,30 +59,38 @@ const LanguageContext = createContext<LanguageCtx>({
 type Props = { children: React.ReactNode };
 
 export function LanguageProvider({ children }: Props) {
-    // Başlangıç dilini cookie’den oku
-    const [lang_code, set_lang_code] = useState<string>(() => {
-        if (typeof window === "undefined") return "tr";
-        const m = document.cookie.match(/(?:^|;\s*)lang=([^;]+)/);
-        return normalize_lang(m ? decodeURIComponent(m[1]) : "tr");
-    });
+    // DÜZELTME 1: Başlangıçta sunucu ile eşleşmesi için her zaman "tr" (varsayılan) ile başlatıyoruz.
+    // Cookie okuma işini useEffect'e bırakıyoruz.
+    const [lang_code, set_lang_code] = useState<string>("tr");
 
-    // Başlangıç para birimini cookie’den oku (yoksa daha sonra otomatik eşlenecek)
-    const [currency_code, set_currency_code] = useState<string>(() => {
-        if (typeof window === "undefined") return default_currency_by_lang["tr"];
-        const m = document.cookie.match(/(?:^|;\s*)currency=([^;]+)/);
-        const normalized = normalize_currency(m ? decodeURIComponent(m[1]) : "");
-        return normalized || default_currency_by_lang["tr"];
-    });
+    // DÜZELTME 2: Currency için de aynısı. Başlangıçta varsayılan, sonra cookie.
+    const [currency_code, set_currency_code] = useState<string>("TRY");
 
-    // Kullanıcı manuel currency seçti mi? Evetse dil değişince override etme.
-    const [autoCurrency, setAutoCurrency] = useState<boolean>(() => {
-        // Eğer cookie’de currency varsa ve normalize edilebiliyorsa otomatik modu devre dışı bırakabiliriz.
-        if (typeof window === "undefined") return true;
-        const m = document.cookie.match(/(?:^|;\s*)currency=([^;]+)/);
-        return m ? false : true;
-    });
+    const [autoCurrency, setAutoCurrency] = useState<boolean>(true);
 
-    // Eski API ile uyum: lang === lang_code
+    // DÜZELTME 3: Sayfa yüklendiğinde (Client-side) cookie'leri kontrol et ve güncelle
+    useEffect(() => {
+        // Dil kontrolü
+        const mLang = document.cookie.match(/(?:^|;\s*)lang=([^;]+)/);
+        const cookieLang = normalize_lang(mLang ? decodeURIComponent(mLang[1]) : "tr");
+        if (cookieLang !== "tr") {
+            set_lang_code(cookieLang);
+        }
+
+        // Para birimi kontrolü
+        const mCurr = document.cookie.match(/(?:^|;\s*)currency=([^;]+)/);
+        const cookieCurr = normalize_currency(mCurr ? decodeURIComponent(mCurr[1]) : "");
+
+        if (cookieCurr) {
+            set_currency_code(cookieCurr);
+            setAutoCurrency(false); // Cookie varsa manuel seçilmiştir
+        } else {
+            // Cookie yoksa dile göre otomatik ayarla
+            set_currency_code(default_currency_by_lang[cookieLang] || "TRY");
+            setAutoCurrency(true);
+        }
+    }, []);
+
     const lang = lang_code;
     const currency = currency_code;
 
@@ -119,7 +113,6 @@ export function LanguageProvider({ children }: Props) {
         []
     );
 
-    // Dil set fonksiyonu (eski API uyumlu)
     const setLang = useCallback(
         (l: string) => {
             const normalized = normalize_lang(l);
@@ -135,7 +128,6 @@ export function LanguageProvider({ children }: Props) {
         [autoCurrency, applyDocumentLang, persistCookie]
     );
 
-    // Yeni setLangCode (ayrı)
     const setLangCode = useCallback(
         (l: string) => {
             setLang(l);
@@ -143,7 +135,6 @@ export function LanguageProvider({ children }: Props) {
         [setLang]
     );
 
-    // Para birimi set fonksiyonu (manuel seçince autoCurrency kapat)
     const setCurrencyCode = useCallback(
         (c: string) => {
             const normalized = normalize_currency(c) || c.toUpperCase();
@@ -154,7 +145,6 @@ export function LanguageProvider({ children }: Props) {
         [persistCookie]
     );
 
-    // currency (camelCase) ile snake_case aynı kalsın
     const setCurrency = useCallback(
         (c: string) => {
             setCurrencyCode(c);
@@ -162,12 +152,10 @@ export function LanguageProvider({ children }: Props) {
         [setCurrencyCode]
     );
 
-    // Dil değişiminde document.lang güncelle
     useEffect(() => {
         applyDocumentLang(lang_code);
     }, [lang_code, applyDocumentLang]);
 
-    // İlk mount’ta autoCurrency açıksa dil ile currency senkronize et
     useEffect(() => {
         if (autoCurrency) {
             const desired = default_currency_by_lang[lang_code] || "USD";

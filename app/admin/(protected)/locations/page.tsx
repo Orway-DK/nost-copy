@@ -5,13 +5,15 @@ import LocationsForm from './locations-form'
 import LocationsCard from './locations-card'
 import { getLocations, createLocation, updateLocation, deleteLocation } from './actions'
 
+// Başlangıç değerlerine map_url eklendi
 const INITIAL_FORM = {
     title: '',
     address: '',
     phone: '',
     email: '',
     lat: '',
-    lng: ''
+    lng: '',
+    map_url: ''
 }
 
 export default function AdminLocationsPage() {
@@ -69,6 +71,7 @@ export default function AdminLocationsPage() {
         }
     }
 
+    // Düzenleme fonksiyonuna map_url eklendi
     const handleEdit = (loc: any) => {
         setEditingId(loc.id)
         setForm({
@@ -77,7 +80,8 @@ export default function AdminLocationsPage() {
             phone: loc.phone || '',
             email: loc.email || '',
             lat: loc.lat.toString(),
-            lng: loc.lng.toString()
+            lng: loc.lng.toString(),
+            map_url: loc.map_url || '' // Varsa linki getir
         })
         window.scrollTo({ top: 0, behavior: 'smooth' })
     }

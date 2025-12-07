@@ -51,6 +51,17 @@ export default function LocationsForm({
                     />
                 </div>
 
+                <div>
+                    <label className="admin-label">Google Maps Linki (Opsiyonel)</label>
+                    <input
+                        className="admin-input"
+                        placeholder="https://goo.gl/maps/..."
+                        value={form.map_url || ''}
+                        onChange={e => setForm({ ...form, map_url: e.target.value })}
+                    />
+                    <p className="text-[10px] opacity-60 mt-1">Haritada "Konuma Git" butonu için kullanılır.</p>
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                     <div>
                         <label className="admin-label">Enlem (Lat)</label>

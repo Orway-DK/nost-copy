@@ -196,7 +196,7 @@ export default function NavigationBar() {
           </li>
         </ul>
 
-        <div className="flex flex-row text-xl gap-4">
+        <div className="flex flex-row text-xl gap-4 opacity-0">
           <SlUser className="cursor-pointer" />
           <SlBasket className="cursor-pointer" />
         </div>

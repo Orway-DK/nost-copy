@@ -30,7 +30,14 @@ export default function LocationsCard({ locations, editingId, onEdit, onDelete }
                             {locations.map(loc => (
                                 <tr key={loc.id} className={`tr-admin row-admin-hover ${editingId === loc.id ? 'bg-[var(--admin-input-bg)]' : ''}`}>
                                     <td className="td-admin">
-                                        <div className="font-medium text-base">{loc.title}</div>
+                                        <div className="font-medium text-base flex items-center gap-2">
+                                            {loc.title}
+                                            {loc.map_url && (
+                                                <a href={loc.map_url} target="_blank" rel="noreferrer" title="Harita Linki Var" className="text-[var(--admin-info)]">
+                                                    📍
+                                                </a>
+                                            )}
+                                        </div>
                                         <div className="admin-help mt-1 max-w-xs truncate">{loc.address}</div>
                                         <div className="text-xs opacity-60 mt-2 flex gap-2">
                                             {loc.phone && <span className="badge-admin badge-admin-default">📞 {loc.phone}</span>}
