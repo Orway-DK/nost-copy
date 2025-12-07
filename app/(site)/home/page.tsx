@@ -3,8 +3,7 @@ import WhyUs from "@/app/_components/WhyUsBanner/WhyUsBanner";
 import DualScrollingCategories from "@/app/_components/slidingBand/DualScrollingCategories";
 import MakeItEasier from "@/app/_components/MakeItEasier/makeItEasier";
 import ReadyProducts from "@/app/_components/ReadyProducts";
-import TestimonialsCarousel from "@/app/_components/Testimonials/TestimonialsCarousel";
-import KeywordMarquee from "@/app/_components/Testimonials/KeywordMarquee";
+import TestimonialsCarousel from "@/app/_components/Testimonials/TestimonialsSection";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +16,6 @@ export default function HomeWorking() {
             <DualScrollingCategories />
             <MakeItEasier />
             <ReadyProducts />
-            <KeywordMarquee />
             <TestimonialsCarousel />
         </div>
     );

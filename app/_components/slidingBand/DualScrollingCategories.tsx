@@ -1,3 +1,4 @@
+// /home/dorukhan/Desktop/NostCopy/nost-copy/app/_components/slidingBand/DualScrollingCategories.tsx
 "use client";
 
 import Link from "next/link";

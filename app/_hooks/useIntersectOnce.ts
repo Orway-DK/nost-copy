@@ -3,11 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 type Options = {
-  /** Eleman görünür olduğunda bir kez tetikle (WP’deki “once” davranışı) */
   once?: boolean;
-  /** Tetikleme eşiği (0–1 arası) */
   threshold?: number | number[];
-  /** Görünürlüğü biraz erken yakalamak için */
   rootMargin?: string;
 };
 

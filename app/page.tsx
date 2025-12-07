@@ -27,6 +27,7 @@ export default function Home() {
     return (
         <div className="w-screen h-screen bg-black">
             <div className="absolute flex flex-col justify-center items-center w-full h-screen text-white z-20">
+                <div className="relative">
                 <Image
                     src="/nost.png"
                     width={200}
@@ -35,8 +36,9 @@ export default function Home() {
                     className="spin-slow z-50 select-none"
                     priority
                 />
-                <div className="bg-black rounded-full w-50 h-50 absolute top-78" />
-                <p className="text-4xl font-poppins mt-10 select-none">
+                <div className="bg-black rounded-full w-50 h-50 -z-10 absolute top-0" />
+                </div>
+                <p className="text-4xl font-poppins mt-10 text-center select-none">
                     Sitemiz yapım aşamasındadır.
                 </p>
                 <p className="text-xl font-poppins mt-5 select-none">

@@ -1,3 +1,4 @@
+// /home/dorukhan/Desktop/NostCopy/nost-copy/app/_components/NavigationBar/_components/CategoriesDropdown.tsx
 "use client";
 
 import { useState, useEffect, useRef } from "react";

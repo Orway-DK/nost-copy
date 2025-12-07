@@ -1,6 +1,7 @@
+// /home/dorukhan/Desktop/NostCopy/nost-copy/app/_components/NavigationBar/NavigationBar.tsx
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import useSWR from "swr";
 import { SlUser, SlBasket } from "react-icons/sl";
@@ -9,7 +10,6 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useAppLoading } from "@/components/AppLoadingProvider";
 import Dropdown from "./_components/Dropdown";
 
-// 1. ADIM: parent_id eklendi
 type CategoryRow = {
   id: number;
   parent_id: number | null;
@@ -17,7 +17,6 @@ type CategoryRow = {
   category_translations: { name: string; lang_code: string }[];
 };
 
-// 2. ADIM: parent_id select sorgusuna eklendi
 const fetchCategories = async (lang: string) => {
   const supabase = createSupabaseBrowserClient();
   const { data, error } = await supabase
@@ -71,17 +70,24 @@ export default function NavigationBar() {
   const staticMenu = useStaticMenu(lang);
   const { start, stop } = useAppLoading();
 
+  // --- HYDRATION FIX: MOUNTED STATE ---
+  const [mounted, setMounted] = useState(false);
+
   const {
     data: categories,
     isLoading: catLoading,
     error: catError,
-  } = useSWR(["categories-nav", lang], () => fetchCategories(lang), {
+  } = useSWR(mounted ? ["categories-nav", lang] : null, () => fetchCategories(lang), {
     revalidateOnFocus: false,
   });
 
   const { data: siteName = "Nost Copy" } = useSWR("site_name", fetchSiteName, {
     revalidateOnFocus: false,
   });
+
+  useEffect(() => {
+    setMounted(true); // Component tarayıcıda çalışmaya başlayınca true olur
+  }, []);
 
   useEffect(() => {
     if (catLoading) start();
@@ -92,8 +98,6 @@ export default function NavigationBar() {
   const categoryItems = useMemo(() => {
     if (!categories) return [];
 
-    // Önce her öğeyi standart bir formata sokuyoruz
-    // 'any' kullanımı burada recursive yapıyı kolay kurmak içindir
     const mapped = categories.map((c) => {
       const tr = c.category_translations.find((t) => t.lang_code === lang);
       return {
@@ -101,11 +105,10 @@ export default function NavigationBar() {
         parentId: c.parent_id,
         label: tr?.name || c.slug,
         href: `/collections/${c.slug}`,
-        children: [] as any[], // Alt kategoriler buraya dolacak
+        children: [] as any[],
       };
     });
 
-    // ID'ye göre hızlı erişim haritası
     const map: Record<number, any> = {};
     mapped.forEach((item) => {
       map[item.id] = item;
@@ -113,13 +116,10 @@ export default function NavigationBar() {
 
     const roots: any[] = [];
 
-    // İlişkilendirme döngüsü
     mapped.forEach((item) => {
       if (item.parentId && map[item.parentId]) {
-        // Babası varsa, babasının children dizisine ekle
         map[item.parentId].children.push(item);
       } else {
-        // Babası yoksa (veya babası pasif/silinmişse) ana kök listesine ekle
         roots.push(item);
       }
     });
@@ -133,6 +133,25 @@ export default function NavigationBar() {
       : lang === "de"
         ? "Kategorien"
         : "Categories";
+
+  // --- HYDRATION FIX: YÜKLENMEDEN ÖNCE RENDER YOK ---
+  if (!mounted) {
+    return (
+      <div className="w-full flex justify-center">
+        <nav className="relative w-full max-w-7xl h-24 flex items-center justify-between font-onest font-semibold">
+          {/* Layout shift'i önlemek için boş bir iskelet */}
+          <div className="text-3xl font-poppins font-bold text-transparent bg-gray-200 rounded w-32 h-8 animate-pulse"></div>
+          <div className="flex space-x-8">
+            {[1, 2, 3, 4].map(i => <div key={i} className="w-20 h-6 bg-gray-200 rounded animate-pulse"></div>)}
+          </div>
+          <div className="flex gap-4">
+            <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+            <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+          </div>
+        </nav>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex justify-center">

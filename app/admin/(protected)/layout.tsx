@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { redirect } from "next/navigation";
 import React from "react";
-
+import { Toaster } from "react-hot-toast";
 import "../admin-theme.css";
 
 import AdminNavbar from "./_components/navbar";
@@ -26,6 +26,19 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
     if (!user) redirect("/admin/login");
     return (
         <div className="admin-root overflow-x-hidden bg-admin-bg">
+            <Toaster
+                position="top-center"
+                toastOptions={{
+                    className: 'text-sm font-medium',
+                    duration: 4000,
+                    style: {
+                        background: 'var(--admin-card)',
+                        color: 'var(--admin-fg)',
+                        border: '1px solid var(--admin-card-border)',
+                    }
+
+                }}
+            />
             <header className="fixed top-0 left-0 right-0 z-30">
                 <AdminNavbar />
             </header>

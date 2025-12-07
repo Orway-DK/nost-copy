@@ -5,8 +5,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CgProfile } from "react-icons/cg";
-import { IoSettingsOutline, IoLogOutOutline } from "react-icons/io5";
-import { logoutAction } from "@/app/auth/actions"; // Server Action importu
+import { IoSettingsOutline, IoLogOutOutline, IoLanguage, IoPersonCircleOutline } from "react-icons/io5";
+import { logoutAction } from "@/app/auth/actions";
 
 export default function AdminNavbar() {
     const [open, setOpen] = useState(false);
@@ -18,43 +18,35 @@ export default function AdminNavbar() {
     const toggle = () => setOpen((o) => !o);
     const close = useCallback(() => setOpen(false), []);
 
+    // --- DİL DEĞİŞTİRME ---
+    const handleLanguageChange = (lang: "tr" | "en") => {
+        // Basit bir cookie ayarı (1 yıl geçerli)
+        document.cookie = `NEXT_LOCALE=${lang}; path=/; max-age=31536000`;
+        // Sayfayı yenile ki dil aktif olsun (Sidebar vb. bu cookie'yi okuyacak şekilde güncellenebilir)
+        window.location.reload();
+    };
+
     // --- LOGOUT HANDLER ---
     async function handleLogout() {
         if (loggingOut) return;
         setLoggingOut(true);
-
-        // 1. Client tarafı temizliği (LocalStorage)
         try {
             if (typeof window !== "undefined") {
-                Object.keys(localStorage)
-                    .filter((k) => k.startsWith("sb-"))
-                    .forEach((k) => localStorage.removeItem(k));
+                Object.keys(localStorage).filter((k) => k.startsWith("sb-")).forEach((k) => localStorage.removeItem(k));
             }
-        } catch { /* Ignore */ }
-
-        // 2. Server Action Çağrısı (Cookie siler ve Redirect eder)
-        try {
-            await logoutAction();
+            await logoutAction(); 
         } catch (error) {
             console.error("Çıkış hatası:", error);
             setLoggingOut(false);
         }
     }
 
-    function handleSettings() {
-        router.push("/admin/settings");
-        close();
-    }
-
-    // --- KLAVYE & MOUSE ETKİLEŞİMLERİ (Eski kod korundu) ---
+    // --- CLICK OUTSIDE & ESCAPE ---
     useEffect(() => {
         if (!open) return;
         function handleClick(e: MouseEvent) {
             const t = e.target as Node;
-            if (
-                menuRef.current && !menuRef.current.contains(t) &&
-                btnRef.current && !btnRef.current.contains(t)
-            ) {
+            if (menuRef.current && !menuRef.current.contains(t) && btnRef.current && !btnRef.current.contains(t)) {
                 close();
             }
         }
@@ -72,31 +64,6 @@ export default function AdminNavbar() {
             document.removeEventListener("keydown", handleKey);
         };
     }, [open, close]);
-
-    useEffect(() => {
-        if (!open) return;
-        const items = Array.from(
-            menuRef.current?.querySelectorAll<HTMLButtonElement>('button[data-menu-item="true"]') || []
-        );
-        let idx = -1;
-        function onKey(e: KeyboardEvent) {
-            if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) return;
-            e.preventDefault();
-            if (items.length === 0) return;
-            if (idx === -1) {
-                idx = 0;
-                items[idx]?.focus();
-                return;
-            }
-            if (e.key === "ArrowDown") idx = (idx + 1) % items.length;
-            else if (e.key === "ArrowUp") idx = (idx - 1 + items.length) % items.length;
-            else if (e.key === "Home") idx = 0;
-            else if (e.key === "End") idx = items.length - 1;
-            items[idx]?.focus();
-        }
-        document.addEventListener("keydown", onKey);
-        return () => document.removeEventListener("keydown", onKey);
-    }, [open]);
 
     return (
         <header
@@ -131,62 +98,72 @@ export default function AdminNavbar() {
                     "
                 >
                     <CgProfile size={24} aria-hidden="true" className="opacity-80" />
-                    <span className="sr-only">Account menu</span>
                 </button>
 
                 {open && (
                     <div
                         ref={menuRef}
                         role="menu"
-                        aria-label="Profile menu"
                         className="
-                            absolute right-0 mt-2 w-56
+                            absolute right-0 mt-2 w-64
                             bg-[var(--admin-card)] text-[var(--admin-fg)]
                             border border-[var(--admin-card-border)] rounded-xl
                             shadow-xl overflow-hidden
                             z-50 ring-1 ring-black ring-opacity-5
                         "
-                        style={{
-                            animation: "admin-reveal 160ms cubic-bezier(0.33, 1, 0.68, 1) both",
-                        }}
+                        style={{ animation: "admin-reveal 160ms cubic-bezier(0.33, 1, 0.68, 1) both" }}
                     >
-                        <div className="py-1 flex flex-col">
-                            {/* SETTINGS ITEM */}
-                            <button
-                                data-menu-item="true"
-                                role="menuitem"
-                                onClick={handleSettings}
-                                className="
-                                    flex items-center gap-3 w-full
-                                    text-left px-4 py-3 text-sm
-                                    bg-transparent
-                                    hover:bg-[var(--admin-input-bg)]
-                                    focus:outline-none focus:bg-[var(--admin-input-bg)]
-                                    transition-colors
-                                "
-                            >
-                                <IoSettingsOutline size={18} className="text-[var(--admin-muted)]" />
-                                <span>Site Ayarları</span>
-                            </button>
+                        <div className="py-2 flex flex-col">
+                            
+                            {/* DİL SEÇİMİ BAŞLIĞI */}
+                            <div className="px-4 py-2 text-xs font-semibold text-[var(--admin-muted)] uppercase tracking-wider flex items-center gap-2">
+                                <IoLanguage /> Dil / Language
+                            </div>
+                            
+                            <div className="flex px-2 gap-2 mb-2">
+                                <button 
+                                    onClick={() => handleLanguageChange("tr")}
+                                    className="flex-1 py-1.5 text-sm rounded bg-[var(--admin-input-bg)] hover:bg-[var(--admin-border)] border border-[var(--admin-input-border)] transition-colors"
+                                >
+                                    🇹🇷 Türkçe
+                                </button>
+                                <button 
+                                    onClick={() => handleLanguageChange("en")}
+                                    className="flex-1 py-1.5 text-sm rounded bg-[var(--admin-input-bg)] hover:bg-[var(--admin-border)] border border-[var(--admin-input-border)] transition-colors"
+                                >
+                                    🇬🇧 English
+                                </button>
+                            </div>
 
                             <div className="h-px bg-[var(--admin-card-border)] my-1 mx-2" />
 
-                            {/* LOGOUT ITEM */}
+                            {/* MENÜ LİNKLERİ */}
+                            
+                            <Link
+                                href="/admin/profile"
+                                onClick={close}
+                                className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-[var(--admin-input-bg)] transition-colors"
+                            >
+                                <IoPersonCircleOutline size={18} className="text-[var(--admin-muted)]" />
+                                <span>Kullanıcı Ayarları</span>
+                            </Link>
+
+                            <Link
+                                href="/admin/settings"
+                                onClick={close}
+                                className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-[var(--admin-input-bg)] transition-colors"
+                            >
+                                <IoSettingsOutline size={18} className="text-[var(--admin-muted)]" />
+                                <span>Site Ayarları</span>
+                            </Link>
+
+                            <div className="h-px bg-[var(--admin-card-border)] my-1 mx-2" />
+
+                            {/* LOGOUT */}
                             <button
-                                data-menu-item="true"
-                                role="menuitem"
                                 onClick={handleLogout}
                                 disabled={loggingOut}
-                                className="
-                                    flex items-center gap-3 w-full
-                                    text-left px-4 py-3 text-sm font-medium
-                                    bg-transparent
-                                    text-[var(--admin-danger)]
-                                    hover:bg-[var(--admin-danger)]/10
-                                    focus:outline-none focus:bg-[var(--admin-danger)]/10
-                                    transition-colors
-                                    disabled:opacity-50
-                                "
+                                className="flex items-center gap-3 w-full text-left px-4 py-3 text-sm font-medium text-[var(--admin-danger)] hover:bg-[var(--admin-danger)]/10 transition-colors disabled:opacity-50"
                             >
                                 <IoLogOutOutline size={18} />
                                 <span>{loggingOut ? "Çıkış Yapılıyor..." : "Güvenli Çıkış"}</span>

@@ -1,3 +1,4 @@
+// app/admin/(protected)/_components/sidebar.tsx
 "use client";
 
 import Link from "next/link";
@@ -6,7 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
     IoChevronDown, IoLogOutOutline, IoSettingsOutline,
     IoFolderOpenOutline, IoGridOutline, IoLayersOutline,
-    IoSpeedometerOutline, IoPeopleOutline
+    IoSpeedometerOutline, IoPeopleOutline, IoLocationOutline
 } from "react-icons/io5";
 import { logoutAction } from "@/app/auth/actions";
 
@@ -14,14 +15,25 @@ import { logoutAction } from "@/app/auth/actions";
 type Match = "exact" | "startsWith";
 type Lang = "tr" | "en";
 
+// Cookie okuyucu (Daha güvenli regex versiyonu)
+function getCookie(name: string) {
+    if (typeof document === "undefined") return null;
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    if (match) return match[2];
+    return null;
+}
+
 type TranslationKey =
-    | "dashboard" // YENİ
-    | "components" // YENİ (Eski homepage_settings yerine)
+    | "dashboard"
+    | "components"
     | "site_settings" | "general" | "social_links"
     | "categories" | "all_categories" | "add_category"
     | "products" | "all_products" | "add_product"
     | "ready_products" | "management" | "users"
-    | "landing_page" | "why_us" | "logout";
+    | "landing_page" | "why_us" | "logout" | "showcase"
+    | "scrolling_cats" | "testimonials_page"
+    | "make_it_easier" | "footer" | "locations";
+
 
 type MenuItem = {
     key: string;
@@ -35,7 +47,7 @@ type MenuItem = {
 // --- ÇEVİRİ SÖZLÜĞÜ ---
 const DICTIONARY: Record<TranslationKey, { tr: string; en: string }> = {
     dashboard: { tr: "Kontrol Paneli", en: "Dashboard" },
-    components: { tr: "Site Bileşenleri", en: "Components" }, // İsim değişti
+    components: { tr: "Site Bileşenleri", en: "Components" },
     site_settings: { tr: "Site Ayarları", en: "Site Settings" },
     general: { tr: "Genel", en: "General" },
     social_links: { tr: "Sosyal Medya", en: "Social Links" },
@@ -50,7 +62,13 @@ const DICTIONARY: Record<TranslationKey, { tr: string; en: string }> = {
     users: { tr: "Kullanıcılar", en: "Users" },
     landing_page: { tr: "Açılış Sayfası", en: "Landing Page" },
     why_us: { tr: "Neden Biz", en: "Why Us" },
-    logout: { tr: "Çıkış Yap", en: "Logout" }
+    logout: { tr: "Çıkış Yap", en: "Logout" },
+    showcase: { tr: "Vitrin Yönetimi", en: "Showcase" },
+    scrolling_cats: { tr: "Kayan Kategoriler", en: "Scrolling Categories" },
+    testimonials_page: { tr: "Referanslar", en: "Testimonials" },
+    make_it_easier: { tr: "Kolaylaştır", en: "Make It Easier" },
+    footer: { tr: "Footer", en: "Footer" },
+    locations: { tr: "Lokasyonlar", en: "Locations" },
 };
 
 const STORAGE_KEY = "admin.sidebar.expanded";
@@ -61,40 +79,51 @@ export default function AdminSidebar() {
     const [mounted, setMounted] = useState(false);
     const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
+    // 1. Dil ve State Yükleme
     useEffect(() => {
         setMounted(true);
-        if (typeof window !== "undefined" && navigator.language?.startsWith("tr")) {
-            setLang("tr");
+
+        // Cookie kontrolü
+        const cookieLang = getCookie("NEXT_LOCALE");
+        if (cookieLang === "tr" || cookieLang === "en") {
+            setLang(cookieLang as Lang);
+        } else {
+            // Fallback: Tarayıcı dili
+            if (typeof window !== "undefined" && navigator.language?.startsWith("tr")) {
+                setLang("tr");
+            }
         }
+
         try {
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) setExpanded(JSON.parse(stored));
         } catch { }
     }, []);
 
+    // Çeviri fonksiyonu
+    const t = (key: TranslationKey) => DICTIONARY[key][lang];
+
+    // 2. Menü Yapısı (DÜZELTME: [lang] bağımlılığı eklendi)
     const menuItems = useMemo<MenuItem[]>(() => [
-        // 1. DASHBOARD (En Üstte)
         {
             key: "dashboard",
             labelKey: "dashboard",
             icon: IoSpeedometerOutline,
             href: "/admin",
             match: "exact"
-        },
-        // 2. COMPONENTS (Eski Anasayfa)
-        {
-            key: "components",
-            labelKey: "components",
-            icon: IoLayersOutline, // İkon değişti
-            match: "startsWith",
-            children: [
-                { key: "landing", labelKey: "landing_page", href: "/admin/landing", match: "exact" },
-                { key: "ready", labelKey: "ready_products", href: "/admin/ready-products", match: "exact" },
-                { key: "whyus", labelKey: "why_us", href: "/admin/why-us", match: "exact" },
-            ]
-        },
-        // 3. PRODUCTS
-        {
+        }, {
+            key: "settings",
+            labelKey: "site_settings",
+            icon: IoSettingsOutline,
+            href: "/admin/settings",
+            match: "exact"
+        }, {
+            key: "locations",
+            labelKey: "locations",
+            icon: IoLocationOutline,
+            href: "/admin/locations",
+            match: "exact"
+        }, {
             key: "products",
             labelKey: "products",
             icon: IoGridOutline,
@@ -104,9 +133,7 @@ export default function AdminSidebar() {
                 { key: "prod_all", labelKey: "all_products", href: "/admin/products", match: "exact" },
                 { key: "prod_add", labelKey: "add_product", href: "/admin/products/new", match: "exact" },
             ]
-        },
-        // 4. CATEGORIES
-        {
+        }, {
             key: "categories",
             labelKey: "categories",
             icon: IoFolderOpenOutline,
@@ -116,21 +143,22 @@ export default function AdminSidebar() {
                 { key: "cat_all", labelKey: "all_categories", href: "/admin/categories", match: "exact" },
                 { key: "cat_add", labelKey: "add_category", href: "/admin/categories/new", match: "exact" },
             ]
-        },
-        // 5. SETTINGS
-        {
-            key: "settings",
-            labelKey: "site_settings",
-            icon: IoSettingsOutline,
+        }, {
+            key: "components",
+            labelKey: "components",
+            icon: IoLayersOutline,
             match: "startsWith",
             children: [
-                { key: "set_gen", labelKey: "general", href: "/admin/settings", match: "exact" },
-                { key: "set_soc", labelKey: "social_links", href: "/admin/social-settings", match: "exact" },
+                { key: "landing", labelKey: "landing_page", href: "/admin/showcase/landing", match: "exact" },
+                { key: "scrolling", labelKey: "scrolling_cats", href: "/admin/showcase/scrolling-categories", match: "exact" }, // BURAYA EKLENDİ
+                { key: "ready", labelKey: "ready_products", href: "/admin/showcase/ready-products", match: "exact" },
+                { key: "whyus", labelKey: "why_us", href: "/admin/showcase/why-us", match: "exact" },
+                { key: "makeiteasier", labelKey: "make_it_easier", href: "/admin/showcase/make-it-easier", match: "exact" },
+                { key: "testimonials", labelKey: "testimonials_page", href: "/admin/showcase/testimonials", match: "exact" },
             ]
         },
-    ], []);
 
-    // ... (Geri kalan toggle, useEffect ve render mantığı aynı, sadece CSS variable'ları kullanmaya devam ediyoruz)
+    ], [lang]); // <--- KRİTİK DÜZELTME: lang değişince menüyü yeniden hesapla
 
     const toggle = (key: string) => {
         setExpanded(prev => {
@@ -140,7 +168,6 @@ export default function AdminSidebar() {
         });
     };
 
-    const t = (key: TranslationKey) => DICTIONARY[key][lang];
     const isActive = (href?: string, match: Match = "startsWith") =>
         href ? (match === "exact" ? pathname === href : pathname.startsWith(href)) : false;
 
@@ -163,15 +190,14 @@ export default function AdminSidebar() {
                         return (
                             <li key={item.key}>
                                 <div
-                                    className={`group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all cursor-pointer ${active && !hasChildren // Sadece tekil link ise aktif stil uygula
+                                    className={`group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all cursor-pointer ${active && !hasChildren
                                         ? "bg-[var(--admin-input-bg)] text-[var(--admin-accent)] font-medium border border-[var(--admin-card-border)]"
-                                        : open // Açık parent
+                                        : open
                                             ? "text-[var(--admin-fg)] font-medium"
                                             : "text-[var(--admin-muted)] hover:bg-[var(--admin-input-bg)] hover:text-[var(--admin-fg)]"
                                         }`}
                                     onClick={() => hasChildren ? toggle(item.key) : null}
                                 >
-                                    {/* Link varsa tıkla, yoksa (dropdown ise) sadece görsel */}
                                     {item.href && !hasChildren ? (
                                         <Link href={item.href} className="flex items-center gap-3 flex-1">
                                             {Icon && <Icon size={18} className={active ? "text-[var(--admin-accent)]" : "opacity-70"} />}
@@ -229,8 +255,6 @@ export default function AdminSidebar() {
                     </li>
                 </ul>
             </nav>
-
-
         </aside>
     );
 }

@@ -2,10 +2,22 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { BiWorld } from "react-icons/bi";
+import { BiWorld, BiTrendingUp, BiDollarCircle } from "react-icons/bi";
 import useSWR from "swr";
 import { useLanguage } from "@/components/LanguageProvider";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+
+// --- URL HELPER ---
+const STORAGE_BASE = process.env.NEXT_PUBLIC_SUPABASE_URL
+    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/why_us/`
+    : "";
+
+const getImageUrl = (path: string | null | undefined) => {
+    if (!path) return "/h1-banner01.jpg";
+    if (path.startsWith("http")) return path;
+    if (path.startsWith("/")) return path;
+    return `${STORAGE_BASE}${path}`;
+};
 
 type WhyUsRow = {
     image1_url: string;
@@ -36,226 +48,169 @@ type ApiResult = {
 
 const fetcher = async (lang: string): Promise<ApiResult> => {
     const supabase = createSupabaseBrowserClient();
+    const { data: baseRow } = await supabase.from("why_us").select("*").eq("active", true).limit(1).maybeSingle();
+    const { data: trRow } = await supabase.from("why_us_translations").select("*").eq("lang_code", lang).limit(1).maybeSingle();
 
-    // Tek kayıt base
-    const { data: baseRow, error: baseErr } = await supabase
-        .from("why_us")
-        .select("image1_url,image2_url,years_experience,badge_code")
-        .eq("active", true)
-        .limit(1)
-        .maybeSingle();
-
-    if (baseErr) throw baseErr;
-
-    // Çeviri
-    const { data: trRow, error: trErr } = await supabase
-        .from("why_us_translations")
-        .select(
-            "badge_label,headline_prefix,headline_emphasis,headline_suffix,description,item1_title,item1_text,item2_title,item2_text,item3_title,item3_text,lang_code"
-        )
-        .eq("lang_code", lang)
-        .limit(1)
-        .maybeSingle();
-
-    if (trErr) throw trErr;
-
-    return {
-        base: baseRow ?? null,
-        tr: trRow ?? null,
-    };
+    return { base: baseRow, tr: trRow };
 };
 
 export default function WhyUs() {
     const sectionRef = useRef<HTMLDivElement>(null);
     const { lang } = useLanguage();
-
     const [visible, setVisible] = useState(false);
-    const [years, setYears] = useState(1);
+    const [years, setYears] = useState(0);
 
-    const { data, error, isLoading } = useSWR<ApiResult>(
-        ["why-us", lang],
-        () => fetcher(lang),
-        { revalidateOnFocus: false }
-    );
+    const { data, isLoading } = useSWR<ApiResult>(["why-us", lang], () => fetcher(lang), { revalidateOnFocus: false });
 
+    // --- DÜZELTME BURADA ---
     useEffect(() => {
+        // Eğer yükleniyorsa observer kurmaya çalışma, ref boştur.
+        if (isLoading) return;
+
         const el = sectionRef.current;
         if (!el) return;
 
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.target === el && entry.isIntersecting && !visible) {
-                        setVisible(true);
-                        observer.unobserve(el);
-                    }
-                });
-            },
-            { threshold: 0.5 }
-        );
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    setVisible(true);
+                    observer.disconnect(); // Bir kere görünmesi yeterli
+                }
+            });
+        }, { threshold: 0.1 });
 
         observer.observe(el);
+
         return () => observer.disconnect();
-    }, [visible]);
+    }, [isLoading]); // isLoading değişince (false olunca) tekrar çalışsın!
 
+    // Yıl sayacı efekti
     useEffect(() => {
-        if (!visible) return;
+        if (!visible || !data?.base) return;
+        const targetYears = data.base.years_experience || 10;
+        let start = 0;
+        const duration = 2000;
+        const stepTime = Math.abs(Math.floor(duration / targetYears));
 
-        const baseYears = data?.base?.years_experience ?? 24;
-        const duration = 1000; // 1s
-        const startValue = 1;
-        const endValue = baseYears;
-        const diff = endValue - startValue;
-        let startTime: number | null = null;
-        let rafId: number;
+        const timer = setInterval(() => {
+            start += 1;
+            setYears(start);
+            if (start >= targetYears) clearInterval(timer);
+        }, stepTime);
 
-        const tick = (now: number) => {
-            if (startTime === null) startTime = now;
-            const elapsed = now - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            const current = Math.round(startValue + diff * progress);
-            setYears(current);
-            if (progress < 1) {
-                rafId = requestAnimationFrame(tick);
-            } else {
-                setYears(endValue);
-            }
-        };
+        return () => clearInterval(timer);
+    }, [visible, data]); // data gelince veya görünür olunca çalış
 
-        rafId = requestAnimationFrame(tick);
-        return () => cancelAnimationFrame(rafId);
-    }, [visible, data?.base?.years_experience]);
-
-    if (error) {
-        return (
-            <div className="flex justify-center items-center w-full max-w-7xl h-[60vh] my-20 text-red-500">
-                {lang === "tr"
-                    ? "İçerik yüklenemedi."
-                    : lang === "de"
-                        ? "Inhalt konnte nicht geladen werden."
-                        : "Failed to load content."}
-            </div>
-        );
-    }
+    // Yükleniyor durumu
+    if (isLoading) return <div className="h-96 w-full bg-gray-100 animate-pulse my-20 rounded-xl"></div>;
 
     const base = data?.base;
     const tr = data?.tr;
 
+    const img1Src = getImageUrl(base?.image1_url);
+    const img2Src = getImageUrl(base?.image2_url);
+
     return (
-        <div ref={sectionRef} className="flex flex-row w-full max-w-7xl h-[60vh] my-20">
-            {/* Sol blok */}
-            <div className="w-4xl relative">
-                <div
-                    className="z-10 transition-transform duration-1000 ease-out"
-                    style={{
-                        transform: visible ? "translateX(0)" : "translateX(-750px)",
-                        opacity: visible ? 1 : 0,
-                    }}
-                >
-                    <Image
-                        src={base?.image1_url ?? "/h1-banner01.jpg"}
-                        alt="bannerImage1"
-                        width={500}
-                        height={500}
-                        className="rounded-3xl w-auto absolute"
-                        loading="lazy"
-                    />
+        <section ref={sectionRef} className="container mx-auto px-4 py-16 lg:py-24 overflow-hidden">
+            <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+
+                {/* SOL BLOK (GÖRSELLER) */}
+                <div className="w-full lg:w-1/2 relative min-h-[400px] lg:min-h-[500px] flex items-center justify-center">
+
+                    {/* Görsel 1 */}
+                    <div
+                        className="absolute left-0 top-0 lg:-top-12 w-3/4 z-10 transition-all duration-1000 ease-out"
+                        style={{
+                            opacity: visible ? 1 : 0,
+                            transform: visible ? "translateX(0)" : "translateX(-100px)",
+                        }}
+                    >
+                        <Image
+                            src={img1Src}
+                            alt="Factory"
+                            width={500}
+                            height={500}
+                            className="rounded-3xl w-full h-auto object-cover"
+                            unoptimized
+                        />
+                    </div>
+
+                    {/* Görsel 2 */}
+                    <div
+                        className="absolute right-0 bottom-0 lg:top-40 w-2/3 z-20 transition-all duration-1000 ease-out delay-200"
+                        style={{
+                            opacity: visible ? 1 : 0,
+                            transform: visible ? "translateY(0)" : "translateY(100px)",
+                        }}
+                    >
+                        <Image
+                            src={img2Src}
+                            alt="Process"
+                            width={400}
+                            height={400}
+                            className="rounded-3xl w-full h-auto object-cover"
+                            unoptimized
+                        />
+                    </div>
+
+                    {/* Badge */}
+                    <div
+                        className="absolute -bottom-6 left-4 lg:left-10 z-30 p-4 rounded-xl flex flex-col items-center transition-all duration-700 delay-500"
+                        style={{
+                            opacity: visible ? 1 : 0,
+                            transform: visible ? "scale(1)" : "scale(0.5)"
+                        }}
+                    >
+                        <span className="text-4xl lg:text-5xl font-bold text-blue-700">{years}+</span>
+                        <span className="text-sm lg:text-lg text-gray-600 font-medium">
+                            {lang === "tr" ? "Yıl Deneyim" : lang === "de" ? "Jahre Erfahrung" : "Years Experience"}
+                        </span>
+                    </div>
                 </div>
 
-                <div
-                    className="z-10 transition-transform duration-1000 ease-out"
-                    style={{
-                        transform: visible ? "translateY(0)" : "translateY(300px)",
-                        opacity: visible ? 1 : 0,
-                    }}
-                >
-                    <Image
-                        src={base?.image2_url ?? "/h1-banner02.jpg"}
-                        alt="bannerImage2"
-                        width={400}
-                        height={400}
-                        className="rounded-3xl w-auto absolute top-50 right-0"
-                        loading="eager"
-                    />
-                </div>
-
-                <div className="absolute bottom-15 flex flex-col ml-10">
-                    <span className="text-5xl text-blue-700">
-                        {years}+
-                    </span>
-                    <span className="text-lg">
-                        {lang === "tr"
-                            ? "Yıl Deneyim"
-                            : lang === "de"
-                                ? "Jahre Erfahrung"
-                                : "Years Of Experience"}
-                    </span>
-                </div>
-            </div>
-
-            {/* Sağ blok */}
-            <div className="w-4xl">
-                <div className="flex flex-col ml-5">
-                    <span className="rounded-full bg-blue-100 w-fit py-1 px-2 text-blue-700 font-semibold uppercase ml-2">
+                {/* SAĞ BLOK (İÇERİK) */}
+                <div className="w-full lg:w-1/2 flex flex-col items-start space-y-6">
+                    <span className="rounded-full bg-blue-50 px-4 py-2 text-blue-700 font-bold text-sm tracking-wide uppercase">
                         {tr?.badge_label ?? base?.badge_code ?? "BEST PRINTING COMPANY"}
                     </span>
-                    <span className="text-5xl mt-2">
+
+                    <h2 className="text-3xl lg:text-5xl font-extrabold text-gray-900 leading-tight">
                         {tr?.headline_prefix ?? "Reason To"}{" "}
                         <span className="text-blue-700">
                             {tr?.headline_emphasis ?? "Get Printing"}
                         </span>{" "}
                         {tr?.headline_suffix ?? "Started With Us"}
-                    </span>
-                </div>
+                    </h2>
 
-                <div className="flex flex-col text-xl font-normal mt-8 ml-20">
-                    <span>
-                        {tr?.description ??
-                            "We are 100+ professional printing experts with more than 10 years of experience in product design. Believe it because you’ve seen it. Here are real numbers."}
-                    </span>
+                    <p className="text-lg text-gray-600 leading-relaxed">
+                        {tr?.description ?? "We are 100+ professional printing experts with more than 10 years of experience."}
+                    </p>
 
-                    <ul className="gap-2 mt-2">
-                        <li className="flex flex-row px-4 py-2 gap-4">
-                            <BiWorld className="text-6xl text-blue-700" />
-                            <div className="flex flex-col">
-                                <span className="font-bold text-xl">
-                                    {tr?.item1_title ?? "High Profit Margin"}
-                                </span>
-                                <span className="font-normal text-md">
-                                    {tr?.item1_text ??
-                                        "Effective optimization of cost and quality that makes you highly profitable."}
-                                </span>
+                    <ul className="grid gap-6 mt-4 w-full">
+                        <li className="flex items-start gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors">
+                            <div className="p-3 bg-blue-100 rounded-lg text-blue-700"><BiDollarCircle className="text-3xl" /></div>
+                            <div>
+                                <h3 className="font-bold text-xl text-gray-900">{tr?.item1_title ?? "High Profit Margin"}</h3>
+                                <p className="text-gray-500 mt-1">{tr?.item1_text ?? "Effective optimization of cost..."}</p>
                             </div>
                         </li>
-
-                        <li className="flex flex-row px-4 py-2 gap-4">
-                            <BiWorld className="text-6xl text-blue-700" />
-                            <div className="flex flex-col">
-                                <span className="font-bold text-xl">
-                                    {tr?.item2_title ?? "Global Shipping"}
-                                </span>
-                                <span className="font-normal text-md">
-                                    {tr?.item2_text ??
-                                        "Reach the global market easily with our fast and flexible shipping solution."}
-                                </span>
+                        <li className="flex items-start gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors">
+                            <div className="p-3 bg-blue-100 rounded-lg text-blue-700"><BiWorld className="text-3xl" /></div>
+                            <div>
+                                <h3 className="font-bold text-xl text-gray-900">{tr?.item2_title ?? "Global Shipping"}</h3>
+                                <p className="text-gray-500 mt-1">{tr?.item2_text ?? "Reach the global market easily..."}</p>
                             </div>
                         </li>
-
-                        <li className="flex flex-row px-4 py-2 gap-4">
-                            <BiWorld className="text-6xl text-blue-700" />
-                            <div className="flex flex-col">
-                                <span className="font-bold text-xl">
-                                    {tr?.item3_title ?? "Trending Products"}
-                                </span>
-                                <span className="font-normal text-md">
-                                    {tr?.item3_text ??
-                                        "Maximize your sales volume with our high market-demand products."}
-                                </span>
+                        <li className="flex items-start gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors">
+                            <div className="p-3 bg-blue-100 rounded-lg text-blue-700"><BiTrendingUp className="text-3xl" /></div>
+                            <div>
+                                <h3 className="font-bold text-xl text-gray-900">{tr?.item3_title ?? "Trending Products"}</h3>
+                                <p className="text-gray-500 mt-1">{tr?.item3_text ?? "Maximize your sales volume..."}</p>
                             </div>
                         </li>
                     </ul>
                 </div>
             </div>
-        </div>
+        </section>
     );
 }

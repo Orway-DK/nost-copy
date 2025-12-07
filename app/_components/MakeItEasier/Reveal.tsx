@@ -1,3 +1,4 @@
+// /home/dorukhan/Desktop/NostCopy/nost-copy/app/_components/MakeItEasier/Reveal.tsx
 "use client";
 
 import { useEffect, useRef } from "react";

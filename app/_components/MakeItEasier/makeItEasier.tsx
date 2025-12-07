@@ -1,3 +1,4 @@
+// /home/dorukhan/Desktop/NostCopy/nost-copy/app/_components/MakeItEasier/makeItEasier.tsx
 "use client";
 
 import Image from "next/image";

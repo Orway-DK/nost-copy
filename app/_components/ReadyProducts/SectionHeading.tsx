@@ -1,3 +1,4 @@
+// /home/dorukhan/Desktop/NostCopy/nost-copy/app/_components/ReadyProducts/SectionHeading.tsx
 "use client";
 
 import React from "react";
