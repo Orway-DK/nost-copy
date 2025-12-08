@@ -1,4 +1,3 @@
-// /home/dorukhan/Desktop/NostCopy/nost-copy/app/_components/NavigationBar/NavigationBar.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -17,17 +16,38 @@ type CategoryRow = {
   category_translations: { name: string; lang_code: string }[];
 };
 
+type ServiceRow = {
+  id: number;
+  slug: string;
+  service_translations: { title: string; lang_code: string }[];
+};
+
+// --- DATA FETCHING ---
+
 const fetchCategories = async (lang: string) => {
   const supabase = createSupabaseBrowserClient();
+  // Kategorilerde de filtreyi kaldırıp JS tarafında seçmek daha güvenlidir
   const { data, error } = await supabase
     .from("categories")
     .select("id, parent_id, slug, category_translations(name, lang_code)")
     .eq("active", true)
-    .eq("category_translations.lang_code", lang)
     .order("slug", { ascending: true });
 
   if (error) throw error;
   return (data ?? []) as CategoryRow[];
+};
+
+const fetchServices = async () => {
+  const supabase = createSupabaseBrowserClient();
+  // DÜZELTME: Dil filtresini kaldırdık. Tüm çevirileri çekiyoruz.
+  const { data, error } = await supabase
+    .from("services")
+    .select("id, slug, service_translations(title, lang_code)")
+    .eq("active", true)
+    .order("id", { ascending: true });
+
+  if (error) throw error;
+  return (data ?? []) as ServiceRow[];
 };
 
 const fetchSiteName = async () => {
@@ -50,17 +70,6 @@ function useStaticMenu(lang: string) {
       { label: t("Anasayfa", "Home", "Startseite"), href: "/" },
       { label: t("Hakkımızda", "About Us", "Über uns"), href: "/about" },
       { label: t("İletişim", "Contact", "Kontakt"), href: "/contact" },
-      {
-        label: t("Hizmetler", "Services", "Dienstleistungen"),
-        children: [
-          { label: t("Baskı", "Printing", "Druck"), href: "/services/printing" },
-          { label: t("Tasarım", "Design", "Design"), href: "/services/design" },
-          {
-            label: t("Paketleme", "Packaging", "Verpackung"),
-            href: "/services/packaging",
-          },
-        ],
-      },
     ];
   }, [lang]);
 }
@@ -69,15 +78,23 @@ export default function NavigationBar() {
   const { lang } = useLanguage();
   const staticMenu = useStaticMenu(lang);
   const { start, stop } = useAppLoading();
-
-  // --- HYDRATION FIX: MOUNTED STATE ---
   const [mounted, setMounted] = useState(false);
 
+  // Kategorileri Çek
   const {
     data: categories,
     isLoading: catLoading,
     error: catError,
-  } = useSWR(mounted ? ["categories-nav", lang] : null, () => fetchCategories(lang), {
+  } = useSWR(mounted ? "categories-nav" : null, () => fetchCategories(lang), {
+    revalidateOnFocus: false,
+  });
+
+  // Hizmetleri Çek
+  const {
+    data: services,
+    isLoading: servLoading,
+    error: servError,
+  } = useSWR(mounted ? "services-nav" : null, fetchServices, {
     revalidateOnFocus: false,
   });
 
@@ -86,20 +103,30 @@ export default function NavigationBar() {
   });
 
   useEffect(() => {
-    setMounted(true); // Component tarayıcıda çalışmaya başlayınca true olur
+    setMounted(true);
   }, []);
 
+  // Loading kontrolü
   useEffect(() => {
-    if (catLoading) start();
-    else stop();
-  }, [catLoading, start, stop]);
+    // Hata varsa veya veri geldiyse yüklemeyi durdur
+    if ((catError || categories) && (servError || services)) {
+      stop();
+    } else if (catLoading || servLoading) {
+      start();
+    }
 
-  // 3. ADIM: Düz listeyi Parent-Child ağacına dönüştürme mantığı
+    // Cleanup: Component unmount olursa loading'i kapat
+    return () => stop();
+  }, [catLoading, servLoading, catError, servError, categories, services, start, stop]);
+
+  // --- KATEGORİ AĞACI ---
   const categoryItems = useMemo(() => {
     if (!categories) return [];
-
     const mapped = categories.map((c) => {
-      const tr = c.category_translations.find((t) => t.lang_code === lang);
+      // Dil yoksa yedeğe düş (Fallback)
+      const tr = c.category_translations.find((t) => t.lang_code === lang)
+        || c.category_translations.find((t) => t.lang_code === 'tr');
+
       return {
         id: c.id,
         parentId: c.parent_id,
@@ -109,13 +136,10 @@ export default function NavigationBar() {
       };
     });
 
+    // Parent-Child eşlemesi
     const map: Record<number, any> = {};
-    mapped.forEach((item) => {
-      map[item.id] = item;
-    });
-
+    mapped.forEach((item) => { map[item.id] = item; });
     const roots: any[] = [];
-
     mapped.forEach((item) => {
       if (item.parentId && map[item.parentId]) {
         map[item.parentId].children.push(item);
@@ -123,31 +147,44 @@ export default function NavigationBar() {
         roots.push(item);
       }
     });
-
     return roots;
   }, [categories, lang]);
 
-  const categoriesLabel =
-    lang === "tr"
-      ? "Kategoriler"
-      : lang === "de"
-        ? "Kategorien"
-        : "Categories";
+  // --- HİZMET LİSTESİ ---
+  const serviceItems = useMemo(() => {
+    if (!services) return [];
+    return services.map(s => {
+      // Dil yoksa yedeğe düş (Fallback: Seçili Dil -> İngilizce -> Türkçe -> İlk Bulunan)
+      const translation = s.service_translations.find(t => t.lang_code === lang)
+        || s.service_translations.find(t => t.lang_code === 'en')
+        || s.service_translations.find(t => t.lang_code === 'tr')
+        || s.service_translations[0];
 
-  // --- HYDRATION FIX: YÜKLENMEDEN ÖNCE RENDER YOK ---
+      return {
+        label: translation?.title || s.slug,
+        href: `/services/${s.slug}`
+      };
+    });
+  }, [services, lang]);
+
+  // Labels
+  const labels = useMemo(() => {
+    const isTr = lang === 'tr';
+    const isDe = lang === 'de';
+    return {
+      categories: isTr ? "Kategoriler" : isDe ? "Kategorien" : "Categories",
+      services: isTr ? "Hizmetler" : isDe ? "Dienstleistungen" : "Services",
+      empty: isTr ? "Veri Yok" : isDe ? "Keine Daten" : "No Data",
+      error: isTr ? "Hata" : isDe ? "Fehler" : "Error"
+    }
+  }, [lang]);
+
+
   if (!mounted) {
     return (
       <div className="w-full flex justify-center">
         <nav className="relative w-full max-w-7xl h-24 flex items-center justify-between font-onest font-semibold">
-          {/* Layout shift'i önlemek için boş bir iskelet */}
           <div className="text-3xl font-poppins font-bold text-transparent bg-gray-200 rounded w-32 h-8 animate-pulse"></div>
-          <div className="flex space-x-8">
-            {[1, 2, 3, 4].map(i => <div key={i} className="w-20 h-6 bg-gray-200 rounded animate-pulse"></div>)}
-          </div>
-          <div className="flex gap-4">
-            <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse"></div>
-            <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse"></div>
-          </div>
         </nav>
       </div>
     );
@@ -161,37 +198,31 @@ export default function NavigationBar() {
         </div>
 
         <ul className="flex space-x-8 items-center">
-          {staticMenu.map((item, i) =>
-            item.children ? (
-              <li key={i}>
-                <Dropdown label={item.label} items={item.children} />
-              </li>
-            ) : (
-              <li key={i} className="text-gray-700 hover:text-blue-500 transition-colors">
-                <Link href={item.href!}>{item.label}</Link>
-              </li>
-            )
-          )}
+          {staticMenu.map((item, i) => (
+            <li key={i} className="text-gray-700 hover:text-blue-500 transition-colors">
+              <Link href={item.href!}>{item.label}</Link>
+            </li>
+          ))}
+
           <li>
             <Dropdown
-              label={categoriesLabel}
+              label={labels.services}
+              items={serviceItems}
+              loading={servLoading}
+              error={!!servError}
+              emptyLabel={labels.empty}
+              errorLabel={labels.error}
+            />
+          </li>
+
+          <li>
+            <Dropdown
+              label={labels.categories}
               items={categoryItems}
               loading={catLoading}
               error={!!catError}
-              emptyLabel={
-                lang === "tr"
-                  ? "Kategori Yok"
-                  : lang === "de"
-                    ? "Keine Kategorie"
-                    : "No category"
-              }
-              errorLabel={
-                lang === "tr"
-                  ? "Yüklenemedi"
-                  : lang === "de"
-                    ? "Fehler beim Laden"
-                    : "Load failed"
-              }
+              emptyLabel={labels.empty}
+              errorLabel={labels.error}
             />
           </li>
         </ul>

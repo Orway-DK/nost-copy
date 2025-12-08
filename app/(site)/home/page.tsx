@@ -4,6 +4,7 @@ import DualScrollingCategories from "@/app/_components/slidingBand/DualScrolling
 import MakeItEasier from "@/app/_components/MakeItEasier/makeItEasier";
 import ReadyProducts from "@/app/_components/ReadyProducts";
 import TestimonialsCarousel from "@/app/_components/Testimonials/TestimonialsSection";
+import ServicesSlider from "@/app/_components/ServicesSlider";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ export default function HomeWorking() {
     return (
         <div className="flex flex-col w-full items-center">
             <LandingSlider />
-
+            <ServicesSlider />
             <WhyUs />
             <DualScrollingCategories />
             <MakeItEasier />

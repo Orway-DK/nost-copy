@@ -4,9 +4,27 @@
 
 /* === Theme Vars === */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Ana Arkaplan ve Metin */
+  --background: #ecf2ff;
+  --foreground: #0f172a; /* Slate 900 - Çok koyu gri/siyah */
 
+  /* Marka Renkleri (Primary - Mavi tonları) */
+  --primary: #2563eb;       /* Blue 600 - Ana aksiyon rengi */
+  --primary-hover: #1d4ed8; /* Blue 700 - Hover durumu */
+  --primary-light: #60a5fa; /* Blue 400 - Koyu zemin üstü parlak metin */
+
+  /* İkincil Renkler (Başlıklar vb.) */
+  --secondary: #1e293b;     /* Slate 800 */
+  
+  /* Yardımcı Renkler */
+  --muted: #64748b;         /* Slate 500 - Açıklama metinleri */
+  --muted-light: #94a3b8;   /* Slate 400 - Daha silik metinler */
+  
+  /* Bileşen Zeminleri */
+  --card: #f3f4f6;          /* Gray 100 - Kart arkaplanı */
+  --card-hover: #e5e7eb;    /* Gray 200 */
+
+  /* Fontlar */
   --font-geist-sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
     Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
   --font-oswald: "Oswald", ui-sans-serif, system-ui, Arial;
@@ -17,52 +35,72 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans); /* font-sans  => Geist */
-  --font-oswald: var(--font-oswald); /* font-oswald => Oswald */
-  --font-poppins: var(--font-poppins); /* font-poppins => Poppins */
+  
+  /* Yeni Renkler */
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
+  
+  --color-secondary: var(--secondary);
+  
+  --color-muted: var(--muted);
+  --color-muted-light: var(--muted-light);
+  
+  --color-card: var(--card);
+  --color-card-hover: var(--card-hover);
+
+  /* Fontlar */
+  --font-sans: var(--font-geist-sans);
+  --font-oswald: var(--font-oswald);
+  --font-poppins: var(--font-poppins);
 }
 
-/* (İstersen bunu tersine çevirebilirsin, şimdilik senin ayarın korunuyor) */
+/*
+/* Dark Mode (Opsiyonel - Renkleri tersine çevirir)
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #ecf2ff;
-    --foreground: #171717;
+    --background: #0f172a;
+    --foreground: #f8fafc;
+    
+    --primary: #3b82f6; 
+    --primary-hover: #60a5fa;
+    --primary-light: #93c5fd;
+
+    --secondary: #e2e8f0;
+
+    --muted: #94a3b8;
+    --muted-light: #64748b;
+
+    --card: #1e293b;
+    --card-hover: #334155;
   }
 }
+*/
 
 /* === Base === */
-html,
-body {
-  height: 100%;
-}
+html, body { height: 100%; }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
-  font-weight: 700;
+  font-weight: 400; /* Genelde body 400 olur, başlıklar 700 */
   margin: 0;
 }
+
+/* === Utilities & Animations === */
 @layer utilities {
+  /* Yazı kenarlığı efekti (Outline Text) */
+  .text-stroke { -webkit-text-stroke: 1px rgba(255, 255, 255, 0.5); }
+  .text-stroke-sm { -webkit-text-stroke: 1px rgba(255, 255, 255, 0.2); }
+  .text-stroke-0 { -webkit-text-stroke: 0; }
+  
+  /* Reveal Animasyonu */
   @keyframes reveal {
-    from {
-      opacity: 0;
-      transform: translate3d(var(--rv-x, 0), var(--rv-y, 16px), 0);
-    }
-    to {
-      opacity: 1;
-      transform: translate3d(0, 0, 0);
-    }
+    from { opacity: 0; transform: translate3d(var(--rv-x, 0), var(--rv-y, 16px), 0); }
+    to { opacity: 1; transform: translate3d(0, 0, 0); }
   }
-
-  .reveal-base {
-    opacity: 0;
-    will-change: transform, opacity;
-    backface-visibility: hidden;
-    transform: translateZ(0);
-  }
-
-  /* 🔑 Süre ve gecikme artık değişken: --rv-duration, --rv-delay */
+  .reveal-base { opacity: 0; will-change: transform, opacity; backface-visibility: hidden; transform: translateZ(0); }
   .reveal-visible {
     animation-name: reveal;
     animation-duration: var(--rv-duration, 700ms);
@@ -70,57 +108,19 @@ body {
     animation-fill-mode: both;
     animation-delay: var(--rv-delay, 0ms);
   }
-
-  .reveal-up {
-    --rv-x: 0;
-    --rv-y: 16px;
-  }
-  .reveal-down {
-    --rv-x: 0;
-    --rv-y: -16px;
-  }
-  .reveal-left {
-    --rv-x: 24px;
-    --rv-y: 0;
-  }
-  .reveal-right {
-    --rv-x: -24px;
-    --rv-y: 0;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .reveal-visible {
-      animation: none !important;
-      opacity: 1;
-      transform: none !important;
-    }
-  }
 }
 
-@keyframes pulseScale {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(0.8); /* 150→200 gibi düşün (200/150 = 1.33) */
-  }
+/* === Swiper Özelleştirmesi (Değişkenlere Bağlı) === */
+.swiper-pagination-bullet {
+    width: 10px;
+    height: 10px;
+    background: var(--muted-light); /* Değişken kullanıldı */
+    opacity: 0.5;
+    transition: all 0.3s;
 }
-
-.animate-pulse-scale {
-  animation: pulseScale 4s ease-in-out infinite;
-}
-
-/* Dönüş animasyonu */
-@keyframes slow-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.spin-slow {
-  animation: slow-spin 10s linear infinite;
+.swiper-pagination-bullet-active {
+    background: var(--primary); /* Değişken kullanıldı */
+    opacity: 1;
+    width: 24px;
+    border-radius: 5px;
 }
