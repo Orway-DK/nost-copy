@@ -1,7 +1,7 @@
 "use client";
 
 import useSWR from "swr";
-import { FaPhone, FaEnvelope } from "react-icons/fa6";
+import { FaPhone, FaEnvelope, FaMapMarkerAlt } from "react-icons/fa"; // Map ikonu eklendi
 import Dropdown from "./LanguageDropdown";
 import { useLanguage } from "@/components/LanguageProvider";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -11,12 +11,11 @@ import { useAppLoading } from "@/components/AppLoadingProvider";
 /**
  * Types
  */
-type SettingsRow = {
+type ContactInfoRow = {
   phone: string | null;
   email: string | null;
-  store_location_url: string | null;
-  whatsapp_url?: string | null;
-  address?: string | null;
+  location_url: string | null;
+  location_label: string | null;
 } | null;
 
 type BannerTranslation = {
@@ -26,25 +25,21 @@ type BannerTranslation = {
 } | null;
 
 /**
- * Fetcher:
- * - site_settings tek satır
- * - banner_translations yeni modelde banner_id üzerinden (code='top_horizontal')
+ * Fetcher
  */
 const fetcher = async (lang: string) => {
   const supabase = createSupabaseBrowserClient();
 
-  // Site settings
-  const { data: settingsData, error: settingsError } = await supabase
-    .from("site_settings")
-    .select("phone,email,store_location_url,whatsapp_url,address")
-    .limit(1)
+  // 1. İletişim Bilgilerini Çek (Dile göre)
+  const { data: contactData, error: contactError } = await supabase
+    .from("site_contact_info")
+    .select("phone, email, location_url, location_label")
+    .eq("lang_code", lang)
     .maybeSingle();
 
-  if (settingsError) throw settingsError;
+  if (contactError) throw contactError;
 
-  // Banner (via join)
-  // Eğer Seçenek A'yı kullanıp sadece eski banner_translations tablosunu açtıysan:
-  // .from('banner_translations').select('promo_text,promo_cta,promo_url').eq('lang_code', lang).maybeSingle();
+  // 2. Banner Çevirisini Çek
   const { data: bannerJoin, error: bannerError } = await supabase
     .from("banner_translations")
     .select("promo_text,promo_cta,promo_url,banners!inner(code,active)")
@@ -54,15 +49,17 @@ const fetcher = async (lang: string) => {
     .maybeSingle();
 
   if (bannerError && bannerError.code !== "PGRST116") {
-    // PGRST116: No rows found (join sonucu yok)
     throw bannerError;
   }
 
-  const banner: BannerTranslation =
-    bannerJoin && Array.isArray(bannerJoin.banners) && bannerJoin.banners[0]?.active ? bannerJoin : null;
+  const banner: BannerTranslation = bannerJoin ? {
+    promo_text: bannerJoin.promo_text,
+    promo_cta: bannerJoin.promo_cta,
+    promo_url: bannerJoin.promo_url
+  } : null;
 
   return {
-    settings: (settingsData ?? null) as SettingsRow,
+    contact: contactData as ContactInfoRow,
     banner,
   };
 };
@@ -73,7 +70,7 @@ export default function TopHorizontalBanner() {
   const registeredRef = useRef(false);
 
   const { data, isLoading, error } = useSWR(
-    ["top-horizontal-banner", lang],
+    ["top-horizontal-banner-v2", lang],
     () => fetcher(lang),
     {
       revalidateOnFocus: false,
@@ -92,75 +89,91 @@ export default function TopHorizontalBanner() {
   }, [isLoading, start, stop]);
 
   if (error) {
-    return (
-      <div className="w-full bg-red-600 text-white text-center py-2 text-sm">
-        Üst banner yüklenirken bir hata oluştu.
-      </div>
-    );
+    return null;
   }
 
-  const settings = data?.settings;
+  const contact = data?.contact;
   const banner = data?.banner;
 
-  // Gösterilecek hiçbir şey yoksa
-  if (!settings && !banner) return null;
+  if (!contact && !banner) return null;
 
   return (
-    <div className="bg-linear-to-r from-blue-800 to-blue-300 px-4 py-2 h-10 w-full flex justify-center font-poppins font-medium text-foreground">
-      <div className="flex flex-row justify-between items-center w-full max-w-7xl text-sm text-white">
-        {/* Sol: Telefon / E-mail */}
-        <div className="flex flex-row gap-8">
-          {settings?.phone && (
+    <div className="bg-gradient-to-r from-blue-800 to-blue-300 px-4 py-2 min-h-[40px] w-full flex justify-center font-poppins font-medium text-foreground relative z-[60]">
+      <div className="flex flex-row justify-between items-center w-full max-w-7xl text-xs md:text-sm text-white">
+
+        {/* --- SOL KISIM --- */}
+        <div className="flex flex-row gap-4 md:gap-8 items-center">
+          {/* Telefon: Her zaman görünür, mobilde ikon+numara */}
+          {contact?.phone && (
             <a
-              href={`tel:${settings.phone}`}
-              className="flex flex-row items-center gap-2"
+              href={`tel:${contact.phone.replace(/\s/g, "")}`}
+              className="flex flex-row items-center gap-2 hover:text-blue-100 transition-colors"
             >
-              <FaPhone /> {settings.phone}
+              <FaPhone className="text-xs" />
+              {/* Çok dar ekranlar için numarayı gizleyip sadece ikon bırakabiliriz, şimdilik gösteriyoruz */}
+              <span className="whitespace-nowrap">{contact.phone}</span>
             </a>
           )}
-          {settings?.email && (
+
+          {/* E-mail: Mobilde gizlenir (hidden sm:flex) */}
+          {contact?.email && (
             <a
-              href={`mailto:${settings.email}`}
-              className="flex flex-row items-center gap-2"
+              href={`mailto:${contact.email}`}
+              className="hidden sm:flex flex-row items-center gap-2 hover:text-blue-100 transition-colors"
             >
-              <FaEnvelope /> {settings.email}
+              <FaEnvelope />
+              <span>{contact.email}</span>
             </a>
           )}
         </div>
 
-        {/* Orta: Banner Promo */}
-        <div className="flex flex-row gap-2">
+        {/* --- ORTA KISIM: Banner --- */}
+        {/* Mobilde tamamen gizlenir (hidden md:flex), sadece tablet ve masaüstünde görünür */}
+        <div className="hidden md:flex flex-row gap-2 items-center">
           {banner?.promo_text && (
-            <a href={banner.promo_url ?? "#"}>{banner.promo_text}</a>
+            <a href={banner.promo_url ?? "#"} className="hover:underline text-center">
+              {banner.promo_text}
+            </a>
           )}
           {banner?.promo_text && banner?.promo_cta && (
-            <span className="opacity-70">|</span>
+            <span className="opacity-70 mx-1">|</span>
           )}
           {banner?.promo_cta && (
-            <a href={banner.promo_url ?? "#"}>{banner.promo_cta}</a>
+            <a href={banner.promo_url ?? "#"} className="font-bold underline decoration-white/50 hover:decoration-white transition-all whitespace-nowrap">
+              {banner.promo_cta}
+            </a>
           )}
         </div>
 
-        {/* Sağ: Dil + Lokasyon */}
-        <div className="flex flex-row items-center gap-2">
+        {/* --- SAĞ KISIM: Dil & Konum --- */}
+        <div className="flex flex-row items-center gap-3 md:gap-4">
+
+          {/* Dil Seçici */}
           <Dropdown />
-          <span className="opacity-70">|</span>
-          <a
-            href={
-              settings?.store_location_url ||
-              settings?.whatsapp_url ||
-              "#"
-            }
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {settings?.store_location_url
-              ? "Store Location"
-              : settings?.whatsapp_url
-                ? "WhatsApp"
-                : "Location"}
-          </a>
+
+          {/* Konum Linki */}
+          {contact?.location_url && (
+            <>
+              <span className="opacity-50">|</span>
+              <a
+                href={contact.location_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-blue-100 transition-colors flex items-center gap-1"
+                title={contact.location_label || "Location"}
+              >
+                {/* Mobilde sadece ikon görünür */}
+                <FaMapMarkerAlt className="sm:hidden text-sm" />
+
+                {/* Masaüstünde metin görünür */}
+                <span className="hidden sm:inline whitespace-nowrap">
+                  {contact.location_label || "Location"}
+                </span>
+              </a>
+            </>
+          )}
         </div>
+
       </div>
     </div>
   );

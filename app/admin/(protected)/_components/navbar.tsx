@@ -1,4 +1,3 @@
-// app/admin/(protected)/_components/navbar.tsx
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -20,9 +19,7 @@ export default function AdminNavbar() {
 
     // --- DİL DEĞİŞTİRME ---
     const handleLanguageChange = (lang: "tr" | "en") => {
-        // Basit bir cookie ayarı (1 yıl geçerli)
         document.cookie = `NEXT_LOCALE=${lang}; path=/; max-age=31536000`;
-        // Sayfayı yenile ki dil aktif olsun (Sidebar vb. bu cookie'yi okuyacak şekilde güncellenebilir)
         window.location.reload();
     };
 
@@ -34,7 +31,7 @@ export default function AdminNavbar() {
             if (typeof window !== "undefined") {
                 Object.keys(localStorage).filter((k) => k.startsWith("sb-")).forEach((k) => localStorage.removeItem(k));
             }
-            await logoutAction(); 
+            await logoutAction();
         } catch (error) {
             console.error("Çıkış hatası:", error);
             setLoggingOut(false);
@@ -67,19 +64,22 @@ export default function AdminNavbar() {
 
     return (
         <header
-            className="w-full flex flex-row justify-between items-center px-6 py-3
+            className="w-full flex flex-row justify-between items-center 
+            px-4 md:px-6 py-3
             bg-[var(--admin-card)] text-[var(--admin-fg)] border-b border-[var(--admin-card-border)]
             sticky top-0 z-30 shadow-sm"
         >
-            <h1 className="text-xl font-semibold flex items-center gap-2">
+            {/* SOL: Logo ve Badge */}
+            <h1 className="text-lg md:text-xl font-semibold flex items-center gap-2">
                 <Link href={"/admin"} className="hover:text-[var(--admin-accent)] transition-colors">
                     Nost Copy
                 </Link>
-                <span className="text-xs font-normal px-2 py-0.5 rounded bg-[var(--admin-input-bg)] text-[var(--admin-muted)] border border-[var(--admin-input-border)]">
+                <span className="text-[10px] md:text-xs font-normal px-1.5 md:px-2 py-0.5 rounded bg-[var(--admin-input-bg)] text-[var(--admin-muted)] border border-[var(--admin-input-border)]">
                     Admin
                 </span>
             </h1>
 
+            {/* SAĞ: Profil Menüsü */}
             <div className="relative">
                 <button
                     ref={btnRef}
@@ -89,7 +89,7 @@ export default function AdminNavbar() {
                     onClick={toggle}
                     className="
                         inline-flex items-center justify-center
-                        w-10 h-10 rounded-full
+                        w-9 h-9 md:w-10 md:h-10 rounded-full
                         bg-[var(--admin-input-bg)] text-[var(--admin-fg)]
                         border border-[var(--admin-input-border)]
                         transition-all duration-200
@@ -97,7 +97,7 @@ export default function AdminNavbar() {
                         hover:bg-[var(--admin-border)] hover:scale-105
                     "
                 >
-                    <CgProfile size={24} aria-hidden="true" className="opacity-80" />
+                    <CgProfile size={20} className="md:w-6 md:h-6 opacity-80" aria-hidden="true" />
                 </button>
 
                 {open && (
@@ -105,7 +105,7 @@ export default function AdminNavbar() {
                         ref={menuRef}
                         role="menu"
                         className="
-                            absolute right-0 mt-2 w-64
+                            absolute right-0 mt-2 w-64 max-w-[calc(100vw-2rem)]
                             bg-[var(--admin-card)] text-[var(--admin-fg)]
                             border border-[var(--admin-card-border)] rounded-xl
                             shadow-xl overflow-hidden
@@ -114,20 +114,20 @@ export default function AdminNavbar() {
                         style={{ animation: "admin-reveal 160ms cubic-bezier(0.33, 1, 0.68, 1) both" }}
                     >
                         <div className="py-2 flex flex-col">
-                            
+
                             {/* DİL SEÇİMİ BAŞLIĞI */}
                             <div className="px-4 py-2 text-xs font-semibold text-[var(--admin-muted)] uppercase tracking-wider flex items-center gap-2">
                                 <IoLanguage /> Dil / Language
                             </div>
-                            
+
                             <div className="flex px-2 gap-2 mb-2">
-                                <button 
+                                <button
                                     onClick={() => handleLanguageChange("tr")}
                                     className="flex-1 py-1.5 text-sm rounded bg-[var(--admin-input-bg)] hover:bg-[var(--admin-border)] border border-[var(--admin-input-border)] transition-colors"
                                 >
                                     🇹🇷 Türkçe
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => handleLanguageChange("en")}
                                     className="flex-1 py-1.5 text-sm rounded bg-[var(--admin-input-bg)] hover:bg-[var(--admin-border)] border border-[var(--admin-input-border)] transition-colors"
                                 >
@@ -138,7 +138,7 @@ export default function AdminNavbar() {
                             <div className="h-px bg-[var(--admin-card-border)] my-1 mx-2" />
 
                             {/* MENÜ LİNKLERİ */}
-                            
+
                             <Link
                                 href="/admin/profile"
                                 onClick={close}

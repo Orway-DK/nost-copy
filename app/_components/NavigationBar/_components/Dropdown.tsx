@@ -1,4 +1,3 @@
-// /home/dorukhan/Desktop/NostCopy/nost-copy/app/_components/NavigationBar/_components/Dropdown.tsx
 "use client";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
@@ -29,7 +28,8 @@ export default function Dropdown({
   loading = false,
   error = false,
   hoverTrigger = true,
-  buttonClassName = "text-gray-700 hover:text-blue-500 cursor-pointer flex items-center gap-1",
+  // text-foreground/80 hover:text-primary
+  buttonClassName = "text-foreground/80 hover:text-primary cursor-pointer flex items-center gap-1 font-medium",
 }: DropdownProps) {
   const [open, setOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement | null>(null);
@@ -61,8 +61,9 @@ export default function Dropdown({
     : "relative h-full flex items-center";
 
   // Ana liste (Level 1)
+  // bg-card, border-muted-light/30
   const listBase =
-    "absolute top-full mt-0 left-0 bg-white border border-gray-200 shadow-lg rounded-md py-2 w-56 transition-all duration-300 z-20";
+    "absolute top-full mt-0 left-0 bg-card border border-muted-light/30 shadow-lg rounded-md py-2 w-56 transition-all duration-300 z-20";
 
   const visibilityClass = hoverTrigger
     ? "opacity-0 invisible group-hover:visible group-hover:opacity-100"
@@ -107,13 +108,13 @@ export default function Dropdown({
         aria-label={label}
       >
         {loading && (
-          <li className="px-4 py-2 text-xs text-gray-400">Yükleniyor...</li>
+          <li className="px-4 py-2 text-xs text-muted">Yükleniyor...</li>
         )}
         {!loading && error && (
-          <li className="px-4 py-2 text-xs text-red-600">{errorLabel}</li>
+          <li className="px-4 py-2 text-xs text-red-500">{errorLabel}</li>
         )}
         {!loading && !error && items.length === 0 && (
-          <li className="px-4 py-2 text-xs text-gray-400">{emptyLabel}</li>
+          <li className="px-4 py-2 text-xs text-muted">{emptyLabel}</li>
         )}
         {!loading &&
           !error &&
@@ -130,7 +131,7 @@ export default function Dropdown({
   );
 }
 
-// Alt Bileşen: Her bir liste elemanını ve alt menülerini yönetir (Recursive)
+// Alt Bileşen
 function DropdownItem({
   item,
   hoverTrigger,
@@ -143,27 +144,28 @@ function DropdownItem({
   const hasChildren = item.children && item.children.length > 0;
 
   return (
-    <li className="relative group/item px-4 py-2 hover:bg-gray-50 cursor-pointer">
+    // hover:bg-background (Kartın üstünde zemin rengiyle kontrast sağlar) veya hover:bg-primary/5
+    <li className="relative group/item px-4 py-2 hover:bg-background cursor-pointer transition-colors">
       <div className="flex items-center justify-between w-full">
         {item.href ? (
           <Link
             href={item.href}
-            className="text-gray-700 hover:text-blue-500 block flex-1"
+            // text-foreground/80 hover:text-primary
+            className="text-foreground/80 hover:text-primary block flex-1 font-medium text-sm"
             onClick={() => {
-              // Eğer alt menü yoksa tıklandığında ana menüyü kapat
               if (!hoverTrigger && !hasChildren) setOpen(false);
             }}
           >
             {item.label}
           </Link>
         ) : (
-          <span className="text-gray-700 flex-1">{item.label}</span>
+          <span className="text-foreground/80 flex-1 font-medium text-sm">{item.label}</span>
         )}
 
-        {/* Alt kategori varsa ok işareti göster */}
+        {/* Alt kategori oku */}
         {hasChildren && (
           <svg
-            className="w-2.5 h-2.5 text-gray-400 -mr-2"
+            className="w-2.5 h-2.5 text-muted -mr-2"
             viewBox="0 0 6 10"
             fill="none"
             stroke="currentColor"
@@ -174,12 +176,11 @@ function DropdownItem({
         )}
       </div>
 
-      {/* Alt Menü (Submenu) - Sağa doğru açılır */}
+      {/* Alt Menü */}
       {hasChildren && (
-        <ul className="absolute left-full top-0 ml-0 bg-white border border-gray-200 shadow-lg rounded-md py-2 w-56 
+        <ul className="absolute left-full top-0 ml-0 bg-card border border-muted-light/30 shadow-lg rounded-md py-2 w-56 
                        opacity-0 invisible group-hover/item:opacity-100 group-hover/item:visible transition-all duration-300 z-30">
           {item.children!.map((child, idx) => (
-            // Kendini tekrar çağırır (Recursive)
             <DropdownItem
               key={`${child.label}-${idx}`}
               item={child}

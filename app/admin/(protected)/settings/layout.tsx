@@ -12,6 +12,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
         { name: "Genel Ayarlar", href: "/admin/settings", icon: <SlSettings /> },
         { name: "Sosyal Medya", href: "/admin/settings/social", icon: <SlShare /> },
         { name: "Footer Menüleri", href: "/admin/settings/footer", icon: <SlList /> },
+        { name: "Üst Bilgi", href: "/admin/settings/top-info-bar", icon: <SlList /> },
     ];
 
     return (
@@ -30,8 +31,8 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                             key={tab.href}
                             href={tab.href}
                             className={`flex items-center gap-2 px-6 py-3 border-b-2 transition-colors whitespace-nowrap ${isActive
-                                    ? "border-[var(--admin-info)] text-[var(--admin-info)] font-medium bg-[var(--admin-input-bg)] rounded-t-lg"
-                                    : "border-transparent text-[var(--admin-muted)] hover:text-[var(--admin-fg)] hover:bg-[var(--admin-bg)]"
+                                ? "border-[var(--admin-info)] text-[var(--admin-info)] font-medium bg-[var(--admin-input-bg)] rounded-t-lg"
+                                : "border-transparent text-[var(--admin-muted)] hover:text-[var(--admin-fg)] hover:bg-[var(--admin-bg)]"
                                 }`}
                         >
                             <span className="text-lg">{tab.icon}</span>
