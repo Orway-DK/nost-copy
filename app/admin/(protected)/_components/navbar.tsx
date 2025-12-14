@@ -1,3 +1,4 @@
+// C:\Projeler\nost-copy\app\admin\(protected)\_components\navbar.tsx
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";

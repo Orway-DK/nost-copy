@@ -1,4 +1,4 @@
-// app/admin/(protected)/categories/[id]/page.tsx
+// C:\Projeler\nost-copy\app\admin\(protected)\categories\[id]\page.tsx
 import { adminSupabase } from "@/lib/supabase/admin";
 import CategoryForm from "./category-form";
 

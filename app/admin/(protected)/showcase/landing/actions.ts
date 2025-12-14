@@ -1,4 +1,4 @@
-// app/admin/(protected)/landing/actions.ts
+// C:\Projeler\nost-copy\app\admin\(protected)\showcase\landing\actions.ts
 "use server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";

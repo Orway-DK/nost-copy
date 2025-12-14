@@ -1,3 +1,4 @@
+// C:\Projeler\nost-copy\app\admin\(protected)\showcase\make-it-easier\page.tsx
 import { getMakeItEasierAction, getSliderPartAction } from "./actions";
 import MakeItEasierManager from "./make-it-easier-manager";
 

@@ -1,4 +1,4 @@
-// app/admin/(protected)/categories/[id]/category-form.tsx
+// C:\Projeler\nost-copy\app\admin\(protected)\categories\[id]\category-form.tsx
 "use client";
 
 import React, { useState } from "react";

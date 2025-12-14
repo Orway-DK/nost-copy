@@ -1,52 +1,55 @@
-"use client";
+// C:\Projeler\nost-copy\app\admin\(protected)\showcase\landing\landing-page-client.tsx
+'use client'
 
-import { useState } from "react";
-import SlidesManager from "./_components/SlidesManager";
-import HighlightsManager from "./_components/HighlightsManager";
-import { IoImages, IoFlash } from "react-icons/io5";
+import { useState } from 'react'
+import SlidesManager from './_components/SlidesManager'
+import HighlightsManager from './_components/HighlightsManager'
+import { IoImagesOutline, IoFlashOutline } from 'react-icons/io5'
 
-export default function LandingPageClient({ initialSlides, initialHighlights }: any) {
-    const [activeTab, setActiveTab] = useState<"slides" | "highlights">("slides");
+export default function LandingPageClient ({
+  initialSlides,
+  initialHighlights
+}: {
+  initialSlides: any[]
+  initialHighlights: any[]
+}) {
+  const [activeTab, setActiveTab] = useState<'slides' | 'highlights'>('slides')
 
-    return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-semibold" style={{ color: "var(--admin-fg)" }}>
-                    Landing Page Yönetimi
-                </h2>
-            </div>
+  return (
+    <div className='space-y-6'>
+      {/* TABS */}
+      <div className='flex border-b border-[var(--admin-card-border)] overflow-x-auto scrollbar-hide'>
+        <button
+          onClick={() => setActiveTab('slides')}
+          className={`flex items-center gap-2 px-6 py-3 border-b-2 transition-colors font-medium whitespace-nowrap ${
+            activeTab === 'slides'
+              ? 'border-[var(--admin-accent)] text-[var(--admin-accent)] bg-[var(--admin-input-bg)] rounded-t-lg'
+              : 'border-transparent text-[var(--admin-muted)] hover:text-[var(--admin-fg)] hover:bg-[var(--admin-bg)]'
+          }`}
+        >
+          <IoImagesOutline size={18} /> Ana Slider
+        </button>
+        <button
+          onClick={() => setActiveTab('highlights')}
+          className={`flex items-center gap-2 px-6 py-3 border-b-2 transition-colors font-medium whitespace-nowrap ${
+            activeTab === 'highlights'
+              ? 'border-[var(--admin-accent)] text-[var(--admin-accent)] bg-[var(--admin-input-bg)] rounded-t-lg'
+              : 'border-transparent text-[var(--admin-muted)] hover:text-[var(--admin-fg)] hover:bg-[var(--admin-bg)]'
+          }`}
+        >
+          <IoFlashOutline size={18} /> Öne Çıkanlar (Highlights)
+        </button>
+      </div>
 
-            {/* TABS */}
-            <div className="flex space-x-6 border-b" style={{ borderColor: "var(--admin-card-border)" }}>
-                <button
-                    onClick={() => setActiveTab("slides")}
-                    className={`pb-3 flex items-center gap-2 border-b-2 transition-colors ${activeTab === "slides"
-                            ? "border-[var(--admin-accent)]"
-                            : "border-transparent opacity-60 hover:opacity-100"
-                        }`}
-                    style={{ color: activeTab === "slides" ? "var(--admin-accent)" : "var(--admin-muted)" }}
-                >
-                    <IoImages /> Hero Slider
-                </button>
-                <button
-                    onClick={() => setActiveTab("highlights")}
-                    className={`pb-3 flex items-center gap-2 border-b-2 transition-colors ${activeTab === "highlights"
-                            ? "border-[var(--admin-accent)]"
-                            : "border-transparent opacity-60 hover:opacity-100"
-                        }`}
-                    style={{ color: activeTab === "highlights" ? "var(--admin-accent)" : "var(--admin-muted)" }}
-                >
-                    <IoFlash /> Highlights (İkonlar)
-                </button>
-            </div>
-
-            {/* CONTENT */}
-            <div className="animate-in fade-in">
-                {activeTab === "slides"
-                    ? <SlidesManager initialSlides={initialSlides} />
-                    : <HighlightsManager initialItems={initialHighlights} />
-                }
-            </div>
-        </div>
-    );
+      {/* CONTENT */}
+      <div className='animate-in fade-in slide-in-from-bottom-2 duration-300'>
+        {activeTab === 'slides' && (
+          <SlidesManager initialSlides={initialSlides} />
+        )}
+        {activeTab === 'highlights' && (
+          <HighlightsManager initialItems={initialHighlights} />
+        )}
+      </div>
+    </div>
+  )
 }

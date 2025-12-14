@@ -1,46 +1,58 @@
-"use client";
+'use client'
 
-import React, { useState } from "react";
-import AdminNavbar from "./navbar";
-import AdminSidebar from "./sidebar";
-import { SlMenu } from "react-icons/sl";
+import React, { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
+import AdminNavbar from './navbar'
+import AdminSidebar from './sidebar'
+import { IoMenu } from 'react-icons/io5'
 
-export default function AdminLayoutClient({ children }: { children: React.ReactNode }) {
-    const [isSidebarOpen, setSidebarOpen] = useState(false);
+export default function AdminLayoutClient ({
+  children
+}: {
+  children: React.ReactNode
+}) {
+  const [isSidebarOpen, setSidebarOpen] = useState(false)
+  const pathname = usePathname()
 
-    return (
-        <div className="min-h-screen bg-[var(--admin-bg)] flex text-[var(--admin-fg)] font-sans selection:bg-[var(--admin-accent)] selection:text-white">
+  // Sayfa değiştiğinde sidebar'ı mobilde kapat
+  useEffect(() => {
+    setSidebarOpen(false)
+  }, [pathname])
 
-            {/* SIDEBAR (Props ile state kontrolü) */}
-            <AdminSidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
+  return (
+    <div className='min-h-screen bg-[var(--admin-bg)] text-[var(--admin-fg)] font-sans flex relative'>
+      {/* SIDEBAR */}
+      <AdminSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
-            {/* ANA İÇERİK SARMALAYICI */}
-            {/* lg:pl-64 -> Masaüstünde sidebar genişliği kadar soldan boşluk bırak */}
-            <div className="flex-1 flex flex-col min-w-0 lg:pl-64 transition-all duration-300">
+      {/* ANA İÇERİK ALANI */}
+      {/* lg:ml-64: Masaüstünde sidebar kadar boşluk bırak */}
+      <div className='flex-1 flex flex-col min-w-0 lg:ml-64 transition-all duration-300'>
+        {/* NAVBAR */}
+        <div className='sticky top-0 z-20'>
+          {/* Mobilde hamburger menü */}
+          <div className='lg:hidden bg-[var(--admin-card)] border-b border-[var(--admin-card-border)] p-4 flex items-center gap-4'>
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className='p-2 -ml-2 text-[var(--admin-fg)] hover:bg-[var(--admin-input-bg)] rounded-md'
+            >
+              <IoMenu size={24} />
+            </button>
+            <span className='font-bold text-lg'>Admin Panel</span>
+          </div>
 
-                {/* MOBİL HEADER (Sadece mobilde görünür - lg:hidden) */}
-                {/* Sidebar'ı açmak için hamburger menü burada */}
-                <div className="lg:hidden h-16 bg-[var(--admin-card)] border-b border-[var(--admin-card-border)] flex items-center px-4 sticky top-0 z-20 shadow-sm">
-                    <button
-                        onClick={() => setSidebarOpen(true)}
-                        className="text-[var(--admin-fg)] p-2 hover:bg-[var(--admin-input-bg)] rounded-lg transition-colors"
-                    >
-                        <SlMenu size={24} />
-                    </button>
-                    <span className="ml-4 font-bold text-lg">Admin Panel</span>
-                </div>
-
-                {/* DESKTOP NAVBAR */}
-                {/* Mobilde gizleyebilirsin veya tutabilirsin. Genelde admin panellerde üstte User Profile kalır. */}
-                <div className="sticky top-0 z-10 lg:z-30">
-                    <AdminNavbar />
-                </div>
-
-                {/* SAYFA İÇERİĞİ */}
-                <main className="p-4 md:p-8 flex-1 w-full max-w-[1600px] mx-auto overflow-x-hidden">
-                    {children}
-                </main>
-            </div>
+          <div className='hidden lg:block'>
+            <AdminNavbar />
+          </div>
         </div>
-    );
+
+        {/* CONTENT */}
+        <main className='p-4 md:p-8 w-full max-w-[1600px] mx-auto'>
+          {children}
+        </main>
+      </div>
+    </div>
+  )
 }

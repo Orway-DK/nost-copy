@@ -1,62 +1,45 @@
-/* orway-dk/nost-copy/nost-copy-d541a3f124d8a8bc7c3eeea745918156697a239e/app/admin/admin-theme.css */
-/* Admin theme tokens + components (Tailwind v4, config-less)
-   - This file defines admin color tokens and ready-to-use component classes.
-   - It MUST be processed by Tailwind. Ensure this file is imported by a routed layout.
-*/
-@import "tailwindcss";
+/* C:\Projeler\nost-copy\app\admin\admin-theme.css */
+@import 'tailwindcss';
 
-/* Scope your admin theme to .admin-root so it doesn’t affect public site */
 .admin-root {
-  /* Light palette */
-  --admin-bg: #f8fafc; /* gray-50-ish */
-  --admin-fg: #0f172a; /* slate-900-ish */
-  --admin-card: #ffffff; /* white */
-  --admin-card-border: #e5e7eb; /* gray-200 */
-  --admin-muted: #6b7280; /* gray-500 */
-
-  --admin-input-bg: #f9fafb; /* gray-50 */
-  --admin-input-fg: #0f172a; /* slate-900-ish */
-  --admin-input-placeholder: #9ca3af; /* gray-400 */
-  --admin-input-border: #d1d5db; /* gray-300 */
-  --admin-input-focus: #9ca3af; /* gray-400 */
-  --admin-ring: #9ca3af; /* gray-400 */
-
-  --admin-accent: #4b5563; /* gray-600 */
-  --admin-accent-2: #374151; /* gray-700 */
-
-  --admin-danger: #ef4444; /* red-500 */
-  --admin-success: #22c55e; /* green-500 */
-  --admin-info: #3b82f6; /* blue-500 */
+  --admin-bg: #f8fafc;
+  --admin-fg: #0f172a;
+  --admin-card: #ffffff;
+  --admin-card-border: #e5e7eb;
+  --admin-muted: #6b7280;
+  --admin-input-bg: #f9fafb;
+  --admin-input-fg: #0f172a;
+  --admin-input-placeholder: #9ca3af;
+  --admin-input-border: #d1d5db;
+  --admin-input-focus: #9ca3af;
+  --admin-ring: #9ca3af;
+  --admin-accent: #4b5563;
+  --admin-accent-2: #374151;
+  --admin-danger: #ef4444;
+  --admin-success: #22c55e;
+  --admin-info: #3b82f6;
 }
 
-/* Tailwind token mapping: define ONCE. */
 @theme inline {
   --color-admin-bg: var(--admin-bg);
   --color-admin-fg: var(--admin-fg);
   --color-admin-card: var(--admin-card);
   --color-admin-border: var(--admin-card-border);
   --color-admin-muted: var(--admin-muted);
-
   --color-admin-input-bg: var(--admin-input-bg);
   --color-admin-input-fg: var(--admin-input-fg);
   --color-admin-input-placeholder: var(--admin-input-placeholder);
   --color-admin-input-border: var(--admin-input-border);
   --color-admin-input-focus: var(--admin-input-focus);
   --color-admin-ring: var(--admin-ring);
-
   --color-admin-accent: var(--admin-accent);
   --color-admin-accent-2: var(--admin-accent-2);
-
   --color-admin-danger: var(--admin-danger);
   --color-admin-success: var(--admin-success);
   --color-admin-info: var(--admin-info);
-
-  /* Optional fonts (if you have global font vars) */
   --font-admin-sans: var(--font-sans, ui-sans-serif, system-ui);
-  --font-admin-title: var(--font-poppins, ui-sans-serif, system-ui);
 }
 
-/* Dark mode override via media query */
 @media (prefers-color-scheme: dark) {
   .admin-root {
     --admin-bg: #0b1220;
@@ -64,24 +47,20 @@
     --admin-card: #111827;
     --admin-card-border: #374151;
     --admin-muted: #9ca3af;
-
     --admin-input-bg: #1f2937;
     --admin-input-fg: #e5e7eb;
     --admin-input-placeholder: #9ca3af;
     --admin-input-border: #4b5563;
     --admin-input-focus: #6b7280;
     --admin-ring: #6b7280;
-
     --admin-accent: #e5e7eb;
     --admin-accent-2: #d1d5db;
-
     --admin-danger: #f87171;
     --admin-success: #34d399;
     --admin-info: #60a5fa;
   }
 }
 
-/* Base container */
 .admin-root {
   min-height: 100vh;
   width: 100%;
@@ -90,36 +69,49 @@
   font-family: var(--font-admin-sans);
 }
 
-/* Components (plain CSS, no @apply) */
+/* --- COMPONENT CLASSES --- */
 
-/* Labels */
-.admin-label {
-  font-size: 0.875rem; /* text-sm */
-  color: var(--admin-fg);
-  opacity: 0.8;
-  margin-bottom: 0.25rem;
+/* Page Header */
+.admin-page-header {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+@media (min-width: 768px) {
+  .admin-page-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+.admin-page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--admin-fg);
 }
 
-/* Inputs */
+/* Inputs & Labels */
+.admin-label {
+  font-size: 0.875rem;
+  color: var(--admin-fg);
+  font-weight: 500;
+  margin-bottom: 0.375rem;
+  display: flex;
+}
+
 .admin-input,
 .admin-textarea,
 .admin-select {
   width: 100%;
-  border-radius: 0.5rem; /* rounded-lg */
-  padding: 0.5rem 0.75rem; /* px-3 py-2 */
-  font-size: 0.875rem; /* text-sm */
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
   background-color: var(--admin-input-bg);
   color: var(--admin-input-fg);
   border: 1px solid var(--admin-input-border);
   outline: none;
-  transition: border-color 150ms ease, box-shadow 150ms ease,
-    background-color 150ms ease;
-}
-.admin-input::placeholder,
-.admin-textarea::placeholder {
-  color: var(--admin-input-placeholder);
+  transition: all 0.2s ease;
 }
 .admin-input:focus,
 .admin-textarea:focus,
@@ -127,291 +119,85 @@
   border-color: var(--admin-input-focus);
   box-shadow: 0 0 0 2px var(--admin-ring);
 }
-.admin-textarea {
-  min-height: 120px;
-}
-
-/* Form helper text */
-.admin-help {
-  font-size: 0.75rem; /* text-xs */
-  color: var(--admin-muted);
-}
 
 /* Buttons */
 .btn-admin {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.375rem; /* rounded-md */
-  padding: 0.5rem 1rem; /* py-2 px-4 */
-  font-size: 0.875rem; /* text-sm */
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
   font-weight: 500;
-  transition: transform 120ms ease, box-shadow 150ms ease,
-    background-color 150ms ease, color 150ms ease;
   cursor: pointer;
-  border: 1px solid transparent;
+  transition: all 0.2s ease;
 }
 .btn-admin:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 .btn-admin:active {
-  transform: scale(0.99);
+  transform: scale(0.98);
 }
+
 .btn-admin-primary {
   background-color: var(--admin-accent);
   color: var(--admin-bg);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }
 .btn-admin-primary:hover {
   background-color: var(--admin-accent-2);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16);
 }
-.btn-admin-primary:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--admin-ring);
-}
+
 .btn-admin-secondary {
   background-color: var(--admin-card);
+  border: 1px solid var(--admin-card-border);
   color: var(--admin-fg);
-  border-color: var(--admin-card-border);
 }
 .btn-admin-secondary:hover {
   background-color: var(--admin-input-bg);
 }
-.btn-admin-secondary:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--admin-ring);
-}
+
 .btn-admin-danger {
   background-color: var(--admin-danger);
-  color: #fff;
+  color: white;
 }
 .btn-admin-danger:hover {
-  filter: brightness(0.95);
-}
-.btn-admin-danger:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--admin-danger), #000 40%);
+  filter: brightness(0.9);
 }
 
-/* Cards / Panels */
+/* Card */
 .card-admin {
   background-color: var(--admin-card);
   border: 1px solid var(--admin-card-border);
-  border-radius: 1rem; /* rounded-2xl */
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-radius: 0.75rem;
   padding: 1.5rem;
-}
-
-/* Alerts */
-.alert-admin {
-  font-size: 0.875rem; /* text-sm */
-  border-radius: 0.375rem;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid transparent;
-}
-/* NOTE: Alerts use light BG and Dark Text for contrast */
-.alert-admin-error {
-  background-color: color-mix(
-    in oklab,
-    var(--admin-danger),
-    #fff 70%
-  ); /* Light BG tint */
-  color: color-mix(
-    in oklab,
-    var(--admin-danger),
-    #000 50%
-  ); /* Dark Text tint */
-  border-color: color-mix(in oklab, var(--admin-danger), #fff 50%);
-}
-.alert-admin-success {
-  background-color: color-mix(
-    in oklab,
-    var(--admin-success),
-    #fff 70%
-  ); /* Light BG tint */
-  color: color-mix(
-    in oklab,
-    var(--admin-success),
-    #000 50%
-  ); /* Dark Text tint */
-  border-color: color-mix(in oklab, var(--admin-success), #fff 50%);
-}
-.alert-admin-info {
-  background-color: color-mix(
-    in oklab,
-    var(--admin-info),
-    #fff 70%
-  ); /* Light BG tint */
-  color: color-mix(in oklab, var(--admin-info), #000 50%); /* Dark Text tint */
-  border-color: color-mix(in oklab, var(--admin-info), #fff 50%);
-}
-
-/* Dark mode alert overrides */
-@media (prefers-color-scheme: dark) {
-  .alert-admin-error {
-    background-color: color-mix(
-      in oklab,
-      var(--admin-danger),
-      #000 50%
-    ); /* Dark BG tint */
-    color: var(--admin-danger); /* Bright Text */
-    border-color: color-mix(in oklab, var(--admin-danger), #000 30%);
-  }
-  .alert-admin-success {
-    background-color: color-mix(in oklab, var(--admin-success), #000 50%);
-    color: var(--admin-success);
-    border-color: color-mix(in oklab, var(--admin-success), #000 30%);
-  }
-  .alert-admin-info {
-    background-color: color-mix(in oklab, var(--admin-info), #000 50%);
-    color: var(--admin-info);
-    border-color: color-mix(in oklab, var(--admin-info), #000 30%);
-  }
-}
-
-/* Table */
-.table-admin {
-  width: 100%;
-  border: 1px solid var(--admin-card-border);
-  border-radius: 0.5rem;
-  overflow: hidden;
-  background-color: var(--admin-card);
-}
-.thead-admin {
-  background-color: var(--admin-input-bg);
-}
-.th-admin {
-  text-align: left;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--admin-muted);
-  border-bottom: 1px solid var(--admin-card-border);
-}
-.tr-admin {
-  border-bottom: 1px solid var(--admin-card-border);
-}
-.td-admin {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  color: var(--admin-fg);
-}
-.row-admin-hover:hover {
-  background-color: var(--admin-input-bg);
-}
-
-/* Navbar (optional helper) */
-.navbar-admin {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 1rem;
-  background-color: var(--admin-input-bg);
-  color: var(--admin-fg);
-  border-bottom: 1px solid var(--admin-card-border);
-}
-.navbar-admin-title {
-  font-size: 1.25rem;
-  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 /* Badges */
 .badge-admin {
   display: inline-flex;
-  align-items: center;
+  padding: 0.25rem 0.625rem;
   border-radius: 9999px;
-  padding: 0.125rem 0.5rem; /* py-0.5 px-2 */
-  font-size: 0.75rem; /* text-xs */
-  font-weight: 500;
+  font-size: 0.75rem;
+  font-weight: 600;
   border: 1px solid transparent;
+}
+.badge-admin-success {
+  background-color: color-mix(in oklab, var(--admin-success), transparent 90%);
+  color: var(--admin-success);
+  border-color: color-mix(in oklab, var(--admin-success), transparent 80%);
 }
 .badge-admin-default {
   background-color: var(--admin-input-bg);
-  color: var(--admin-fg);
+  color: var(--admin-muted);
   border-color: var(--admin-card-border);
 }
-/* DÜZELTME: Light BG, Vivid Text (Yüksek Kontrast) */
-.badge-admin-success {
-  background-color: color-mix(
-    in oklab,
-    var(--admin-success),
-    #fff 90%
-  ); /* %90 beyaz ile çok açık BG */
-  color: var(--admin-success); /* Ana renk ile koyu/canlı metin */
-  border-color: color-mix(in oklab, var(--admin-success), #fff 70%);
-}
-.badge-admin-error {
-  background-color: color-mix(in oklab, var(--admin-danger), #fff 90%);
-  color: var(--admin-danger);
-  border-color: color-mix(in oklab, var(--admin-danger), #fff 70%);
-}
-.badge-admin-info {
-  background-color: color-mix(in oklab, var(--admin-info), #fff 90%);
-  color: var(--admin-info);
-  border-color: color-mix(in oklab, var(--admin-info), #fff 70%);
-}
 
-/* Dark mode badge overrides */
-@media (prefers-color-scheme: dark) {
-  /* Dark modda, arka planı biraz daha koyu yapıp metni parlak bırakarak kontrastı sağlıyoruz */
-  .badge-admin-success {
-    background-color: color-mix(in oklab, var(--admin-success), #000 65%);
-    color: var(--admin-success);
-    border-color: color-mix(in oklab, var(--admin-success), #000 40%);
-  }
-  .badge-admin-error {
-    background-color: color-mix(in oklab, var(--admin-danger), #000 65%);
-    color: var(--admin-danger);
-    border-color: color-mix(in oklab, var(--admin-danger), #000 40%);
-  }
-  .badge-admin-info {
-    background-color: color-mix(in oklab, var(--admin-info), #000 65%);
-    color: var(--admin-info);
-    border-color: color-mix(in oklab, var(--admin-info), #000 40%);
-  }
-}
-
-/* Utility helpers */
-.grid-admin {
-  display: grid;
-  gap: 1rem;
-}
-.grid-admin-2 {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: 1fr;
-}
-@media (min-width: 768px) {
-  .grid-admin-2 {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-.grid-admin-3 {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: 1fr;
-}
-@media (min-width: 768px) {
-  .grid-admin-3 {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-@media (min-width: 1280px) {
-  .grid-admin-3 {
-    grid-template-columns: 1fr 1fr 1fr;
-  }
-}
-
-/* Animation used in dropdown */
-@keyframes admin-reveal {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 12px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
+/* Table Wrapper for Mobile */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }

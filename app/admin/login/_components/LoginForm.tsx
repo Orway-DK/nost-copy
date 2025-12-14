@@ -1,4 +1,4 @@
-///home/dorukhan/Desktop/NostCopy/nost-copy/app/admin/login/_components/LoginForm.tsx
+// C:\Projeler\nost-copy\app\admin\login\_components\LoginForm.tsx
 
 "use client";
 import React, { useState } from "react";
