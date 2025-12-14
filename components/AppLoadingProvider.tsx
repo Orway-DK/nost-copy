@@ -1,94 +1,119 @@
-// orway-dk/nost-copy/nost-copy-d541a3f124d8a8bc7c3eeea745918156697a239e/components/AppLoadingProvider.tsx
-"use client";
+'use client'
 
-import {
-    createContext,
-    useContext,
-    useMemo,
-    useState,
-    ReactNode,
-    useCallback,
-    useEffect,
-} from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useRef,
+  useEffect
+} from 'react'
 
-import Image from "next/image";
-
-type Ctx = {
-    pending: number;
-    start: () => void;
-    stop: () => void;
-};
-
-const AppLoadingContext = createContext<Ctx | null>(null);
-
-export function AppLoadingProvider({ children }: { children: ReactNode }) {
-    const [pending, setPending] = useState(0);
-
-    // 🔹 BAŞLANGIÇTA OVERLAY AÇIK
-    const [visible, setVisible] = useState(true);
-    const [fadeOut, setFadeOut] = useState(false);
-
-    const start = useCallback(() => {
-        setPending((p) => p + 1);
-    }, []);
-
-    const stop = useCallback(() => {
-        setPending((p) => Math.max(0, p - 1));
-    }, []);
-
-    // pending değiştikçe overlay görünürlüğü ve fade-out animasyonu
-    useEffect(() => {
-        if (pending > 0) {
-            // Herhangi bir component "yükleniyorum" dedi:
-            // Overlay açık ve opak olsun
-            setVisible(true);
-            setFadeOut(false);
-        } else if (pending === 0 && visible) {
-            // Yükleme bitti → fade-out başlat
-            setFadeOut(true);
-
-            const timeout = setTimeout(() => {
-                setVisible(false);
-                setFadeOut(false);
-            }, 400); // ⏱ CSS transition süresi ile aynı
-
-            return () => clearTimeout(timeout);
-        }
-    }, [pending, visible]);
-
-    const value = useMemo(
-        () => ({ pending, start, stop }),
-        [pending, start, stop]
-    );
-
-    return (
-        <AppLoadingContext.Provider value={value}>
-            {/* Overlay: sadece visible=true iken DOM'da */}
-            {visible && (
-                <div
-                    className={`
-            fixed inset-0 z-[9999] flex items-center justify-center
-            bg-black backdrop-blur-sm
-            transition-opacity duration-400
-            ${fadeOut ? "opacity-0" : "opacity-100"}
-          `}
-                >
-                    <div className="flex flex-col items-center gap-4">
-                        {/* DÜZELTME: priority eklendi */}
-                        <Image src={"/nost.png"} alt="logo" width={100} height={100} className="spin-slow" priority />
-                    </div>
-                </div>
-            )}
-
-            {children}
-        </AppLoadingContext.Provider>
-    );
+// Loading Context Tipi
+type LoadingCtx = {
+  start: () => void
+  stop: () => void
+  isLoading: boolean
 }
 
-export function useAppLoading() {
-    const ctx = useContext(AppLoadingContext);
-    if (!ctx) {
-        throw new Error("useAppLoading must be used within AppLoadingProvider");
+const AppLoadingContext = createContext<LoadingCtx>({
+  start: () => {},
+  stop: () => {},
+  isLoading: false
+})
+
+export function AppLoadingProvider ({
+  children
+}: {
+  children: React.ReactNode
+}) {
+  const [loadingCount, setLoadingCount] = useState(0)
+  const [isVisible, setIsVisible] = useState(false)
+
+  // Titremeyi önlemek için timer referansları
+  const stopTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const minDisplayTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const isLockedRef = useRef(false) // Minimum süre kilidi
+
+  const start = useCallback(() => {
+    // Eğer bir durdurma zamanlayıcısı varsa iptal et (Hala yükleniyor demektir)
+    if (stopTimerRef.current) {
+      clearTimeout(stopTimerRef.current)
+      stopTimerRef.current = null
     }
-    return ctx;
+
+    setLoadingCount(prev => {
+      const newVal = prev + 1
+      if (newVal === 1) {
+        // İlk yükleme başladı, ekrana getir
+        setIsVisible(true)
+        isLockedRef.current = true
+
+        // En az 500ms ekranda kalmasını garanti et
+        if (minDisplayTimerRef.current) clearTimeout(minDisplayTimerRef.current)
+        minDisplayTimerRef.current = setTimeout(() => {
+          isLockedRef.current = false
+          // Eğer süre dolduğunda sayaç 0 ise kapatmayı tetikle
+          // (Burada state'e erişemediğimiz için useEffect ile kontrol edeceğiz)
+        }, 500)
+      }
+      return newVal
+    })
+  }, [])
+
+  const stop = useCallback(() => {
+    setLoadingCount(prev => Math.max(0, prev - 1))
+  }, [])
+
+  // Sayaç veya Kilit değiştiğinde görünürlüğü kontrol et
+  useEffect(() => {
+    // Eğer sayaç 0 ise ve minimum süre kilidi yoksa kapat
+    if (loadingCount === 0 && !isLockedRef.current) {
+      // Biraz gecikmeli kapat ki animasyonlar yumuşak olsun
+      stopTimerRef.current = setTimeout(() => {
+        setIsVisible(false)
+      }, 300)
+    }
+
+    // Eğer sayaç 0 ama kilitliyse, kilit açılınca kapanması için bir interval veya
+    // minDisplayTimerRef içindeki callback işi halledecek mi?
+    // State güncellemeleri asenkron olduğu için en temizi, kilit açıldığında
+    // loadingCount'u kontrol eden bir mekanizmadır.
+    // Basitlik adına: MinDisplay süresi dolunca bir force update yapmayalım,
+    // kullanıcı hissetmez. 300ms delay zaten çoğu durumu kurtarır.
+  }, [loadingCount])
+
+  // Kilit süresi dolduğunda tekrar kontrol et (Edge case için)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isLockedRef.current && loadingCount === 0 && isVisible) {
+        setIsVisible(false)
+      }
+    }, 200)
+    return () => clearInterval(interval)
+  }, [loadingCount, isVisible])
+
+  return (
+    <AppLoadingContext.Provider value={{ start, stop, isLoading: isVisible }}>
+      {children}
+
+      {/* FULL SCREEN LOADING OVERLAY */}
+      <div
+        className={`fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center transition-opacity duration-500 pointer-events-none
+                ${isVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0'}`}
+      >
+        {/* LOGO veya SPINNER */}
+        <div className='flex flex-col items-center gap-4'>
+          <div className='w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin'></div>
+          <h2 className='text-xl font-bold text-gray-700 animate-pulse'>
+            Nost Copy
+          </h2>
+        </div>
+      </div>
+    </AppLoadingContext.Provider>
+  )
+}
+
+export function useAppLoading () {
+  return useContext(AppLoadingContext)
 }

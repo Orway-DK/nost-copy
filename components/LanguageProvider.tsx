@@ -1,3 +1,4 @@
+// C:\Projeler\nost-copy\components\LanguageProvider.tsx
 "use client";
 
 import React, {

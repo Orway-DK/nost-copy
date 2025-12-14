@@ -1,3 +1,4 @@
+// C:\Projeler\nost-copy\app\_components\ServicesSlider\ServiceCard.tsx
 "use client";
 
 import React from "react";

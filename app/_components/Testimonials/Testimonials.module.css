@@ -1,26 +1,39 @@
+/* C:\Projeler\nost-copy\app\_components\Testimonials\Testimonials.module.css */
+
 /* --- GENEL CONTAINER --- */
 .sectionWrapper {
   position: relative;
   width: 100%;
-  overflow: hidden; /* Taşmaları gizle */
-  padding: 10rem 0 8rem; /* Üst-alt boşluk */
+  overflow: hidden;
+  padding: 10rem 0 8rem; /* Masaüstü boşlukları */
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
 
-/* --- MARQUEE (KAYAN BAŞLIK) ALANI --- */
+/* --- MARQUEE (KAYAN BAŞLIK - SADECE MASAÜSTÜ) --- */
 .marqueeContainer {
   position: absolute;
-  top: 0; /* Kartların biraz üzerinde başlasın */
+  top: 0;
   left: 0;
   width: 100%;
-  z-index: 0; /* Kartların arkasında */
+  z-index: 0;
   user-select: none;
   pointer-events: none;
-  /* Kenarlardan hafif silikleşme efekti için maske */
-  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 5%,
+    black 95%,
+    transparent
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 5%,
+    black 95%,
+    transparent
+  );
 }
 
 .marqueeTrack {
@@ -28,44 +41,74 @@
   align-items: center;
   white-space: nowrap;
   will-change: transform;
-  /* Sonsuz döngü animasyonu */
   animation: marqueeScroll 40s linear infinite;
 }
 
 .marqueeText {
-  font-family: 'Poppins', sans-serif; /* Fontunu projene göre ayarla */
-  font-weight: 500;
-  font-size: 10vw; /* Ekran genişliğine göre devasa başlık */
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 10vw;
   line-height: 1;
-  color: rgba(81, 55, 255, 0.08); /* Theme renginin çok açığı */
+  color: rgba(81, 55, 255, 0.06); /* Biraz daha silik */
   text-transform: uppercase;
-  margin-right: 2rem; /* Kelimeler arası boşluk */
+  margin-right: 2rem;
 }
 
-/* Animasyon Keyframes */
 @keyframes marqueeScroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); } /* İçerik 2 kere tekrarlandığı için %50 kaydırıyoruz */
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
+/* --- MOBİL BAŞLIK (SADECE MOBİL) --- */
+.mobileHeader {
+  display: none; /* Masaüstünde gizli */
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 0 1.5rem;
+  z-index: 10;
+}
 
-/* --- SLIDER ALANI (ÖN PLAN) --- */
+.mobileTitle {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 2rem;
+  line-height: 1.2;
+  color: #111827; /* Koyu renk, okunabilir */
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+}
+
+.mobileSubtitle {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+/* --- SLIDER ALANI --- */
 .sliderContainer {
   position: relative;
-  z-index: 10; /* Yazının önünde */
+  z-index: 10;
   width: 100%;
-  margin-top: 5vw; /* Başlık ile kartlar arasına biraz mesafe (responsive) */
+  margin-top: 5vw;
 }
 
-/* Swiper Customization */
+/* Swiper ayarları */
 .sliderContainer :global(.swiper) {
   width: 100%;
-  padding-bottom: 4rem !important; /* Pagination noktaları için alt boşluk */
-  overflow: visible !important; /* KESİK KART EFEKTİ İÇİN KRİTİK */
+  padding-bottom: 4rem !important;
+  overflow: visible !important;
 }
 
 .sliderContainer :global(.swiper-wrapper) {
-  align-items: center; /* Kartları dikeyde ortala */
+  align-items: center;
 }
 
 /* --- KART TASARIMI --- */
@@ -73,23 +116,21 @@
   background: #fff;
   border-radius: 24px;
   padding: 2.5rem;
-  box-shadow: 0 10px 30px -5px rgba(0,0,0,0.06);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.06);
   height: auto;
-  min-height: 400px; /* Kartların boyunu eşitlemek için */
+  min-height: 400px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border: 1px solid rgba(0,0,0,0.03);
-  transition: transform 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
 
-/* Aktif (Ortadaki) kart efekti */
 .sliderContainer :global(.swiper-slide-active) .card {
-  transform: scale(1.1); /* Ortadakini büyüt */
-  box-shadow: 0 25px 50px -12px rgba(81, 55, 255, 0.2); /* Gölgeyi artır */
+  transform: scale(1.1);
+  box-shadow: 0 25px 50px -12px rgba(81, 55, 255, 0.2);
   border-color: rgba(81, 55, 255, 0.2);
   z-index: 20;
-  position: relative;
 }
 
 .stars {
@@ -105,7 +146,7 @@
   color: #374151;
   font-style: italic;
   font-weight: 500;
-  flex-grow: 1; /* Boşluğu doldursun */
+  flex-grow: 1;
 }
 
 .author {
@@ -117,20 +158,20 @@
   border-top: 1px solid #f3f4f6;
 }
 
-.avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: #e5e7eb;
-  border: 2px solid #fff;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-}
-
+.avatar,
 .avatarPlaceholder {
   width: 56px;
   height: 56px;
   border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.avatar {
+  object-fit: cover;
+  background: #e5e7eb;
+}
+.avatarPlaceholder {
   background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
   color: #4338ca;
   font-weight: 700;
@@ -138,21 +179,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid #fff;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
 }
 
 .authorInfo {
   display: flex;
   flex-direction: column;
 }
-
 .authorName {
   font-weight: 700;
   color: #111827;
   font-size: 1.05rem;
 }
-
 .authorJob {
   font-size: 0.8rem;
   color: #6b7280;
@@ -160,11 +197,39 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-
-/* Yüklenme Durumu */
 .loadingState {
   text-align: center;
   font-size: 1.2rem;
   color: #9ca3af;
   padding: 4rem;
+}
+
+/* --- RESPONSIVE (MOBİL AYARLARI) --- */
+@media (max-width: 768px) {
+  .sectionWrapper {
+    padding: 2rem 0 3rem; /* Mobilde dikey boşluğu azalttık */
+  }
+
+  .marqueeContainer {
+    display: none; /* Mobilde kayan yazıyı gizle */
+  }
+
+  .mobileHeader {
+    display: block; /* Mobilde statik başlığı göster */
+  }
+
+  .sliderContainer {
+    margin-top: 1rem; /* Başlık ile slider arasını yakınlaştır */
+  }
+
+  .card {
+    padding: 1.5rem; /* Mobilde kart iç boşluğunu azalt */
+    min-height: 320px; /* Mobilde kart boyunu kısalt */
+    border-radius: 20px;
+  }
+
+  /* Mobilde scale efektini biraz yumuşat */
+  .sliderContainer :global(.swiper-slide-active) .card {
+    transform: scale(1.05);
+  }
 }

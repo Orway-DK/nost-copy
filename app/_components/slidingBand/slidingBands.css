@@ -1,74 +1,51 @@
-/* Yalnızca yatay overflow gizlensin */
-.marquee-mask {
-  overflow-x: hidden;
-  overflow-y: visible;
-  width: 100%;
-}
+/* app/_components/slidingBand/slidingBands.css */
 
-/* Ray: strip'ler burada duruyor */
-.marquee-track {
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-  will-change: transform;
-}
-
-/* Strip: shrink olmasın, aralarında boşluk olsun */
-.marquee-strip {
-  flex: 0 0 auto;
-  display: flex;
-  gap: 10px; /* gap-10 */
-  align-items: center;
-  margin-right: 2.5rem; /* strip'ler birleşmesin */
-}
-
-/* 3 strip → 1 strip genişliği ≈ %33.333 */
-@keyframes dk-marquee-keyframes {
-  from {
+/* Animasyon Tanımları */
+@keyframes marquee {
+  0% {
     transform: translateX(0%);
   }
-  to {
-    transform: translateX(-33.3333%);
+  100% {
+    transform: translateX(-100%);
   }
 }
 
-@keyframes dk-marquee-reverse-keyframes {
-  from {
-    transform: translateX(-33.3333%);
+@keyframes marquee-reverse {
+  0% {
+    transform: translateX(-100%);
   }
-  to {
+  100% {
     transform: translateX(0%);
   }
 }
 
-/* Sağdan sola (alt siyah bant) */
-.dk-marquee {
-  animation: dk-marquee-keyframes 30s linear infinite;
-}
-/* Sağdan sola (alt siyah bant) */
-.dk-marquee-fast {
-  animation: dk-marquee-keyframes 5s linear infinite;
+/* Sınıf Tanımları 
+   Not: Tailwind config'e extend olarak da ekleyebilirdin ama 
+   CSS dosyası istiyorsan buraya ekliyoruz.
+*/
+
+/* 1. Sola Kayan (Normal) */
+.animate-marquee {
+  animation: marquee 120s linear infinite;
 }
 
-/* Soldan sağa (üst beyaz bant) */
-.dk-marquee-reverse {
-  animation: dk-marquee-reverse-keyframes 30s linear infinite;
-}
-/* Soldan sağa (üst beyaz bant) */
-.dk-marquee-reverse-fast {
-  animation: dk-marquee-reverse-keyframes 5s linear infinite;
+/* Mobilde daha hızlı olması için süre (duration) kısaltıldı */
+.animate-marquee-fast {
+  animation: marquee 60s linear infinite;
 }
 
-/* Hover'da ikisini de durdur */
-.group:hover .dk-marquee,
-.group:hover .dk-marquee-reverse {
-  animation-play-state: paused;
+/* 2. Sağa Kayan (Reverse) */
+.animate-marquee-reverse {
+  animation: marquee-reverse 120s linear infinite;
 }
 
-/* Mobilde biraz daha yavaş */
-@media (max-width: 640px) {
-  .dk-marquee,
-  .dk-marquee-reverse {
-    animation-duration: 60s;
-  }
+.animate-marquee-reverse-fast {
+  animation: marquee-reverse 60s linear infinite;
+}
+
+/* Önemli: Mobilde taşmaları engellemek için */
+.marquee-container {
+  display: flex;
+  overflow: hidden;
+  user-select: none;
 }

@@ -1,205 +1,182 @@
-"use client";
+'use client'
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import useSWR from "swr";
-import { SlUser, SlBasket, SlMenu, SlClose } from "react-icons/sl";
-import { useLanguage } from "@/components/LanguageProvider";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { useAppLoading } from "@/components/AppLoadingProvider";
-import Dropdown from "./_components/Dropdown";
+import { useMemo, useState } from 'react'
+import Link from 'next/link'
+import useSWR from 'swr'
+import { SlUser, SlBasket, SlMenu, SlClose } from 'react-icons/sl'
+import { useLanguage } from '@/components/LanguageProvider'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import Dropdown from './_components/Dropdown'
 
 type CategoryRow = {
-  id: number;
-  parent_id: number | null;
-  slug: string;
-  category_translations: { name: string; lang_code: string }[];
-};
-
-type ServiceRow = {
-  id: number;
-  slug: string;
-  service_translations: { title: string; lang_code: string }[];
-};
-
-// --- DATA FETCHING ---
-
-const fetchCategories = async (lang: string) => {
-  const supabase = createSupabaseBrowserClient();
-  const { data, error } = await supabase
-    .from("categories")
-    .select("id, parent_id, slug, category_translations(name, lang_code)")
-    .eq("active", true)
-    .order("slug", { ascending: true });
-
-  if (error) throw error;
-  return (data ?? []) as CategoryRow[];
-};
-
-const fetchServices = async () => {
-  const supabase = createSupabaseBrowserClient();
-  const { data, error } = await supabase
-    .from("services")
-    .select("id, slug, service_translations(title, lang_code)")
-    .eq("active", true)
-    .order("id", { ascending: true });
-
-  if (error) throw error;
-  return (data ?? []) as ServiceRow[];
-};
-
-const fetchSiteName = async () => {
-  const supabase = createSupabaseBrowserClient();
-  const { data, error } = await supabase
-    .from("site_settings")
-    .select("site_name")
-    .limit(1)
-    .maybeSingle();
-  if (error) throw error;
-  return data?.site_name || "Nost Copy";
-};
-
-function useStaticMenu(lang: string) {
-  return useMemo(() => {
-    const t = (tr: string, en: string, de: string) =>
-      lang === "tr" ? tr : lang === "de" ? de : en;
-
-    return [
-      { label: t("Anasayfa", "Home", "Startseite"), href: "/home" },
-      { label: t("Hakkımızda", "About Us", "Über uns"), href: "/about" },
-      { label: t("İletişim", "Contact", "Kontakt"), href: "/contact" },
-    ];
-  }, [lang]);
+  id: number
+  parent_id: number | null
+  slug: string
+  category_translations: { name: string; lang_code: string }[]
 }
 
-export default function NavigationBar() {
-  const { lang } = useLanguage();
-  const staticMenu = useStaticMenu(lang);
-  const { start, stop } = useAppLoading();
-  const [mounted, setMounted] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+type ServiceRow = {
+  id: number
+  slug: string
+  service_translations: { title: string; lang_code: string }[]
+}
 
-  // Kategorileri Çek
-  const {
-    data: categories,
-    isLoading: catLoading,
-    error: catError,
-  } = useSWR(mounted ? "categories-nav" : null, () => fetchCategories(lang), {
-    revalidateOnFocus: false,
-  });
+// --- DATA FETCHING ---
+const fetchCategories = async (lang: string) => {
+  const supabase = createSupabaseBrowserClient()
+  const { data, error } = await supabase
+    .from('categories')
+    .select('id, parent_id, slug, category_translations(name, lang_code)')
+    .eq('active', true)
+    .order('slug', { ascending: true })
 
-  // Hizmetleri Çek
-  const {
-    data: services,
-    isLoading: servLoading,
-    error: servError,
-  } = useSWR(mounted ? "services-nav" : null, fetchServices, {
-    revalidateOnFocus: false,
-  });
+  if (error) throw error
+  return (data ?? []) as CategoryRow[]
+}
 
-  const { data: siteName = "Nost Copy" } = useSWR("site_name", fetchSiteName, {
-    revalidateOnFocus: false,
-  });
+const fetchServices = async () => {
+  const supabase = createSupabaseBrowserClient()
+  const { data, error } = await supabase
+    .from('services')
+    .select('id, slug, service_translations(title, lang_code)')
+    .eq('active', true)
+    .order('id', { ascending: true })
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  if (error) throw error
+  return (data ?? []) as ServiceRow[]
+}
 
-  // Loading kontrolü
-  useEffect(() => {
-    if ((catError || categories) && (servError || services)) {
-      stop();
-    } else if (catLoading || servLoading) {
-      start();
+const fetchSiteName = async () => {
+  const supabase = createSupabaseBrowserClient()
+  const { data, error } = await supabase
+    .from('site_settings')
+    .select('site_name')
+    .limit(1)
+    .maybeSingle()
+  if (error) throw error
+  return data?.site_name || 'Nost Copy'
+}
+
+function useStaticMenu (lang: string) {
+  return useMemo(() => {
+    const t = (tr: string, en: string, de: string) =>
+      lang === 'tr' ? tr : lang === 'de' ? de : en
+
+    return [
+      { label: t('Anasayfa', 'Home', 'Startseite'), href: '/home' },
+      { label: t('Hakkımızda', 'About Us', 'Über uns'), href: '/about' },
+      { label: t('İletişim', 'Contact', 'Kontakt'), href: '/contact' }
+    ]
+  }, [lang])
+}
+
+export default function NavigationBar () {
+  const { lang } = useLanguage()
+  const staticMenu = useStaticMenu(lang)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  // --- SUSPENSE AYARLARI ---
+  // Loading state kontrolü yok. Veri yoksa Suspense bekler.
+
+  const { data: categories } = useSWR(
+    ['categories-nav', lang],
+    () => fetchCategories(lang),
+    {
+      revalidateOnFocus: false,
+      suspense: true
     }
-    return () => stop();
-  }, [catLoading, servLoading, catError, servError, categories, services, start, stop]);
+  )
 
-  const closeMobileMenu = () => setMobileMenuOpen(false);
+  const { data: services } = useSWR('services-nav', fetchServices, {
+    revalidateOnFocus: false,
+    suspense: true
+  })
+
+  const { data: siteName = 'Nost Copy' } = useSWR('site_name', fetchSiteName, {
+    revalidateOnFocus: false,
+    suspense: true
+  })
+
+  const closeMobileMenu = () => setMobileMenuOpen(false)
 
   // --- KATEGORİ AĞACI ---
   const categoryItems = useMemo(() => {
-    if (!categories) return [];
-    const mapped = categories.map((c) => {
-      const tr = c.category_translations.find((t) => t.lang_code === lang)
-        || c.category_translations.find((t) => t.lang_code === 'tr');
+    if (!categories) return []
+    const mapped = categories.map(c => {
+      const tr =
+        c.category_translations.find(t => t.lang_code === lang) ||
+        c.category_translations.find(t => t.lang_code === 'tr')
 
       return {
         id: c.id,
         parentId: c.parent_id,
         label: tr?.name || c.slug,
         href: `/collections/${c.slug}`,
-        children: [] as any[],
-      };
-    });
-
-    const map: Record<number, any> = {};
-    mapped.forEach((item) => { map[item.id] = item; });
-    const roots: any[] = [];
-    mapped.forEach((item) => {
-      if (item.parentId && map[item.parentId]) {
-        map[item.parentId].children.push(item);
-      } else {
-        roots.push(item);
+        children: [] as any[]
       }
-    });
-    return roots;
-  }, [categories, lang]);
+    })
+
+    const map: Record<number, any> = {}
+    mapped.forEach(item => {
+      map[item.id] = item
+    })
+    const roots: any[] = []
+    mapped.forEach(item => {
+      if (item.parentId && map[item.parentId]) {
+        map[item.parentId].children.push(item)
+      } else {
+        roots.push(item)
+      }
+    })
+    return roots
+  }, [categories, lang])
 
   // --- HİZMET LİSTESİ ---
   const serviceItems = useMemo(() => {
-    if (!services) return [];
+    if (!services) return []
     return services.map(s => {
-      const translation = s.service_translations.find(t => t.lang_code === lang)
-        || s.service_translations.find(t => t.lang_code === 'en')
-        || s.service_translations.find(t => t.lang_code === 'tr')
-        || s.service_translations[0];
+      const translation =
+        s.service_translations.find(t => t.lang_code === lang) ||
+        s.service_translations.find(t => t.lang_code === 'en') ||
+        s.service_translations.find(t => t.lang_code === 'tr') ||
+        s.service_translations[0]
 
       return {
         label: translation?.title || s.slug,
         href: `/services/${s.slug}`
-      };
-    });
-  }, [services, lang]);
+      }
+    })
+  }, [services, lang])
 
   const labels = useMemo(() => {
-    const isTr = lang === 'tr';
-    const isDe = lang === 'de';
+    const isTr = lang === 'tr'
+    const isDe = lang === 'de'
     return {
-      categories: isTr ? "Kategoriler" : isDe ? "Kategorien" : "Categories",
-      services: isTr ? "Hizmetler" : isDe ? "Dienstleistungen" : "Services",
-      empty: isTr ? "Veri Yok" : isDe ? "Keine Daten" : "No Data",
-      error: isTr ? "Hata" : isDe ? "Fehler" : "Error",
-      blog: "Blog"
+      categories: isTr ? 'Kategoriler' : isDe ? 'Kategorien' : 'Categories',
+      services: isTr ? 'Hizmetler' : isDe ? 'Dienstleistungen' : 'Services',
+      empty: isTr ? 'Veri Yok' : isDe ? 'Keine Daten' : 'No Data',
+      error: isTr ? 'Hata' : isDe ? 'Fehler' : 'Error',
+      blog: 'Blog'
     }
-  }, [lang]);
-
-  if (!mounted) {
-    return (
-      <div className="w-full flex justify-center bg-background">
-        <nav className="relative w-full max-w-7xl h-20 md:h-24 flex items-center justify-between px-4 font-onest font-semibold">
-          <div className="text-2xl md:text-3xl font-poppins font-bold text-transparent bg-muted/20 rounded w-32 h-8 animate-pulse"></div>
-        </nav>
-      </div>
-    );
-  }
+  }, [lang])
 
   return (
-    // bg-background, border-muted-light/20
-    <div className="w-full flex justify-center bg-background/10 border-b border-muted-light/20 shadow-sm relative z-50">
-      <nav className="relative w-full max-w-7xl h-20 md:h-24 flex items-center justify-between px-4 md:px-0 font-onest font-semibold">
-
+    <div className='w-full flex justify-center bg-background/10 border-b border-muted-light/20 shadow-sm relative z-50'>
+      <nav className='relative w-full max-w-7xl h-20 md:h-24 flex items-center justify-between px-4 md:px-0 font-onest font-semibold'>
         {/* LOGO */}
-        {/* text-foreground */}
-        <div className="text-2xl md:text-3xl font-poppins font-bold text-foreground z-50">
-          <Link href="/home" onClick={closeMobileMenu}>{siteName}</Link>
+        <div className='text-2xl md:text-3xl font-poppins font-bold text-foreground z-50'>
+          <Link href='/home' onClick={closeMobileMenu}>
+            {siteName}
+          </Link>
         </div>
 
         {/* --- DESKTOP MENU --- */}
-        <ul className="hidden md:flex space-x-8 items-center">
+        <ul className='hidden md:flex space-x-8 items-center'>
           {staticMenu.map((item, i) => (
-            // text-foreground/80 hover:text-primary
-            <li key={i} className="text-foreground/80 hover:text-primary transition-colors">
+            <li
+              key={i}
+              className='text-foreground/80 hover:text-primary transition-colors'
+            >
               <Link href={item.href!}>{item.label}</Link>
             </li>
           ))}
@@ -208,8 +185,6 @@ export default function NavigationBar() {
             <Dropdown
               label={labels.services}
               items={serviceItems}
-              loading={servLoading}
-              error={!!servError}
               emptyLabel={labels.empty}
               errorLabel={labels.error}
             />
@@ -219,93 +194,93 @@ export default function NavigationBar() {
             <Dropdown
               label={labels.categories}
               items={categoryItems}
-              loading={catLoading}
-              error={!!catError}
               emptyLabel={labels.empty}
               errorLabel={labels.error}
             />
           </li>
-          <li className="text-foreground/80 hover:text-primary transition-colors">
-            <Link href="/blog">{labels.blog}</Link>
+          <li className='text-foreground/80 hover:text-primary transition-colors'>
+            <Link href='/blog'>{labels.blog}</Link>
           </li>
         </ul>
 
-        {/* --- DESKTOP ICONS --- */}
-        <div className="hidden md:flex flex-row text-xl gap-4 opacity-0">
-          <SlUser className="cursor-pointer" />
-          <SlBasket className="cursor-pointer" />
+        {/* --- ICONS --- */}
+        <div className='hidden md:flex flex-row text-xl gap-4 opacity-0'>
+          <SlUser className='cursor-pointer' />
+          <SlBasket className='cursor-pointer' />
         </div>
 
-        {/* --- MOBILE HAMBURGER BUTTON --- */}
+        {/* --- MOBILE HAMBURGER --- */}
         <button
-          className="md:hidden text-2xl text-foreground p-2 z-50 focus:outline-none"
+          className='md:hidden text-2xl text-foreground p-2 z-50 focus:outline-none'
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? <SlClose /> : <SlMenu />}
         </button>
 
-        {/* --- MOBILE MENU OVERLAY --- */}
-        {/* bg-background */}
-        <div className={`
-            fixed inset-0 bg-background z-40 flex flex-col pt-28 px-6 gap-8 overflow-y-auto transition-all duration-300 ease-in-out md:hidden
-            ${mobileMenuOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-5 pointer-events-none'}
-        `}>
+        {/* --- MOBILE MENU --- */}
+        <div
+          className={`fixed inset-0 bg-background z-40 flex flex-col pt-28 px-6 gap-8 overflow-y-auto transition-all duration-300 ease-in-out md:hidden ${
+            mobileMenuOpen
+              ? 'opacity-100 visible translate-y-0'
+              : 'opacity-0 invisible -translate-y-5 pointer-events-none'
+          }`}
+        >
           {/* Statik Linkler */}
-          <div className="flex flex-col gap-4">
+          <div className='flex flex-col gap-4'>
             {staticMenu.map((item, i) => (
               <Link
                 key={i}
                 href={item.href!}
                 onClick={closeMobileMenu}
-                // text-foreground border-muted-light/20
-                className="text-xl font-bold text-foreground border-b border-muted-light/20 pb-2"
+                className='text-xl font-bold text-foreground border-b border-muted-light/20 pb-2'
               >
                 {item.label}
               </Link>
             ))}
             <Link
-              href="/blog"
+              href='/blog'
               onClick={closeMobileMenu}
-              className="text-xl font-bold text-foreground border-b border-muted-light/20 pb-2"
+              className='text-xl font-bold text-foreground border-b border-muted-light/20 pb-2'
             >
               {labels.blog}
             </Link>
           </div>
 
-          {/* Mobil Hizmetler Listesi */}
-          <div className="flex flex-col gap-3">
-            {/* text-muted */}
-            <div className="text-xs font-bold text-muted uppercase tracking-widest">{labels.services}</div>
+          {/* Mobil Hizmetler */}
+          <div className='flex flex-col gap-3'>
+            <div className='text-xs font-bold text-muted uppercase tracking-widest'>
+              {labels.services}
+            </div>
             {serviceItems.map((item: any, i: number) => (
               <Link
                 key={i}
                 href={item.href}
                 onClick={closeMobileMenu}
-                // text-foreground/80 hover:text-primary hover:border-primary border-muted-light/20
-                className="text-base text-foreground/80 pl-2 border-l-2 border-muted-light/20 hover:border-primary hover:text-primary transition-all"
+                className='text-base text-foreground/80 pl-2 border-l-2 border-muted-light/20 hover:border-primary hover:text-primary transition-all'
               >
                 {item.label}
               </Link>
             ))}
           </div>
 
-          {/* Mobil Kategoriler Listesi */}
-          <div className="flex flex-col gap-3 pb-10">
-            <div className="text-xs font-bold text-muted uppercase tracking-widest">{labels.categories}</div>
+          {/* Mobil Kategoriler */}
+          <div className='flex flex-col gap-3 pb-10'>
+            <div className='text-xs font-bold text-muted uppercase tracking-widest'>
+              {labels.categories}
+            </div>
             {categoryItems.map((item: any, i: number) => (
               <Link
                 key={i}
                 href={item.href}
                 onClick={closeMobileMenu}
-                className="text-base text-foreground/80 pl-2 border-l-2 border-muted-light/20 hover:border-primary hover:text-primary transition-all"
+                className='text-base text-foreground/80 pl-2 border-l-2 border-muted-light/20 hover:border-primary hover:text-primary transition-all'
               >
                 {item.label}
               </Link>
             ))}
           </div>
         </div>
-
       </nav>
     </div>
-  );
+  )
 }

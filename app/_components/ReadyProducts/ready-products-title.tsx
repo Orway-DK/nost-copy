@@ -1,40 +1,36 @@
-"use client";
+// C:\Projeler\nost-copy\app\_components\ReadyProducts\ready-products-title.tsx
+'use client'
 
-import { useEffect, useState } from "react";
-import { useLanguage } from "@/components/LanguageProvider";
-import SectionHeading from "./SectionHeading";
+import { useEffect, useState } from 'react'
+import { useLanguage } from '@/components/LanguageProvider'
+import SectionHeading from './SectionHeading'
 
 const TITLES = {
-    tr: { text: "Muhteşem Ürünler Sizin İçin Hazır", highlight: "Ürünler" },
-    en: { text: "Amazing Products Are Ready For You", highlight: "Products" },
-    de: { text: "Tolle Produkte Sind Für Sie Bereit", highlight: "Produkte" },
-};
+  tr: { text: 'Muhteşem Ürünler Sizin İçin Hazır', highlight: 'Ürünler' },
+  en: { text: 'Amazing Products Are Ready For You', highlight: 'Products' },
+  de: { text: 'Tolle Produkte Sind Für Sie Bereit', highlight: 'Produkte' }
+}
 
-export default function ReadyProductsTitle() {
-    // --- HYDRATION FIX ---
-    const [mounted, setMounted] = useState(false);
-    const { lang } = useLanguage();
+export default function ReadyProductsTitle () {
+  const [mounted, setMounted] = useState(false)
+  const { lang } = useLanguage()
 
-    useEffect(() => {
-        setMounted(true);
-    }, []);
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
-    // Eğer henüz client tarafında mount olmadıysak hiçbir şey döndürme (veya loading skeleton)
-    // Bu sayede sunucu ile istemci arasındaki metin farkı hataya yol açmaz.
-    if (!mounted) {
-        return null;
-        // İstersen layout kaymasını (CLS) önlemek için buraya 
-        // boş ama aynı yükseklikte görünmez bir div de koyabilirsin.
-    }
+  // Hydration mismatch önleme
+  if (!mounted) return <div className='h-16 w-full'></div>
 
-    // Geçerli dil yoksa varsayılan olarak 'en' kullan (veya tr)
-    const currentLang = (lang && TITLES[lang as keyof typeof TITLES]) ? lang : "en";
-    const content = TITLES[currentLang as keyof typeof TITLES];
+  const currentLang = lang && TITLES[lang as keyof typeof TITLES] ? lang : 'en'
+  const content = TITLES[currentLang as keyof typeof TITLES]
 
-    return (
-        <SectionHeading
-            text={content.text}
-            highlight={content.highlight}
-        />
-    );
+  return (
+    <SectionHeading
+      text={content.text}
+      highlight={content.highlight}
+      // Global CSS değişkenini kullanıyoruz, böylece tema değişirse bu da değişir
+      highlightColor='var(--primary)'
+    />
+  )
 }

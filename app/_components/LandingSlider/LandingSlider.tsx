@@ -1,58 +1,35 @@
-// C:\Projects\soner\app\_components\LandingSlider\LandingSlider.tsx
-import Image from "next/image";
-import SliderItem from "./_components/SliderItem";
-import SocialPart from "./_components/SocialPart";
-import LandingHighlights from "./_components/LandingHighlights"
+// C:\Projeler\nost-copy\app\_components\LandingSlider\LandingSlider.tsx
 
-/**
- * Stil ve yapıyı koruyor; sadece SliderItem artık yeni şemadan (landing_slides + landing_slide_translations)
- * veri çekiyor.
- */
-export default function LandingSlider() {
+import SliderItem from './_components/SliderItem'
+import SocialPart from './_components/SocialPart'
+import LandingHighlights from './_components/LandingHighlights'
+
+export default function LandingSlider () {
   return (
-    <>
-      <div className="flex justify-center items-center w-full mt-10">
-        <div className="pointer-events-none absolute inset-0 -z-10">
-          <Image
-            src="/h1-bg01.svg"
-            alt="Landing Slider Background"
-            width={500}
-            height={500}
-            className="object-cover w-auto object-center select-none"
-            draggable={false}
-            priority
-          />
-        </div>
-        <div className="absolute top-0 right-0 -z-10 ">
-          <Image
-            src="/h1-slider1.svg"
-            alt="Landing Slider Background"
-            width={1000}
-            height={1000}
-            className="object-cover w-auto object-center select-none"
-            draggable={false}
-            priority
-          />
-        </div>
-        <div className="absolute top-0 right-0 -z-10 ">
-          <Image
-            src="/h1-slider2.svg"
-            alt="Landing Slider Background"
-            width={700}
-            height={700}
-            className="object-cover w-auto object-center select-none"
-            draggable={false}
-            priority
-          />
-        </div>
-        <div className="relative w-full">
-          <section className="min-h-[50vh] flex items-center justify-center">
-            <SliderItem />
-          </section>
-        </div>
+    // min-h-[...]: Kutu en az bu kadar olsun ama içerik taşarsa uzasın (h-auto davranışı)
+    <section className='relative w-full flex flex-col items-center mt-0 md:mt-10 min-h-[500px] md:min-h-[60vh]'>
+      {/* SLIDER ALANI */}
+      <div className='relative w-full z-10 px-0 flex-grow flex flex-col justify-center'>
+        {/* pb-8 ekledik: Slider ile Highlights arasına mobilde mesafe koyar */}
+        <section className='h-auto md:h-full flex items-center justify-center w-full py-12 md:py-0 pb-8'>
+          <SliderItem />
+        </section>
+      </div>
+
+      {/* SOCIAL PART */}
+      <div className='hidden lg:block'>
         <SocialPart />
       </div>
-      <LandingHighlights />
-    </>
-  );
+
+      {/* HIGHLIGHTS */}
+      {/* DÜZELTME: 
+         - 'absolute bottom-0' KALDIRILDI. Artık mobilde de akışın içinde.
+         - 'mt-auto': Eğer içerik kısaysa en alta iter, uzunsa hemen altına gelir.
+         - 'z-20': Slider resminin altında kalmasın diye öne aldık.
+      */}
+      <div className='w-full flex justify-center px-4 md:px-0 mt-4 md:mt-0 relative z-20'>
+        <LandingHighlights />
+      </div>
+    </section>
+  )
 }
