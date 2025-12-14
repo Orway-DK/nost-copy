@@ -1,8 +1,9 @@
+// C:\Projeler\nost-copy\app\admin\(protected)\services\service-form.tsx
 'use client'
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { IoSave, IoImageOutline, IoLanguage, IoSparkles } from 'react-icons/io5'
+import { IoSave, IoImageOutline, IoSparkles } from 'react-icons/io5'
 import { toast } from 'react-hot-toast'
 import MediaPickerModal from '@/app/admin/(protected)/_components/MediaPickerModal'
 import { upsertServiceAction } from './actions'
@@ -78,10 +79,11 @@ export default function ServiceForm ({
     const loadingToast = toast.loading('Çeviriliyor...')
 
     try {
+      // HATA DÜZELTİLDİ: Değişken isimleri tutarlı hale getirildi (newTrans)
       const newTrans = [...form.translations]
       const fields = ['title', 'description', 'content']
 
-      const tasks = newTranslations.map(async (target, idx) => {
+      const tasks = newTrans.map(async (target, idx) => {
         if (target.lang_code === activeLang) return
 
         for (const field of fields) {
@@ -95,7 +97,7 @@ export default function ServiceForm ({
             )
             if (res.success) {
               // @ts-ignore
-              newTranslations[idx][field] = res.text
+              newTrans[idx][field] = res.text
             }
           }
         }
