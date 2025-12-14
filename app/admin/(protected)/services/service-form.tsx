@@ -1,4 +1,3 @@
-// C:\Projeler\nost-copy\app\admin\(protected)\services\service-form.tsx
 'use client'
 
 import { useState } from 'react'
@@ -79,7 +78,6 @@ export default function ServiceForm ({
     const loadingToast = toast.loading('Çeviriliyor...')
 
     try {
-      // HATA DÜZELTİLDİ: Değişken isimleri tutarlı hale getirildi (newTrans)
       const newTrans = [...form.translations]
       const fields = ['title', 'description', 'content']
 
@@ -129,169 +127,171 @@ export default function ServiceForm ({
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className='flex flex-col h-full bg-[var(--admin-card)]'
-    >
-      {/* Modal Body - Scrollable */}
-      <div className='flex-1 overflow-y-auto p-6 space-y-6'>
-        {/* 1. Genel Bilgiler */}
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-          <div className='space-y-4'>
-            <div>
-              <label className='admin-label'>Slug (URL)</label>
-              <input
-                className='admin-input'
-                value={form.slug}
-                onChange={e => updateMain('slug', e.target.value)}
-                placeholder='hizmet-adi-url (Boş bırakırsan otomatik dolar)'
-              />
+    <>
+      <form
+        onSubmit={handleSubmit}
+        className='flex flex-col h-full bg-[var(--admin-card)]'
+      >
+        {/* Modal Body - Scrollable */}
+        <div className='flex-1 overflow-y-auto p-6 space-y-6'>
+          {/* 1. Genel Bilgiler */}
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+            <div className='space-y-4'>
+              <div>
+                <label className='admin-label'>Slug (URL)</label>
+                <input
+                  className='admin-input'
+                  value={form.slug}
+                  onChange={e => updateMain('slug', e.target.value)}
+                  placeholder='hizmet-adi-url (Boş bırakırsan otomatik dolar)'
+                />
+              </div>
+              <div className='flex items-center gap-2 pt-4'>
+                <input
+                  type='checkbox'
+                  className='w-5 h-5 accent-[var(--admin-success)]'
+                  checked={form.active}
+                  onChange={e => updateMain('active', e.target.checked)}
+                />
+                <span className='text-sm font-medium text-[var(--admin-fg)]'>
+                  Yayında (Aktif)
+                </span>
+              </div>
             </div>
-            <div className='flex items-center gap-2 pt-4'>
-              <input
-                type='checkbox'
-                className='w-5 h-5 accent-[var(--admin-success)]'
-                checked={form.active}
-                onChange={e => updateMain('active', e.target.checked)}
-              />
-              <span className='text-sm font-medium text-[var(--admin-fg)]'>
-                Yayında (Aktif)
-              </span>
+
+            {/* Resim Seçimi */}
+            <div>
+              <label className='admin-label'>Hizmet Görseli</label>
+              <div className='flex gap-2 mb-2'>
+                <input
+                  className='admin-input flex-1 text-xs'
+                  value={form.image_url}
+                  readOnly
+                  placeholder='Görsel seç...'
+                />
+                <button
+                  type='button'
+                  onClick={() => setIsMediaOpen(true)}
+                  className='btn-admin btn-admin-secondary'
+                >
+                  Seç
+                </button>
+              </div>
+              <div
+                className='relative w-full h-32 rounded-lg border bg-[var(--admin-input-bg)] flex items-center justify-center overflow-hidden'
+                style={{ borderColor: 'var(--admin-input-border)' }}
+              >
+                {form.image_url ? (
+                  <Image
+                    src={form.image_url}
+                    alt='preview'
+                    fill
+                    className='object-cover'
+                    unoptimized
+                  />
+                ) : (
+                  <div className='flex flex-col items-center opacity-30'>
+                    <IoImageOutline size={32} />
+                    <span className='text-xs'>Görsel Yok</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Resim Seçimi */}
-          <div>
-            <label className='admin-label'>Hizmet Görseli</label>
-            <div className='flex gap-2 mb-2'>
-              <input
-                className='admin-input flex-1 text-xs'
-                value={form.image_url}
-                readOnly
-                placeholder='Görsel seç...'
-              />
+          <hr className='border-[var(--admin-card-border)]' />
+
+          {/* 2. Çeviri Alanı */}
+          <div className='space-y-4'>
+            <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3'>
+              <div className='flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1'>
+                {LANGS.map(l => (
+                  <button
+                    key={l}
+                    type='button'
+                    onClick={() => setActiveLang(l)}
+                    className={`px-3 py-1.5 rounded text-sm font-bold uppercase transition-colors border ${
+                      activeLang === l
+                        ? 'bg-[var(--admin-accent)] text-white border-transparent'
+                        : 'bg-[var(--admin-input-bg)] text-[var(--admin-muted)] border-[var(--admin-card-border)]'
+                    }`}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
               <button
                 type='button'
-                onClick={() => setIsMediaOpen(true)}
-                className='btn-admin btn-admin-secondary'
+                onClick={handleAutoTranslate}
+                disabled={translating}
+                className='btn-admin btn-admin-secondary text-xs py-1.5 px-3 flex items-center gap-2 whitespace-nowrap w-full sm:w-auto justify-center'
               >
-                Seç
+                <IoSparkles
+                  className={
+                    translating
+                      ? 'animate-spin text-yellow-500'
+                      : 'text-yellow-500'
+                  }
+                />
+                {translating ? 'Çevriliyor...' : 'Diğerlerine Dağıt'}
               </button>
             </div>
-            <div
-              className='relative w-full h-32 rounded-lg border bg-[var(--admin-input-bg)] flex items-center justify-center overflow-hidden'
-              style={{ borderColor: 'var(--admin-input-border)' }}
-            >
-              {form.image_url ? (
-                <Image
-                  src={form.image_url}
-                  alt='preview'
-                  fill
-                  className='object-cover'
-                  unoptimized
+
+            <div className='space-y-4 animate-in fade-in'>
+              <div>
+                <label className='admin-label'>
+                  Hizmet Başlığı ({activeLang.toUpperCase()})
+                </label>
+                <input
+                  className='admin-input font-semibold'
+                  value={currentTrans.title}
+                  onChange={e => updateTrans('title', e.target.value)}
+                  required={activeLang === 'tr'}
                 />
-              ) : (
-                <div className='flex flex-col items-center opacity-30'>
-                  <IoImageOutline size={32} />
-                  <span className='text-xs'>Görsel Yok</span>
-                </div>
-              )}
+              </div>
+              <div>
+                <label className='admin-label'>
+                  Kısa Açıklama (Kartta görünür)
+                </label>
+                <textarea
+                  className='admin-textarea h-20'
+                  value={currentTrans.description}
+                  onChange={e => updateTrans('description', e.target.value)}
+                />
+              </div>
+              <div>
+                <label className='admin-label'>
+                  Detaylı İçerik (HTML destekler)
+                </label>
+                <textarea
+                  className='admin-textarea h-40 font-mono text-sm'
+                  value={currentTrans.content}
+                  onChange={e => updateTrans('content', e.target.value)}
+                  placeholder='<p>Paragraf...</p>'
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        <hr className='border-[var(--admin-card-border)]' />
-
-        {/* 2. Çeviri Alanı */}
-        <div className='space-y-4'>
-          <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3'>
-            <div className='flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1'>
-              {LANGS.map(l => (
-                <button
-                  key={l}
-                  type='button'
-                  onClick={() => setActiveLang(l)}
-                  className={`px-3 py-1.5 rounded text-sm font-bold uppercase transition-colors border ${
-                    activeLang === l
-                      ? 'bg-[var(--admin-accent)] text-white border-transparent'
-                      : 'bg-[var(--admin-input-bg)] text-[var(--admin-muted)] border-[var(--admin-card-border)]'
-                  }`}
-                >
-                  {l}
-                </button>
-              ))}
-            </div>
-            <button
-              type='button'
-              onClick={handleAutoTranslate}
-              disabled={translating}
-              className='btn-admin btn-admin-secondary text-xs py-1.5 px-3 flex items-center gap-2 whitespace-nowrap w-full sm:w-auto justify-center'
-            >
-              <IoSparkles
-                className={
-                  translating
-                    ? 'animate-spin text-yellow-500'
-                    : 'text-yellow-500'
-                }
-              />
-              {translating ? 'Çevriliyor...' : 'Diğerlerine Dağıt'}
-            </button>
-          </div>
-
-          <div className='space-y-4 animate-in fade-in'>
-            <div>
-              <label className='admin-label'>
-                Hizmet Başlığı ({activeLang.toUpperCase()})
-              </label>
-              <input
-                className='admin-input font-semibold'
-                value={currentTrans.title}
-                onChange={e => updateTrans('title', e.target.value)}
-                required={activeLang === 'tr'}
-              />
-            </div>
-            <div>
-              <label className='admin-label'>
-                Kısa Açıklama (Kartta görünür)
-              </label>
-              <textarea
-                className='admin-textarea h-20'
-                value={currentTrans.description}
-                onChange={e => updateTrans('description', e.target.value)}
-              />
-            </div>
-            <div>
-              <label className='admin-label'>
-                Detaylı İçerik (HTML destekler)
-              </label>
-              <textarea
-                className='admin-textarea h-40 font-mono text-sm'
-                value={currentTrans.content}
-                onChange={e => updateTrans('content', e.target.value)}
-                placeholder='<p>Paragraf...</p>'
-              />
-            </div>
-          </div>
+        {/* Footer Buttons */}
+        <div className='p-5 border-t border-[var(--admin-card-border)] bg-[var(--admin-input-bg)] flex justify-end gap-3'>
+          <button
+            type='button'
+            onClick={onClose}
+            className='btn-admin btn-admin-secondary px-6'
+          >
+            İptal
+          </button>
+          <button
+            type='submit'
+            disabled={saving}
+            className='btn-admin btn-admin-primary px-6 gap-2'
+          >
+            <IoSave /> {saving ? 'Kaydediliyor...' : 'Kaydet'}
+          </button>
         </div>
-      </div>
-
-      {/* Footer Buttons */}
-      <div className='p-5 border-t border-[var(--admin-card-border)] bg-[var(--admin-input-bg)] flex justify-end gap-3'>
-        <button
-          type='button'
-          onClick={onClose}
-          className='btn-admin btn-admin-secondary px-6'
-        >
-          İptal
-        </button>
-        <button
-          type='submit'
-          disabled={saving}
-          className='btn-admin btn-admin-primary px-6 gap-2'
-        >
-          <IoSave /> {saving ? 'Kaydediliyor...' : 'Kaydet'}
-        </button>
-      </div>
+      </form>
 
       <MediaPickerModal
         isOpen={isMediaOpen}
@@ -299,6 +299,6 @@ export default function ServiceForm ({
         onSelect={url => updateMain('image_url', url)}
         bucketName='services'
       />
-    </form>
+    </>
   )
 }
