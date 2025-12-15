@@ -94,32 +94,32 @@ export default function HomeBlogArea () {
   }, [lang])
 
   return (
-    <section className='py-0 md:py-24 bg-background overflow-hidden'>
+    <section className='py-12 md:py-24 bg-background overflow-hidden'>
       <div className='max-w-[1400px] mx-auto px-4'>
         <div className='grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20'>
           {/* SOL KOLON (Başlık & Açıklama) */}
           <div className='lg:col-span-4 relative text-center lg:text-left'>
             <div className='sticky top-24'>
-              {/* Dekoratif Daire - Mobilde Gizle */}
-              <div className='hidden lg:block absolute -top-20 -left-20 w-[300px] h-[300px] opacity-10 pointer-events-none'>
+              {/* Dekoratif Daire - Mobilde Gizle, Dark Mode'da Opaklığı Düşür */}
+              <div className='hidden lg:block absolute -top-20 -left-20 w-[300px] h-[300px] opacity-10 dark:opacity-5 pointer-events-none'>
                 <Image
                   src='/h1-bg01.svg'
                   alt='decoration'
                   width={300}
                   height={300}
-                  className='animate-spin-slow'
+                  className='animate-spin-slow dark:invert' // Dark mode'da invert edilebilir
                 />
               </div>
 
               <div className='relative z-10'>
-                <span className='text-xs md:text-sm font-bold tracking-widest text-muted uppercase mb-3 block'>
+                <span className='text-xs md:text-sm font-bold tracking-widest text-muted-foreground uppercase mb-3 block'>
                   {t.badge}
                 </span>
                 <h2 className='text-3xl md:text-5xl font-bold text-foreground mb-4 md:mb-6 leading-tight'>
                   {t.title_1} <br className='hidden md:block' />
                   <span className='text-primary'>{t.title_2}</span>
                 </h2>
-                <p className='text-base md:text-lg text-muted mb-6 md:mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0'>
+                <p className='text-base md:text-lg text-muted-foreground mb-6 md:mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0'>
                   {t.desc}
                 </p>
 
@@ -158,10 +158,6 @@ export default function HomeBlogArea () {
               : posts.map(post => (
                   <article
                     key={post.id}
-                    // MOBİL DÜZELTMESİ:
-                    // flex-col: Mobilde alt alta
-                    // bg-card, border, shadow: Kart görünümü
-                    // p-4: İç boşluk
                     className='group flex flex-col md:flex-row gap-6 items-start bg-card rounded-2xl border border-border/40 p-4 md:p-0 md:bg-transparent md:border-0 hover:border-primary/20 transition-all duration-300 shadow-sm md:shadow-none hover:shadow-md'
                   >
                     {/* Görsel */}
@@ -177,7 +173,7 @@ export default function HomeBlogArea () {
                           className='object-cover transition-transform duration-500 group-hover:scale-105'
                         />
                       )}
-                      {/* Tarih Rozeti (Mobilde Görselin Üzerinde) */}
+                      {/* Tarih Rozeti */}
                       <div className='absolute top-3 left-3 bg-background/95 backdrop-blur text-foreground text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-full shadow-sm border border-border/50'>
                         {new Date(post.created_at).toLocaleDateString(
                           lang === 'tr' ? 'tr-TR' : 'en-US'
@@ -188,14 +184,14 @@ export default function HomeBlogArea () {
                     {/* İçerik */}
                     <div className='flex-1 py-1 md:py-2 px-1 md:px-0 flex flex-col justify-between h-full'>
                       <div>
-                        <div className='flex items-center gap-3 text-xs font-bold text-muted uppercase tracking-wider mb-3'>
+                        <div className='flex items-center gap-3 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3'>
                           <span className='text-primary flex items-center gap-1'>
                             <span className='w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px]'>
                               👤
                             </span>
                             {post.author}
                           </span>
-                          <span className='w-1 h-1 rounded-full bg-muted'></span>
+                          <span className='w-1 h-1 rounded-full bg-muted-foreground'></span>
                           <span>3 {t.comments}</span>
                         </div>
 
@@ -203,7 +199,7 @@ export default function HomeBlogArea () {
                           <Link href={`/blog/${post.slug}`}>{post.title}</Link>
                         </h3>
 
-                        <p className='text-sm md:text-base text-muted mb-4 line-clamp-2 md:line-clamp-2 leading-relaxed'>
+                        <p className='text-sm md:text-base text-muted-foreground mb-4 line-clamp-2 md:line-clamp-2 leading-relaxed'>
                           {post.excerpt}
                         </p>
                       </div>

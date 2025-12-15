@@ -1,15 +1,20 @@
-// C:\Projeler\nost-copy\app\admin\(protected)\showcase\scrolling-categories\scrolling-categories-list.tsx
 'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { updateScrollingCategoriesAction } from './actions'
+import {
+  updateScrollingCategoriesAction,
+  updateSliderSettingsAction // Yeni action importu
+} from './actions'
 import {
   IoSave,
   IoRefresh,
   IoEye,
   IoEyeOff,
-  IoReorderTwo
+  IoReorderTwo,
+  IoSpeedometerOutline,
+  IoPhonePortraitOutline,
+  IoDesktopOutline
 } from 'react-icons/io5'
 import { toast } from 'react-hot-toast'
 
@@ -21,16 +26,29 @@ type CategoryItem = {
   name: string
 }
 
+type Settings = {
+  duration_desktop: number
+  duration_mobile: number
+}
+
 export default function ScrollingCategoriesList ({
-  initialItems
+  initialItems,
+  initialSettings // Yeni prop
 }: {
   initialItems: CategoryItem[]
+  initialSettings: Settings | null
 }) {
   const router = useRouter()
   const [items, setItems] = useState(initialItems)
-  const [isDirty, setIsDirty] = useState(false)
+  const [settings, setSettings] = useState<Settings>(
+    initialSettings || { duration_desktop: 120, duration_mobile: 60 }
+  )
+
+  const [isDirtyList, setIsDirtyList] = useState(false)
+  const [isDirtySettings, setIsDirtySettings] = useState(false)
   const [saving, setSaving] = useState(false)
 
+  // Liste Güncelleme
   const handleLocalUpdate = (
     id: number,
     field: keyof CategoryItem,
@@ -39,28 +57,53 @@ export default function ScrollingCategoriesList ({
     setItems(prev =>
       prev.map(item => (item.id === id ? { ...item, [field]: value } : item))
     )
-    setIsDirty(true)
+    setIsDirtyList(true)
   }
 
+  // Ayar Güncelleme
+  const handleSettingChange = (field: keyof Settings, value: number) => {
+    setSettings(prev => ({ ...prev, [field]: value }))
+    setIsDirtySettings(true)
+  }
+
+  // Kaydetme (Hem liste hem ayarlar)
   const handleSave = async () => {
     setSaving(true)
-    const promise = updateScrollingCategoriesAction(items)
 
-    toast.promise(promise, {
-      loading: 'Kaydediliyor...',
-      success: res => {
-        if (!res.success) throw new Error(res.message)
-        setIsDirty(false)
-        router.refresh()
-        return res.message || 'Başarıyla güncellendi!'
-      },
-      error: err => err.message || 'Bir hata oluştu.'
-    })
+    const promises = []
+
+    if (isDirtyList) {
+      promises.push(updateScrollingCategoriesAction(items))
+    }
+
+    if (isDirtySettings) {
+      promises.push(
+        updateSliderSettingsAction(
+          settings.duration_desktop,
+          settings.duration_mobile
+        )
+      )
+    }
+
+    if (promises.length === 0) {
+      setSaving(false)
+      return
+    }
 
     try {
-      await promise
-    } catch {
-      // Hata toast.promise içinde handle edildi
+      const results = await Promise.all(promises)
+      const errors = results.filter(r => !r.success)
+
+      if (errors.length > 0) {
+        throw new Error(errors[0].message)
+      }
+
+      toast.success('Tüm değişiklikler kaydedildi.')
+      setIsDirtyList(false)
+      setIsDirtySettings(false)
+      router.refresh()
+    } catch (err: any) {
+      toast.error(err.message || 'Bir hata oluştu.')
     } finally {
       setSaving(false)
     }
@@ -68,38 +111,98 @@ export default function ScrollingCategoriesList ({
 
   return (
     <div className='space-y-6 pb-20'>
-      {/* TOOLBAR */}
-      <div
-        className='flex flex-col sm:flex-row justify-between items-center bg-[var(--admin-card)] p-4 rounded-xl border gap-4 sm:gap-0 shadow-sm'
-        style={{ borderColor: 'var(--admin-card-border)' }}
-      >
-        <div className='text-sm font-medium text-[var(--admin-muted)]'>
-          Toplam{' '}
-          <span className='text-[var(--admin-fg)] font-bold'>
-            {items.length}
-          </span>{' '}
-          kategori listeleniyor.
+      {/* ÜST TOOLBAR VE AYARLAR */}
+      <div className='bg-[var(--admin-card)] rounded-xl border border-[var(--admin-card-border)] overflow-hidden'>
+        {/* Başlık ve Butonlar */}
+        <div className='p-4 border-b border-[var(--admin-card-border)] flex flex-col sm:flex-row justify-between items-center gap-4'>
+          <div className='text-sm font-medium text-[var(--admin-muted)]'>
+            <span className='text-[var(--admin-fg)] font-bold'>
+              {items.length}
+            </span>{' '}
+            kategori yönetiliyor.
+          </div>
+
+          <div className='flex gap-2 w-full sm:w-auto'>
+            <button
+              onClick={() => router.refresh()}
+              className='btn-admin btn-admin-secondary flex-1 sm:flex-none justify-center'
+              title='Yenile'
+            >
+              <IoRefresh size={18} />
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving || (!isDirtyList && !isDirtySettings)}
+              className={`btn-admin flex items-center gap-2 px-6 flex-1 sm:flex-none justify-center transition-all ${
+                isDirtyList || isDirtySettings
+                  ? 'btn-admin-primary shadow-lg scale-105'
+                  : 'btn-admin-secondary opacity-50 cursor-not-allowed'
+              }`}
+            >
+              <IoSave size={18} />
+              {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+            </button>
+          </div>
         </div>
-        <div className='flex gap-2 w-full sm:w-auto'>
-          <button
-            onClick={() => router.refresh()}
-            className='btn-admin btn-admin-secondary flex-1 sm:flex-none justify-center'
-            title='Yenile'
-          >
-            <IoRefresh size={18} />
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving || !isDirty}
-            className={`btn-admin flex items-center gap-2 px-6 flex-1 sm:flex-none justify-center transition-all ${
-              isDirty
-                ? 'btn-admin-primary shadow-lg scale-105'
-                : 'btn-admin-secondary opacity-50 cursor-not-allowed'
-            }`}
-          >
-            <IoSave size={18} />
-            {saving ? 'Kaydediliyor...' : 'Sıralamayı Kaydet'}
-          </button>
+
+        {/* Hız Ayarları Formu */}
+        <div className='p-4 bg-[var(--admin-input-bg)] flex flex-col md:flex-row gap-6 items-center'>
+          <div className='flex items-center gap-2 text-[var(--admin-info)]'>
+            <IoSpeedometerOutline size={24} />
+            <span className='font-bold text-sm'>Animasyon Süresi</span>
+          </div>
+
+          <div className='flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full'>
+            <div className='flex items-center gap-3'>
+              <IoDesktopOutline className='text-[var(--admin-muted)]' />
+              <div className='flex-1'>
+                <label className='text-xs text-[var(--admin-muted)] block mb-1'>
+                  Masaüstü (Saniye)
+                </label>
+                <input
+                  type='number'
+                  className='admin-input w-full'
+                  value={settings.duration_desktop}
+                  onChange={e =>
+                    handleSettingChange(
+                      'duration_desktop',
+                      parseInt(e.target.value)
+                    )
+                  }
+                  min={10}
+                  max={300}
+                />
+                <span className='text-[10px] opacity-50'>
+                  Düşük = Hızlı, Yüksek = Yavaş
+                </span>
+              </div>
+            </div>
+
+            <div className='flex items-center gap-3'>
+              <IoPhonePortraitOutline className='text-[var(--admin-muted)]' />
+              <div className='flex-1'>
+                <label className='text-xs text-[var(--admin-muted)] block mb-1'>
+                  Mobil (Saniye)
+                </label>
+                <input
+                  type='number'
+                  className='admin-input w-full'
+                  value={settings.duration_mobile}
+                  onChange={e =>
+                    handleSettingChange(
+                      'duration_mobile',
+                      parseInt(e.target.value)
+                    )
+                  }
+                  min={10}
+                  max={300}
+                />
+                <span className='text-[10px] opacity-50'>
+                  Genelde masaüstünün yarısı önerilir.
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

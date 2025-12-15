@@ -117,7 +117,7 @@ export default function Footer () {
   }, [])
 
   const { data, isLoading } = useSWR(
-    mounted ? ['footer-data', lang] : null, // Mounted olmadan fetch yapma
+    mounted ? ['footer-data', lang] : null,
     () => fetchFooterData(lang),
     { revalidateOnFocus: false }
   )
@@ -255,42 +255,47 @@ export default function Footer () {
 
   // --- HYDRATION FIX: MOUNTED KONTROLÜ ---
   if (!mounted) {
-    return <div className='w-full bg-[#212529] h-[400px]'></div>
+    return <div className='w-full bg-secondary h-[400px]'></div>
   }
 
   return (
-    <footer className='w-full text-[#ecf2ff] font-sans pt-10'>
+    // Ana arka plan bg-secondary olarak ayarlandı (Koyu/Lacivert ton yerine tema rengi)
+    // Metin rengi text-secondary-foreground
+    <footer className='w-full bg-secondary text-secondary-foreground font-sans'>
       {/* 1. ABONELİK BÖLÜMÜ */}
-      <div className='relative w-full overflow-hidden bg-[#212529]'>
+      <div className='relative w-full overflow-hidden'>
+        {/* Dalga Efekti SVG: Renkler temaya uyarlandı (fill-background ve bg-secondary) */}
         <div className='block border-none rotate-180 w-full overflow-hidden'>
           <svg
-            className='bg-[#212529] h-[90px] w-[calc(100%+2px)]'
+            className='bg-secondary h-[90px] w-[calc(100%+2px)]'
             xmlns='http://www.w3.org/2000/svg'
             viewBox='0 0 1000 100'
             preserveAspectRatio='none'
           >
             <path
-              className='fill-[#ecf2ff]'
+              className='fill-background' // Sayfa arkaplan rengiyle birleşmesi için
               d='M500,97C126.7,96.3,0.8,19.8,0,0v100l1000,0V1C1000,19.4,873.3,97.8,500,97z'
             ></path>
           </svg>
         </div>
 
-        <div className='bg-[#212529]'>
+        <div className='bg-secondary'>
           <div className='relative z-10 max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-8'>
             <div className='flex-1 text-center md:text-left'>
-              <h2 className='text-2xl md:text-4xl font-bold leading-tight text-white'>
+              <h2 className='text-2xl md:text-4xl font-bold leading-tight text-secondary-foreground'>
                 {uiText.signupTitle}
               </h2>
-              <p className='text-gray-400 mt-2'>{uiText.signupDesc}</p>
+              {/* text-muted-foreground kullanıldı */}
+              <p className='text-muted-foreground mt-2'>{uiText.signupDesc}</p>
             </div>
 
             <div className='flex-1 w-full max-w-md'>
-              <div className='flex relative shadow-lg rounded-full overflow-hidden bg-white'>
+              <div className='flex relative shadow-lg rounded-full overflow-hidden bg-card'>
                 <input
                   type='email'
                   placeholder={uiText.emailPlaceholder}
-                  className='w-full py-3 px-6 text-gray-800 focus:outline-none'
+                  // Input metin ve arka plan renkleri
+                  className='w-full py-3 px-6 text-card-foreground bg-card focus:outline-none placeholder:text-muted-foreground'
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleSubscribe()}
@@ -299,12 +304,12 @@ export default function Footer () {
                 <button
                   onClick={handleSubscribe}
                   disabled={subStatus === 'loading'}
-                  className={`px-8 font-semibold text-white transition-colors duration-300 border-l ${
+                  className={`px-8 font-semibold text-primary-foreground transition-colors duration-300 border-l border-border ${
                     subStatus === 'success'
                       ? 'bg-green-600'
                       : subStatus === 'error'
                       ? 'bg-red-600'
-                      : 'bg-blue-600 hover:bg-blue-700'
+                      : 'bg-primary hover:bg-primary-hover'
                   }`}
                 >
                   {subStatus === 'loading'
@@ -331,35 +336,33 @@ export default function Footer () {
           </div>
         </div>
 
-        <hr className='border-gray-500 border-2 opacity-30 mx-auto max-w-7xl my-8' />
+        <hr className='border-border border-2 opacity-10 mx-auto max-w-7xl my-8' />
 
         {/* 2. BİLGİ ALANI (Grid) */}
         <div className='max-w-7xl mx-auto px-6 pb-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8'>
           {/* KOLON 1: Logo & Açıklama */}
-          {/* text-center md:text-left eklendi */}
           <div className='space-y-6 lg:col-span-1 text-center md:text-left'>
             {isLoading ? (
-              <div className='h-10 w-32 bg-gray-700 animate-pulse rounded mx-auto md:mx-0'></div>
+              <div className='h-10 w-32 bg-muted animate-pulse rounded mx-auto md:mx-0'></div>
             ) : settings?.logo_url ? (
-              // Resim için mx-auto md:mx-0 eklendi
               <Image
                 src={settings.logo_url}
                 alt={settings.site_name || 'Logo'}
                 width={160}
                 height={50}
-                className='object-contain mx-auto md:mx-0'
+                className='object-contain mx-auto md:mx-0 opacity-90' // Logoyu beyaza çevirmek için (koyu zeminse) veya tema uyumu için
               />
             ) : (
-              <span className='text-2xl font-bold'>
+              <span className='text-2xl font-bold text-secondary-foreground'>
                 {settings?.site_name || 'Site Name'}
               </span>
             )}
 
-            <p className='text-gray-400 text-sm leading-relaxed'>
+            <p className='text-muted-foreground text-sm leading-relaxed'>
               {settings?.footer_text || 'Premium printing solutions.'}
             </p>
 
-            {/* Social ikonlar için justify-center md:justify-start eklendi */}
+            {/* Social ikonlar */}
             <div className='flex flex-wrap gap-2 justify-center md:justify-start'>
               {socials?.map((s, idx) => (
                 <a
@@ -367,7 +370,8 @@ export default function Footer () {
                   href={s.url}
                   target='_blank'
                   rel='noopener noreferrer'
-                  className='w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all duration-300 text-gray-400 text-sm'
+                  // bg-card, hover:bg-primary
+                  className='w-8 h-8 rounded-full bg-muted/20 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all duration-300 text-muted-foreground text-sm'
                 >
                   {getSocialIcon(s.code)}
                 </a>
@@ -379,6 +383,7 @@ export default function Footer () {
           {['information', 'useful', 'about'].map(sectionKey => {
             const sectionLinks = links?.filter(l => l.section === sectionKey)
             let sectionTitle = 'Menu'
+            // (Dil kontrolleri aynı kaldı)
             if (sectionKey === 'information')
               sectionTitle =
                 lang === 'tr'
@@ -402,20 +407,19 @@ export default function Footer () {
                   : 'About Us'
 
             return (
-              // text-center md:text-left eklendi
               <div
                 key={sectionKey}
                 className='lg:col-span-1 text-center md:text-left'
               >
-                <h3 className='text-lg font-semibold mb-6 text-white inline-block'>
+                <h3 className='text-lg font-semibold mb-6 text-secondary-foreground inline-block'>
                   {sectionTitle}
                 </h3>
-                <ul className='space-y-3 text-sm text-gray-400'>
+                <ul className='space-y-3 text-sm text-muted-foreground'>
                   {sectionLinks?.map((l, i) => (
                     <li key={i}>
                       <Link
                         href={l.url}
-                        className='hover:text-white hover:translate-x-1 transition-all duration-200 inline-block'
+                        className='hover:text-primary hover:translate-x-1 transition-all duration-200 inline-block'
                       >
                         {l.title}
                       </Link>
@@ -429,15 +433,13 @@ export default function Footer () {
           })}
 
           {/* KOLON 5: İletişim */}
-          {/* text-center md:text-left eklendi */}
           <div className='lg:col-span-1 text-center md:text-left'>
-            <h3 className='text-lg font-semibold mb-6 text-white inline-block'>
+            <h3 className='text-lg font-semibold mb-6 text-secondary-foreground inline-block'>
               {uiText.contactTitle}
             </h3>
-            <ul className='space-y-4 text-sm text-gray-400'>
-              {/* Flex itemlar için justify-center md:justify-start eklendi */}
+            <ul className='space-y-4 text-sm text-muted-foreground'>
               <li className='flex items-start gap-3 justify-center md:justify-start'>
-                <FaMapMarkerAlt className='mt-1 text-blue-500 flex-shrink-0' />
+                <FaMapMarkerAlt className='mt-1 text-primary flex-shrink-0' />
                 <span className='leading-relaxed'>
                   {settings?.address ? (
                     settings.store_location_url ? (
@@ -445,7 +447,7 @@ export default function Footer () {
                         href={settings.store_location_url}
                         target='_blank'
                         rel='noopener noreferrer'
-                        className='hover:text-white transition-colors hover:underline decoration-blue-500'
+                        className='hover:text-primary transition-colors hover:underline decoration-primary'
                       >
                         {settings.address}
                       </a>
@@ -457,35 +459,32 @@ export default function Footer () {
                   )}
                 </span>
               </li>
-              {/* justify-center md:justify-start */}
               <li className='flex items-center gap-3 justify-center md:justify-start'>
-                <FaPhone className='text-blue-500 flex-shrink-0' />
+                <FaPhone className='text-primary flex-shrink-0' />
                 <a
                   href={`tel:${settings?.phone}`}
-                  className='hover:text-white transition-colors'
+                  className='hover:text-primary transition-colors'
                 >
                   {settings?.phone || 'Loading...'}
                 </a>
               </li>
-              {/* justify-center md:justify-start */}
               <li className='flex items-center gap-3 justify-center md:justify-start'>
-                <FaEnvelope className='text-blue-500 flex-shrink-0' />
+                <FaEnvelope className='text-primary flex-shrink-0' />
                 <a
                   href={`mailto:${settings?.email}`}
-                  className='hover:text-white transition-colors'
+                  className='hover:text-primary transition-colors'
                 >
                   {settings?.email || 'Loading...'}
                 </a>
               </li>
               {settings?.working_hours && (
-                // justify-center md:justify-start
-                <li className='flex items-start gap-3 pt-2 border-t border-gray-800 mt-2 justify-center md:justify-start'>
-                  <FaClock className='mt-1 text-blue-500 flex-shrink-0' />
+                <li className='flex items-start gap-3 pt-2 border-t border-border/20 mt-2 justify-center md:justify-start'>
+                  <FaClock className='mt-1 text-primary flex-shrink-0' />
                   <div>
-                    <span className='block text-xs font-semibold text-gray-500 uppercase'>
+                    <span className='block text-xs font-semibold text-muted-foreground uppercase opacity-70'>
                       {uiText.workingHours}
                     </span>
-                    <span className='text-gray-300'>
+                    <span className='text-secondary-foreground'>
                       {settings.working_hours}
                     </span>
                   </div>
@@ -496,12 +495,15 @@ export default function Footer () {
         </div>
 
         {/* 3. ALT BİLGİ */}
-        <div className='bg-[#1a1d21] py-6 border-t border-gray-800'>
+        {/* bg-secondary'nin bir ton koyusu veya aynısı, border ile ayrılmış */}
+        <div className='bg-secondary/50 py-6 border-t border-border/10'>
           <div className='max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4'>
-            <p className='text-xs text-gray-500 text-center md:text-left'>
+            <p className='text-xs text-muted-foreground text-center md:text-left'>
               © {new Date().getFullYear()}{' '}
-              <strong className='text-white'>{settings?.site_name}</strong>.{' '}
-              {uiText.rightsReserved}
+              <strong className='text-secondary-foreground'>
+                {settings?.site_name}
+              </strong>
+              . {uiText.rightsReserved}
             </p>
             <div className='opacity-80 grayscale hover:grayscale-0 transition-all duration-500'>
               <Image

@@ -1,3 +1,4 @@
+// C:\Projeler\nost-copy\app\_components\LandingSlider\_components\SliderItem.tsx
 'use client'
 
 import { useEffect } from 'react'

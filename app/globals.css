@@ -5,32 +5,71 @@
 @import 'leaflet/dist/leaflet.css';
 
 /* === Theme Vars === */
-:root {
-  /* Ana Arkaplan ve Metin */
-  --background: #ecf2ff;
-  --foreground: #0f172a; /* Slate 900 */
+@layer base {
+  :root {
+    /* --- LIGHT MODE (Aydınlık) --- */
 
-  /* Marka Renkleri */
-  --primary: #2563eb; /* Blue 600 */
-  --primary-hover: #1d4ed8; /* Blue 700 */
-  --primary-light: #60a5fa; /* Blue 400 */
+    /* Zemin: Hafif mavi tonu (Mevcut tercihiniz) */
+    --background: #ecf2ff;
+    /* Metin: Çok koyu gri/mavi (Okunabilirlik için siyah yerine yumuşak siyah) */
+    --foreground: #0f172a;
 
-  /* İkincil Renkler */
-  --secondary: #1e293b; /* Slate 800 */
+    /* Kartlar: Beyaz yapıyoruz ki üzerindeki gri yazılar okunsun. */
+    --card: #ffffff;
+    --card-foreground: #0f172a;
 
-  /* Yardımcı Renkler */
-  --muted: #64748b; /* Slate 500 */
-  --muted-light: #94a3b8; /* Slate 400 */
+    /* Hover durumları */
+    --card-hover: #f8fafc;
 
-  /* Bileşen Zeminleri */
-  --card: #dee9ff; /* Gray 100 */
-  --card-hover: #e5e7eb; /* Gray 200 */
+    /* Primary: Canlı Mavi */
+    --primary: #2563eb;
+    --primary-foreground: #ffffff;
+    --primary-hover: #1d4ed8;
 
-  /* Fontlar */
-  --font-geist-sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
-    Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
-  --font-oswald: 'Oswald', ui-sans-serif, system-ui, Arial;
-  --font-poppins: 'Poppins', ui-sans-serif, system-ui, Arial;
+    /* Secondary: Yardımcı butonlar vb. */
+    --secondary: #e2e8f0;
+    --secondary-foreground: #1e293b;
+
+    /* Muted: Açıklama metinleri için (Örn: "Kurulduğumuz günden beri...") */
+    /* Bu rengi koyulaştırdık ki okunabilsin */
+    --muted: #f1f5f9;
+    --muted-foreground: #475569; /* Slate 600 - Yeterince koyu gri */
+
+    /* Kenarlıklar */
+    --border: #cbd5e1;
+  }
+
+  /* --- DARK MODE (Karanlık) --- */
+  /* İşletim sistemi dark mode ise veya 'dark' class'ı varsa */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      /* Zemin: Lacivert değil, Modern Koyu Gri (Zinc Palette) */
+      --background: #09090b; /* Neredeyse siyah, nötr gri */
+      --foreground: #f4f4f5; /* Kırık beyaz metin */
+
+      /* Kartlar: Zeminden bir tık açık gri */
+      --card: #18181b; /* Zinc 900 */
+      --card-foreground: #f4f4f5;
+
+      --card-hover: #27272a; /* Zinc 800 */
+
+      /* Primary: Mavi, ama karanlıkta göz almaması için bir tık parlak */
+      --primary: #3b82f6; /* Blue 500 */
+      --primary-foreground: #ffffff;
+      --primary-hover: #60a5fa; /* Blue 400 */
+
+      /* Secondary */
+      --secondary: #27272a;
+      --secondary-foreground: #f4f4f5;
+
+      /* Muted: Silik metinler için açık gri */
+      --muted: #27272a;
+      --muted-foreground: #a1a1aa; /* Zinc 400 - Okunabilir açık gri */
+
+      /* Kenarlıklar */
+      --border: #27272a;
+    }
+  }
 }
 
 /* Tailwind @theme inline */
@@ -38,18 +77,21 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  /* Yeni Renkler */
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-card-hover: var(--card-hover);
+
   --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
   --color-primary-hover: var(--primary-hover);
-  --color-primary-light: var(--primary-light);
 
   --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
 
   --color-muted: var(--muted);
-  --color-muted-light: var(--muted-light);
+  --color-muted-foreground: var(--muted-foreground);
 
-  --color-card: var(--card);
-  --color-card-hover: var(--card-hover);
+  --color-border: var(--border);
 
   /* Fontlar */
   --font-sans: var(--font-geist-sans);
@@ -67,11 +109,12 @@ body {
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
   font-weight: 400;
   margin: 0;
+  -webkit-font-smoothing: antialiased; /* Fontları daha net yapar */
 }
 
 /* === Utilities & Animations === */
@@ -115,7 +158,7 @@ body {
 .swiper-pagination-bullet {
   width: 10px;
   height: 10px;
-  background: var(--muted-light);
+  background: var(--muted-foreground); /* Güncellendi: Artık temaya uyumlu */
   opacity: 0.5;
   transition: all 0.3s;
 }

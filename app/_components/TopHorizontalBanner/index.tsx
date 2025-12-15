@@ -2,7 +2,6 @@
 
 import useSWR from 'swr'
 import { FaPhone, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa'
-// Import yolun farklıysa düzelt:
 import Dropdown from './LanguageDropdown'
 import { useLanguage } from '@/components/LanguageProvider'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
@@ -73,11 +72,9 @@ export default function TopHorizontalBanner () {
     () => fetcher(lang),
     {
       revalidateOnFocus: false,
-      suspense: true // KRİTİK AYAR: Veri yoksa render'ı durdurur, LoadingOverlay çıkar.
+      suspense: true
     }
   )
-
-  // isLoading kontrolü YAPMIYORUZ. React otomatik bekletiyor.
 
   const contact = data?.contact
   const banner = data?.banner
@@ -85,14 +82,16 @@ export default function TopHorizontalBanner () {
   if (!contact && !banner) return null
 
   return (
-    <div className='bg-gradient-to-r from-blue-800 to-blue-300 px-4 py-2 min-h-[40px] w-full flex justify-center font-poppins font-medium text-foreground relative z-[60]'>
-      <div className='flex flex-row justify-between items-center w-full max-w-7xl text-xs md:text-sm text-white'>
+    // DÜZELTME: Statik gradient yerine bg-primary (Light) ve dark:bg-card (Dark)
+    // Metin rengi: text-primary-foreground (Beyaz/Açık)
+    <div className='bg-primary dark:bg-card border-b border-border/10 px-4 py-2 min-h-[40px] w-full flex justify-center font-sans font-medium text-primary-foreground dark:text-card-foreground relative z-[60] transition-colors duration-300'>
+      <div className='flex flex-row justify-between items-center w-full max-w-7xl text-xs md:text-sm'>
         {/* --- SOL KISIM --- */}
         <div className='flex flex-row gap-4 md:gap-8 items-center'>
           {contact?.phone && (
             <a
               href={`tel:${contact.phone.replace(/\s/g, '')}`}
-              className='flex flex-row items-center gap-2 hover:text-blue-100 transition-colors'
+              className='flex flex-row items-center gap-2 hover:opacity-80 transition-opacity'
             >
               <FaPhone className='text-xs' />
               <span className='whitespace-nowrap'>{contact.phone}</span>
@@ -102,7 +101,7 @@ export default function TopHorizontalBanner () {
           {contact?.email && (
             <a
               href={`mailto:${contact.email}`}
-              className='hidden sm:flex flex-row items-center gap-2 hover:text-blue-100 transition-colors'
+              className='hidden sm:flex flex-row items-center gap-2 hover:opacity-80 transition-opacity'
             >
               <FaEnvelope />
               <span>{contact.email}</span>
@@ -121,12 +120,12 @@ export default function TopHorizontalBanner () {
             </a>
           )}
           {banner?.promo_text && banner?.promo_cta && (
-            <span className='opacity-70 mx-1'>|</span>
+            <span className='opacity-50 mx-1'>|</span>
           )}
           {banner?.promo_cta && (
             <a
               href={banner.promo_url ?? '#'}
-              className='font-bold underline decoration-white/50 hover:decoration-white transition-all whitespace-nowrap'
+              className='font-bold underline decoration-current/50 hover:decoration-current transition-all whitespace-nowrap'
             >
               {banner.promo_cta}
             </a>
@@ -143,7 +142,7 @@ export default function TopHorizontalBanner () {
                 href={contact.location_url}
                 target='_blank'
                 rel='noopener noreferrer'
-                className='hover:text-blue-100 transition-colors flex items-center gap-1'
+                className='hover:opacity-80 transition-opacity flex items-center gap-1'
                 title={contact.location_label || 'Location'}
               >
                 <FaMapMarkerAlt className='sm:hidden text-sm' />

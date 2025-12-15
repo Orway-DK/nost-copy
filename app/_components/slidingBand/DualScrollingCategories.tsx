@@ -4,8 +4,6 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useLanguage } from '@/components/LanguageProvider'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { useLoading } from '@/components/LoadingContext' // Eğer loading context kullanıyorsan ekle
-// CSS dosyasını import etmeyi unutma
 import './slidingBands.css'
 
 type CategoryItem = {
@@ -16,60 +14,60 @@ type CategoryItem = {
   sort: number
 }
 
+// Varsayılan hızlar (Eğer DB'den gelmezse)
+const DEFAULT_SPEEDS = {
+  desktop: 120,
+  mobile: 60
+}
+
 const FALLBACK: CategoryItem[] = [
   { id: -1, label: 'Dress shirt', href: '#', slug: 'dress-shirt', sort: 0 },
-  { id: -2, label: 'New Products', href: '#', slug: 'new-products', sort: 1 },
-  {
-    id: -3,
-    label: 'Infants & toddlers',
-    href: '#',
-    slug: 'infants-toddlers',
-    sort: 2
-  },
-  { id: -4, label: 'Tank tops', href: '#', slug: 'tank-tops', sort: 3 },
-  { id: -5, label: "Men's shirts", href: '#', slug: 'mens-shirts', sort: 4 },
-  {
-    id: -6,
-    label: "Women's shirts",
-    href: '#',
-    slug: 'womens-shirts',
-    sort: 5
-  },
-  {
-    id: -7,
-    label: 'Bags & accessories',
-    href: '#',
-    slug: 'bags-accessories',
-    sort: 6
-  }
+  { id: -2, label: 'New Products', href: '#', slug: 'new-products', sort: 1 }
+  // ... diğer fallbackler
 ]
 
 export default function DualScrollingCategories () {
   const { lang } = useLanguage()
   const [items, setItems] = useState<CategoryItem[]>(FALLBACK)
+  const [speeds, setSpeeds] = useState(DEFAULT_SPEEDS)
+  const [isMobile, setIsMobile] = useState(false)
 
-  // --- SWR / FETCH MANTIĞI (Burayı senin kodundan aynen korudum) ---
+  // Mobil kontrolü (SSR uyumlu)
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
   useEffect(() => {
     let mounted = true
     ;(async () => {
       try {
         const supabase = createSupabaseBrowserClient()
-        const { data, error } = await supabase
-          .from('categories')
-          .select(
-            'id, slug, sort, active, category_translations(name, lang_code)'
-          )
-          .eq('active', true)
-          .eq('category_translations.lang_code', lang)
-          .order('sort', { ascending: true })
 
-        if (error) {
+        // Paralel istek: Hem kategoriler hem ayarlar
+        const [catRes, setRes] = await Promise.all([
+          supabase
+            .from('categories')
+            .select(
+              'id, slug, sort, active, category_translations(name, lang_code)'
+            )
+            .eq('active', true)
+            .eq('category_translations.lang_code', lang)
+            .order('sort', { ascending: true }),
+
+          supabase
+            .from('slider_settings')
+            .select('duration_desktop, duration_mobile')
+            .eq('section_key', 'scrolling_categories')
+            .single()
+        ])
+
+        if (catRes.error) {
           if (mounted) setItems(FALLBACK)
-          return
-        }
-
-        const mapped =
-          (data ?? []).map((c: any, idx: number) => {
+        } else {
+          const mapped = (catRes.data ?? []).map((c: any, idx: number) => {
             const tr = (c.category_translations ?? []).find(
               (t: any) => t.lang_code === lang
             )
@@ -80,11 +78,21 @@ export default function DualScrollingCategories () {
               label: tr?.name ?? c.slug,
               href: `/collections/${c.slug}`
             } as CategoryItem
-          }) ?? []
+          })
+          if (mounted) {
+            if (mapped.length === 0) setItems(FALLBACK)
+            else setItems(mapped)
+          }
+        }
 
-        if (mounted) {
-          if (mapped.length === 0) setItems(FALLBACK)
-          else setItems(mapped)
+        // Hız ayarlarını uygula
+        if (!setRes.error && setRes.data) {
+          if (mounted) {
+            setSpeeds({
+              desktop: setRes.data.duration_desktop,
+              mobile: setRes.data.duration_mobile
+            })
+          }
         }
       } catch (err) {
         if (mounted) setItems(FALLBACK)
@@ -95,28 +103,28 @@ export default function DualScrollingCategories () {
     }
   }, [lang])
 
+  // Aktif Süreyi Belirle
+  const currentDuration = isMobile ? `${speeds.mobile}s` : `${speeds.desktop}s`
+
   return (
     <div className='relative w-full overflow-hidden py-12 md:py-24 bg-background'>
       {/* ALT BANT (Sola Kayan) */}
       <div className='absolute inset-x-0 top-1/2 -translate-y-1/2 -mx-20 bg-fuchsia-100 text-black py-3 rotate-6 lg:rotate-3 shadow-sm border-y border-black/5 z-0'>
-        {/* group class'ı hover durdurma için gerekli */}
         <div className='px-4 group flex overflow-hidden select-none'>
-          {/* MOBİL DÜZELTMESİ:
-                        1. w-max: İçeriğin genişliği kadar yer kapla.
-                        2. animate-marquee-fast: Mobilde hızlı kay.
-                        3. md:animate-marquee: Masaüstünde normal hızda kay.
-                    */}
-          <div className='flex min-w-full shrink-0 w-max animate-marquee-fast md:animate-marquee group-hover:[animation-play-state:paused]'>
-            {/* İçerik tekrarı (sonsuz döngü için) */}
+          {/* Style ile animationDuration'ı eziyoruz */}
+          <div
+            className='flex min-w-full shrink-0 w-max animate-marquee group-hover:[animation-play-state:paused]'
+            style={{ animationDuration: currentDuration }}
+          >
             <CategoryStrip items={items} />
             <CategoryStrip items={items} />
             <CategoryStrip items={items} />
             <CategoryStrip items={items} />
           </div>
-          {/* Aynısından bir tane daha (boşluk kalmaması için) - aria-hidden ekran okuyucular görmesin diye */}
           <div
             aria-hidden='true'
-            className='flex min-w-full shrink-0 w-max animate-marquee-fast md:animate-marquee group-hover:[animation-play-state:paused]'
+            className='flex min-w-full shrink-0 w-max animate-marquee group-hover:[animation-play-state:paused]'
+            style={{ animationDuration: currentDuration }}
           >
             <CategoryStrip items={items} />
             <CategoryStrip items={items} />
@@ -129,7 +137,10 @@ export default function DualScrollingCategories () {
       {/* ÜST BANT (Sağa Kayan - Reverse) */}
       <div className='absolute inset-x-0 top-1/2 -translate-y-1/2 bg-yellow-50 text-black py-3 -rotate-4 lg:-rotate-2 z-10 shadow-lg border-y border-black/5'>
         <div className='px-4 group flex overflow-hidden select-none'>
-          <div className='flex min-w-full shrink-0 w-max animate-marquee-reverse-fast md:animate-marquee-reverse group-hover:[animation-play-state:paused]'>
+          <div
+            className='flex min-w-full shrink-0 w-max animate-marquee-reverse group-hover:[animation-play-state:paused]'
+            style={{ animationDuration: currentDuration }}
+          >
             <CategoryStrip items={items} />
             <CategoryStrip items={items} />
             <CategoryStrip items={items} />
@@ -137,7 +148,8 @@ export default function DualScrollingCategories () {
           </div>
           <div
             aria-hidden='true'
-            className='flex min-w-full shrink-0 w-max animate-marquee-reverse-fast md:animate-marquee-reverse group-hover:[animation-play-state:paused]'
+            className='flex min-w-full shrink-0 w-max animate-marquee-reverse group-hover:[animation-play-state:paused]'
+            style={{ animationDuration: currentDuration }}
           >
             <CategoryStrip items={items} />
             <CategoryStrip items={items} />

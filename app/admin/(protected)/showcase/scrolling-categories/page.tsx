@@ -1,13 +1,20 @@
-// C:\Projeler\nost-copy\app\admin\(protected)\showcase\scrolling-categories\page.tsx
 import ScrollingCategoriesList from './scrolling-categories-list'
-import { getScrollingCategoriesAction } from './actions'
+import {
+  getScrollingCategoriesAction,
+  getSliderSettingsAction
+} from './actions'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ScrollingCategoriesPage () {
-  // Veriyi action üzerinden çekiyoruz
-  const res = await getScrollingCategoriesAction()
-  const categories = res.success ? res.data : []
+  // Paralel veri çekme
+  const [catRes, setRes] = await Promise.all([
+    getScrollingCategoriesAction(),
+    getSliderSettingsAction()
+  ])
+
+  const categories = catRes.success ? catRes.data : []
+  const settings = setRes.success ? setRes.data : null
 
   return (
     <div className='space-y-6 pb-20'>
@@ -16,13 +23,16 @@ export default async function ScrollingCategoriesPage () {
         <div>
           <h1 className='admin-page-title'>Kayan Kategoriler</h1>
           <p className='text-[var(--admin-muted)] text-sm'>
-            Anasayfadaki kayan bantta görünecek kategorilerin sırasını ve
-            görünürlüğünü ayarlayın.
+            Anasayfadaki kayan bantta görünecek kategorileri ve animasyon hızını
+            ayarlayın.
           </p>
         </div>
       </div>
 
-      <ScrollingCategoriesList initialItems={categories} />
+      <ScrollingCategoriesList
+        initialItems={categories}
+        initialSettings={settings}
+      />
     </div>
   )
 }
