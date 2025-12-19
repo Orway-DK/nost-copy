@@ -6,9 +6,7 @@ import Dropdown from './LanguageDropdown'
 import { useLanguage } from '@/components/LanguageProvider'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 
-/**
- * Types
- */
+/* Types */
 type ContactInfoRow = {
   phone: string | null
   email: string | null
@@ -82,9 +80,7 @@ export default function TopHorizontalBanner () {
   if (!contact && !banner) return null
 
   return (
-    // DÜZELTME: Statik gradient yerine bg-primary (Light) ve dark:bg-card (Dark)
-    // Metin rengi: text-primary-foreground (Beyaz/Açık)
-    <div className='bg-primary dark:bg-card border-b border-border/10 px-4 py-2 min-h-[40px] w-full flex justify-center font-sans font-medium text-primary-foreground dark:text-card-foreground relative z-[60] transition-colors duration-300'>
+    <div className='bg-primary dark:bg-secondary border-b border-border/10 px-4 py-2 min-h-[40px] w-full flex justify-center font-sans font-medium text-primary-foreground dark:text-card-foreground relative z-[60] transition-colors duration-300'>
       <div className='flex flex-row justify-between items-center w-full max-w-7xl text-xs md:text-sm'>
         {/* --- SOL KISIM --- */}
         <div className='flex flex-row gap-4 md:gap-8 items-center'>
@@ -110,7 +106,8 @@ export default function TopHorizontalBanner () {
         </div>
 
         {/* --- ORTA KISIM --- */}
-        <div className='hidden md:flex flex-row gap-2 items-center'>
+        {/* Değişiklik: hidden xl:flex kullanılarak 1280px altına kadar gizlendi */}
+        <div className='hidden xl:flex flex-row gap-2 items-center'>
           {banner?.promo_text && (
             <a
               href={banner.promo_url ?? '#'}

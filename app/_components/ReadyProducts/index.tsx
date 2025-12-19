@@ -17,7 +17,6 @@ const getImageUrl = (path: string | null) => {
 const fetchReadyProducts = async () => {
   const supabase = createSupabaseBrowserClient()
 
-  // Veriyi çek
   const { data, error } = await supabase
     .from('homepage_ready_products')
     .select(
@@ -36,18 +35,14 @@ const fetchReadyProducts = async () => {
   if (error) throw error
   if (!data) return []
 
-  // Veriyi işle ve formatla
   return data.map((item: any) => {
     const prod = item.products
-
-    // Görseli bul
     const media = Array.isArray(prod.product_media) ? prod.product_media : []
     const sortedMedia = media.sort(
       (a: any, b: any) => a.sort_order - b.sort_order
     )
     const imageKey = sortedMedia[0]?.image_key || null
 
-    // İsimleri hazırla
     const names: Record<string, string> = {
       tr: prod.name,
       en: prod.name,
@@ -75,14 +70,33 @@ const fetchReadyProducts = async () => {
 }
 
 export default function ReadyProducts () {
-  const { data: products } = useSWR(
+  const { data: products, isLoading } = useSWR(
     'homepage-ready-products',
     fetchReadyProducts,
     {
-      revalidateOnFocus: false,
-      suspense: true
+      revalidateOnFocus: false
+      // suspense: true kaldırıldı, hata buna sebep oluyordu
     }
   )
+
+  // Yükleme durumu için skeleton veya boş div
+  if (isLoading) {
+    return (
+      <div className='py-12 md:py-20 w-full flex justify-center'>
+        <div className='container mx-auto px-4'>
+          <div className='h-12 w-64 bg-muted animate-pulse rounded-lg mb-10' />
+          <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
+            {[1, 2, 3, 4].map(i => (
+              <div
+                key={i}
+                className='aspect-[4/5] bg-muted animate-pulse rounded-xl'
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (!products || products.length === 0) return null
 

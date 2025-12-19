@@ -8,66 +8,56 @@
 @layer base {
   :root {
     /* --- LIGHT MODE (Aydınlık) --- */
+    --background: #ecf2ff; /* SABİT */
+    --foreground: #0f172a; /* Slate 900 - Okunabilirlik için derinlik */
 
-    /* Zemin: Hafif mavi tonu (Mevcut tercihiniz) */
-    --background: #ecf2ff;
-    /* Metin: Çok koyu gri/mavi (Okunabilirlik için siyah yerine yumuşak siyah) */
-    --foreground: #0f172a;
-
-    /* Kartlar: Beyaz yapıyoruz ki üzerindeki gri yazılar okunsun. */
     --card: #ffffff;
     --card-foreground: #0f172a;
+    --card-hover: #f1f5f9;
 
-    /* Hover durumları */
-    --card-hover: #f8fafc;
-
-    /* Primary: Canlı Mavi */
     --primary: #2563eb;
     --primary-foreground: #ffffff;
     --primary-hover: #1d4ed8;
 
-    /* Secondary: Yardımcı butonlar vb. */
-    --secondary: #e2e8f0;
-    --secondary-foreground: #1e293b;
+    /* Secondary: Arka plan ile metin arasında daha net bir ayrım */
+    --secondary: #dbeafe; /* Hafif mavi/gri - Background ile uyumlu ama farklı */
+    --secondary-foreground: #1e40af; /* Daha koyu mavi - Okunurluk için */
 
-    /* Muted: Açıklama metinleri için (Örn: "Kurulduğumuz günden beri...") */
-    /* Bu rengi koyulaştırdık ki okunabilsin */
-    --muted: #f1f5f9;
-    --muted-foreground: #475569; /* Slate 600 - Yeterince koyu gri */
+    --muted: #f8fafc;
+    --muted-foreground: #475569; /* Slate 600 */
 
-    /* Kenarlıklar */
     --border: #cbd5e1;
+    --accent: #facc15; /* Vurgu rengi eklendi */
+    --accent-foreground: #422006;
   }
 
   /* --- DARK MODE (Karanlık) --- */
-  /* İşletim sistemi dark mode ise veya 'dark' class'ı varsa */
   @media (prefers-color-scheme: dark) {
     :root {
-      /* Zemin: Lacivert değil, Modern Koyu Gri (Zinc Palette) */
-      --background: #09090b; /* Neredeyse siyah, nötr gri */
-      --foreground: #f4f4f5; /* Kırık beyaz metin */
+      --background: rgba(25, 25, 25, 1); /* SABİT */
+      --foreground: #f8fafc; /* Daha parlak beyaz (Slate 50) */
 
-      /* Kartlar: Zeminden bir tık açık gri */
-      --card: #18181b; /* Zinc 900 */
-      --card-foreground: #f4f4f5;
+      /* Kartlar: Zeminden net ayrılmalı */
+      --card: #1e1e1e; /* Background'dan bir tık daha açık */
+      --card-foreground: #f8fafc;
+      --card-hover: #2a2a2a;
 
-      --card-hover: #27272a; /* Zinc 800 */
-
-      /* Primary: Mavi, ama karanlıkta göz almaması için bir tık parlak */
-      --primary: #3b82f6; /* Blue 500 */
+      --primary: #3b82f6;
       --primary-foreground: #ffffff;
-      --primary-hover: #60a5fa; /* Blue 400 */
+      --primary-hover: #60a5fa;
 
-      /* Secondary */
-      --secondary: #27272a;
-      --secondary-foreground: #f4f4f5;
+      /* Secondary: Dark mode'da en büyük çakışma buradaydı. 
+         Arka plandan belirgin şekilde farklı (daha açık/gri) olmalı. */
+      --secondary: #333333;
+      --secondary-foreground: #e2e8f0; /* İçindeki yazıları daha açık yaptık */
 
-      /* Muted: Silik metinler için açık gri */
-      --muted: #27272a;
-      --muted-foreground: #a1a1aa; /* Zinc 400 - Okunabilir açık gri */
+      /* Muted: Okunabilirlik için foreground'a yaklaştırıldı */
+      --muted: #262626;
+      --muted-foreground: #94a3b8; /* Slate 400 - Yazılar için ideal kontrast */
 
-      /* Kenarlıklar */
-      --border: #27272a;
+      --border: #3f3f46; /* Zinc 700 */
+      --accent: #fbbf24;
+      --accent-foreground: #000000;
     }
   }
 }
@@ -92,8 +82,9 @@
   --color-muted-foreground: var(--muted-foreground);
 
   --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
 
-  /* Fontlar */
   --font-sans: var(--font-geist-sans);
   --font-oswald: var(--font-oswald);
   --font-poppins: var(--font-poppins);
@@ -114,21 +105,23 @@ body {
   font-family: var(--font-sans);
   font-weight: 400;
   margin: 0;
-  -webkit-font-smoothing: antialiased; /* Fontları daha net yapar */
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility; /* Yazı kalitesini artırır */
 }
 
-/* === Utilities & Animations === */
+/* === Okunabilirliği Artıran Ek Katmanlar === */
 @layer utilities {
-  .text-stroke {
-    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.5);
-  }
-  .text-stroke-sm {
-    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.2);
-  }
-  .text-stroke-0 {
-    -webkit-text-stroke: 0;
+  /* Cam efekti (Bento kartları için arka planda desen varsa çok işe yarar) */
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-md border border-border/50;
   }
 
+  /* Metin üzerine hafif gölge (Görsel üstü yazılar için) */
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Animasyonlar */
   @keyframes reveal {
     from {
       opacity: 0;
@@ -142,14 +135,10 @@ body {
   .reveal-base {
     opacity: 0;
     will-change: transform, opacity;
-    backface-visibility: hidden;
-    transform: translateZ(0);
   }
   .reveal-visible {
-    animation-name: reveal;
-    animation-duration: var(--rv-duration, 700ms);
-    animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
-    animation-fill-mode: both;
+    animation: reveal var(--rv-duration, 700ms)
+      cubic-bezier(0.22, 0.61, 0.36, 1) both;
     animation-delay: var(--rv-delay, 0ms);
   }
 }
@@ -158,8 +147,8 @@ body {
 .swiper-pagination-bullet {
   width: 10px;
   height: 10px;
-  background: var(--muted-foreground); /* Güncellendi: Artık temaya uyumlu */
-  opacity: 0.5;
+  background: var(--muted-foreground);
+  opacity: 0.3;
   transition: all 0.3s;
 }
 .swiper-pagination-bullet-active {

@@ -194,7 +194,7 @@ export default function MakeItEasier () {
   }
 
   return (
-    <div className='mt-10 w-full overflow-hidden'>
+    <div className='w-full overflow-hidden'>
       {/* Üst kıvrım */}
       <div className='block border-none rotate-180 w-full overflow-hidden'>
         <svg
@@ -204,7 +204,7 @@ export default function MakeItEasier () {
           preserveAspectRatio='none'
         >
           <path
-            className='fill-[#ecf2ff]'
+            className='fill-background'
             d='M500,97C126.7,96.3,0.8,19.8,0,0v100l1000,0V1C1000,19.4,873.3,97.8,500,97z'
           ></path>
         </svg>
@@ -315,7 +315,7 @@ export default function MakeItEasier () {
           preserveAspectRatio='none'
         >
           <path
-            className='fill-[#ecf2ff]'
+            className='fill-background'
             d='M500,97C126.7,96.3,0.8,19.8,0,0v100l1000,0V1C1000,19.4,873.3,97.8,500,97z'
           ></path>
         </svg>

@@ -43,10 +43,6 @@ export default function ServiceCard ({ service }: { service: ServiceItem }) {
 
       {/* Alt İçerik Alanı */}
       <div className='absolute bottom-0 left-0 w-full p-8 z-10 translate-y-2 group-hover:translate-y-0 transition-transform duration-300'>
-        <div className='text-5xl font-bold text-transparent text-stroke mb-4 opacity-50 group-hover:opacity-100 group-hover:text-primary group-hover:text-stroke-0 transition-all duration-300'>
-          {service.index}
-        </div>
-
         <h3 className='text-2xl font-bold text-white group-hover:text-primary-light transition-colors'>
           {service.title}
         </h3>

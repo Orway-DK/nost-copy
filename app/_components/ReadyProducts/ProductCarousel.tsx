@@ -74,24 +74,23 @@ export default function ProductCarousel ({
 
   return (
     <div className={`w-full h-auto relative ${className}`}>
-      {/* Mobilde kenar boşluğu px-0, masaüstünde px-1 */}
       <div className='max-w-7xl mx-auto px-0 md:px-1 relative group/carousel'>
         {showTitle && title && (
           <div className='mb-6 px-4 md:px-0 flex items-center justify-between'>
-            <h2 className='text-2xl md:text-3xl font-bold tracking-tight'>
+            <h2 className='text-2xl md:text-3xl font-bold tracking-tight text-foreground'>
               {title}
             </h2>
           </div>
         )}
 
-        {/* Navigation Buttons - Sadece Masaüstünde Göster (hidden md:block) */}
+        {/* Navigation Buttons - Dark Mode Uyumlu */}
         <button
           ref={prevRef}
           className='hidden md:block absolute z-20 top-1/2 -translate-y-1/2 -left-4 lg:-left-12 text-primary hover:text-primary-hover transition-all disabled:opacity-0 scale-0 group-hover/carousel:scale-100 duration-300'
           type='button'
           aria-label='Previous Slide'
         >
-          <IoIosArrowDropleftCircle className='w-12 h-12 drop-shadow-md bg-white rounded-full' />
+          <IoIosArrowDropleftCircle className='w-12 h-12 drop-shadow-md bg-card rounded-full' />
         </button>
         <button
           ref={nextRef}
@@ -99,16 +98,14 @@ export default function ProductCarousel ({
           type='button'
           aria-label='Next Slide'
         >
-          <IoIosArrowDroprightCircle className='w-12 h-12 drop-shadow-md bg-white rounded-full' />
+          <IoIosArrowDroprightCircle className='w-12 h-12 drop-shadow-md bg-card rounded-full' />
         </button>
 
         <Swiper
           modules={[Autoplay, Navigation]}
-          // MOBİL AYARLARI (Varsayılan)
-          slidesPerView={1.3} // Ortada 1, yanlardan 0.3 görünür (%75 genişlik)
-          centeredSlides={true} // Aktif olanı ortala
+          slidesPerView={1.3}
+          centeredSlides={true}
           spaceBetween={16}
-          loop={products.length > 2}
           autoplay={{
             delay: 4000,
             disableOnInteraction: true,
@@ -128,70 +125,48 @@ export default function ProductCarousel ({
             }
           }}
           breakpoints={{
-            // 640px (Tablet)
-            640: {
-              slidesPerView: 2,
-              centeredSlides: false,
-              spaceBetween: 20
-            },
-            // 768px
-            768: {
-              slidesPerView: 3,
-              centeredSlides: false,
-              spaceBetween: 24
-            },
-            // 1024px (Masaüstü)
-            1024: {
-              slidesPerView: 4,
-              centeredSlides: false,
-              spaceBetween: 28
-            },
-            // 1280px (Geniş)
-            1280: {
-              slidesPerView: 4,
-              centeredSlides: false,
-              spaceBetween: 32
-            }
+            640: { slidesPerView: 2, centeredSlides: false, spaceBetween: 20 },
+            768: { slidesPerView: 3, centeredSlides: false, spaceBetween: 24 },
+            1024: { slidesPerView: 4, centeredSlides: false, spaceBetween: 28 },
+            1280: { slidesPerView: 4, centeredSlides: false, spaceBetween: 32 }
           }}
           className='product-carousel select-none !pb-10 !px-0 md:!px-1'
         >
           {products.map(p => {
             const displayName =
               p.names[lang] || p.names['en'] || p.names['tr'] || 'Product'
-
-            let priceVal: number | null = 0
-            if (effectiveCurrency === 'TRY') priceVal = p.price.try
-            else if (effectiveCurrency === 'EUR') priceVal = p.price.eur
-            else priceVal = p.price.usd
+            const priceVal =
+              effectiveCurrency === 'TRY'
+                ? p.price.try
+                : effectiveCurrency === 'EUR'
+                ? p.price.eur
+                : p.price.usd
 
             return (
               <SwiperSlide key={p.id} className='h-auto !flex'>
-                <div className='group relative w-full flex flex-col bg-card hover:bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-muted-light/20'>
-                  {/* Görsel */}
-                  <div className='relative w-full aspect-[4/5] bg-gray-100 overflow-hidden'>
-                    <Link
-                      href={p.url}
-                      title={displayName}
-                      className='block w-full h-full relative'
-                    >
+                {/* DÜZELTME: bg-card, border-border, shadow-sm ve hover:bg-card-hover kullanıldı */}
+                <div className='group relative w-full flex flex-col bg-card hover:bg-card-hover rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-border/50'>
+                  {/* Görsel Alanı */}
+                  <div className='relative w-full aspect-[4/5] bg-muted/30 overflow-hidden'>
+                    <Link href={p.url} className='block w-full h-full relative'>
                       <Image
                         src={p.image}
                         alt={displayName}
                         fill
                         sizes='(max-width: 640px) 75vw, (max-width: 1024px) 33vw, 25vw'
-                        className='object-cover transition-transform duration-700 group-hover:scale-105'
+                        className='object-cover transition-transform duration-700 group-hover:scale-110'
                         unoptimized
                       />
                     </Link>
                   </div>
 
-                  {/* İçerik */}
+                  {/* İçerik Alanı */}
                   <div className='flex flex-col flex-grow p-4 text-center'>
                     <h3 className='text-sm md:text-base font-semibold leading-snug text-foreground group-hover:text-primary transition-colors line-clamp-2 min-h-[2.5rem] flex items-center justify-center mb-2'>
                       <Link href={p.url}>{displayName}</Link>
                     </h3>
 
-                    <div className='mt-auto pt-2 border-t border-muted-light/20 w-full'>
+                    <div className='mt-auto pt-2 border-t border-border/30 w-full'>
                       <span className='text-base md:text-lg font-bold text-primary block'>
                         {formatPrice(priceVal, effectiveCurrency)}
                       </span>

@@ -9,7 +9,7 @@ export const metadata = {
 
 export default function AboutPage() {
     return (
-        <div className="relative w-screen min-h-screen left-1/2 -translate-x-1/2 overflow-x-hidden bg-gray-50/30">
+        <div className="relative w-screen min-h-screen left-1/2 -translate-x-1/2 overflow-x-hidden">
 
             {/* --- ARKAPLAN DESENLERİ (Contact Page ile uyumlu) --- */}
             <div className="absolute inset-0 w-full h-full pointer-events-none z-0">
@@ -35,7 +35,7 @@ export default function AboutPage() {
             </div>
 
             {/* --- ANA İÇERİK --- */}
-            <main className="relative z-10 w-full pt-20">
+            <main className="relative z-10 w-full ">
                 <AboutContent />
             </main>
         </div>

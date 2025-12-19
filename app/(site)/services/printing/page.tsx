@@ -1,112 +1,140 @@
 // app/services/printing/page.tsx
-import React from "react";
-import Image from "next/image";
-import type { Metadata } from "next";
+import React from 'react'
+import Image from 'next/image'
+import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-    title: "Özel Baskı Hizmetleri - Nost Copy",
-    description: "En gelişmiş ofset ve dijital baskı çözümlerimizle tanışın.",
-};
+  title: 'Özel Baskı Hizmetleri - Nost Copy',
+  description: 'En gelişmiş ofset ve dijital baskı çözümlerimizle tanışın.'
+}
 
-export default async function PrintingPage() {
-    return (
-        // bg-background: Temanın ana zemin rengi
-        <div className="w-full min-h-screen bg-background">
-
-            {/* --- HERO BÖLÜMÜ --- */}
-            {/* bg-secondary: Temadaki koyu ikincil renk (Slate 800)
-         text-background: Temadaki zemin rengi (Genelde beyaz), koyu zemin üstünde okunaklı olur.
-      */}
-            <section className="relative h-[600px] w-full bg-secondary text-background flex items-center justify-center overflow-hidden">
-
-                {/* Görsel Opaklığı */}
-                <div className="absolute inset-0 opacity-40">
-                    <Image
-                        src="/images/printing-hero-special.jpg"
-                        alt="Printing"
-                        fill
-                        className="object-cover"
-                        priority
-                    />
-                </div>
-
-                <div className="relative z-10 text-center px-4">
-                    <h1 className="text-6xl md:text-8xl font-black mb-4 tracking-tighter">
-                        SINIRSIZ BASKI
-                    </h1>
-                    {/* opacity-90: Rengi değiştirmeden hafif şeffaflıkla ton farkı yaratıyoruz */}
-                    <p className="text-xl md:text-2xl font-light opacity-90">
-                        Hayal ettiğiniz her şeyi kağıda döküyoruz.
-                    </p>
-
-                    {/* Buton:
-                bg-background -> Beyaz zemin
-                text-secondary -> Koyu metin
-                hover:bg-card -> Hover'da hafif grileşme
-            */}
-                    <button className="mt-8 px-8 py-3 bg-background text-secondary font-bold rounded-full hover:bg-card transition-colors">
-                        Hemen Teklif Al
-                    </button>
-                </div>
-            </section>
-
-            {/* --- ÖZEL İÇERİK BÖLÜMÜ --- */}
-            <section className="py-20 max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                <div>
-                    {/* text-foreground: Ana metin rengi */}
-                    <h2 className="text-4xl font-bold mb-6 text-foreground">Neden Bizim Baskı Çözümlerimiz?</h2>
-
-                    {/* text-muted: Açıklama metni rengi */}
-                    <p className="text-lg text-muted mb-4">
-                        Diğer hizmetlerimizden farklı olarak, baskı departmanımızda
-                        Heidelberg XL-75 makineleri kullanıyoruz. Bu sayfa özel olarak tasarlandı
-                        çünkü baskı bizim amiral gemimiz.
-                    </p>
-
-                    <ul className="space-y-3 mt-6 text-foreground">
-                        <li className="flex items-center gap-2">
-                            <span className="text-primary">✅</span> 24 Saatte Teslim
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <span className="text-primary">✅</span> Pantone Renk Garantisi
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <span className="text-primary">✅</span> Ücretsiz Numune
-                        </li>
-                    </ul>
-                </div>
-
-                {/* bg-card: Kart arkaplan rengi */}
-                <div className="bg-card p-8 rounded-2xl h-[400px] border border-muted-light)]/20">
-                    <div className="w-full h-full flex items-center justify-center text-muted border-2 border-dashed border-muted-light rounded-xl">
-                        Özel Baskı Videoları Alanı
-                    </div>
-                </div>
-            </section>
-
-            {/* --- SÜREÇ BÖLÜMÜ --- */}
-            {/* bg-foreground: Temanın en koyu rengi (Genelde siyah/çok koyu gri)
-          text-background: Üzerine açık renk yazı
-      */}
-            <section className="bg-foreground text-background py-20 text-center">
-                <h3 className="text-3xl font-bold mb-8">Baskı Sürecimiz Nasıl İşliyor?</h3>
-
-                <div className="flex flex-wrap justify-center gap-8">
-                    {/* border-[var(--muted)]: Kenarlık için muted rengini kullandık */}
-                    <div className="w-64 p-6 border border-muted)] rounded-xl hover:bg-secondary/50 transition-colors">
-                        <div className="text-primary font-bold text-xl mb-2">01</div>
-                        Dosyanı Yükle
-                    </div>
-                    <div className="w-64 p-6 border border-muted)] rounded-xl hover:bg-secondary/50 transition-colors">
-                        <div className="text-primary font-bold text-xl mb-2">02</div>
-                        Onayla
-                    </div>
-                    <div className="w-64 p-6 border border-muted)] rounded-xl hover:bg-secondary/50 transition-colors">
-                        <div className="text-primary font-bold text-xl mb-2">03</div>
-                        Teslim Al
-                    </div>
-                </div>
-            </section>
+export default async function PrintingPage () {
+  return (
+    <div className='w-full min-h-screen bg-background text-foreground transition-colors duration-300'>
+      {/* --- HERO BÖLÜMÜ --- */}
+      <section className='relative h-[600px] w-full flex items-center justify-center overflow-hidden bg-secondary'>
+        {/* Görsel Katmanı */}
+        <div className='absolute inset-0 z-0'>
+          <Image
+            src='/images/printing-hero-special.jpg'
+            alt='Printing Service Hero'
+            fill
+            className='object-cover opacity-40 dark:opacity-30'
+            priority
+          />
+          {/* Alt kısımdaki içeriğe yumuşak geçiş için degrade overlay */}
+          <div className='absolute inset-0 bg-gradient-to-b from-transparent via-secondary/20 to-secondary/80' />
         </div>
-    );
+
+        <div className='relative z-10 text-center px-6 max-w-5xl'>
+          <h1 className='text-5xl md:text-8xl font-black mb-6 tracking-tighter text-primary-foreground leading-none'>
+            SINIRSIZ BASKI
+          </h1>
+          <p className='text-lg md:text-2xl font-medium text-primary-foreground/90 max-w-2xl mx-auto leading-relaxed'>
+            Hayal ettiğiniz her şeyi en yüksek kalite standartlarında kağıda
+            döküyoruz.
+          </p>
+
+          <button className='mt-10 px-10 py-4 bg-primary text-primary-foreground font-black rounded-full hover:bg-primary-hover hover:-translate-y-1 transition-all shadow-xl shadow-primary/20 uppercase tracking-widest text-sm'>
+            Hemen Teklif Al
+          </button>
+        </div>
+      </section>
+
+      {/* --- ÖZEL İÇERİK BÖLÜMÜ (Bento Tarzı) --- */}
+      <section className='py-24 max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center'>
+        <div className='space-y-8'>
+          <div className='inline-block px-4 py-1.5 bg-primary/10 text-primary text-xs font-bold rounded-full uppercase tracking-[0.2em]'>
+            Amiral Gemisi Hizmetimiz
+          </div>
+          <h2 className='text-4xl md:text-5xl font-bold text-foreground leading-tight'>
+            Neden Bizim Baskı <br />{' '}
+            <span className='text-primary'>Çözümlerimiz?</span>
+          </h2>
+
+          <p className='text-lg text-slate-400 dark:text-slate-300 leading-relaxed font-medium'>
+            Diğer hizmetlerimizden farklı olarak, baskı departmanımızda
+            <span className='text-foreground font-bold'>
+              {' '}
+              Heidelberg XL-75
+            </span>{' '}
+            makineleri kullanıyoruz. Bu sayfa özel olarak tasarlandı çünkü baskı
+            bizim uzmanlık alanımız.
+          </p>
+
+          <ul className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+            {[
+              '24 Saatte Teslim',
+              'Pantone Renk Garantisi',
+              'Ücretsiz Numune',
+              'Özel Kağıt Seçenekleri'
+            ].map((item, i) => (
+              <li
+                key={i}
+                className='flex items-center gap-3 text-foreground/90 font-bold text-sm'
+              >
+                <span className='w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs'>
+                  ✓
+                </span>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Video/Görsel Alanı - Glassmorphism efekti eklendi */}
+        <div className='bg-card/80 backdrop-blur-md p-4 rounded-[2.5rem] h-[450px] border border-border/40 shadow-2xl relative group'>
+          <div className='w-full h-full flex items-center justify-center text-muted-foreground border-2 border-dashed border-border/60 rounded-[2rem] bg-background/50 overflow-hidden'>
+            <span className='text-sm font-bold tracking-widest uppercase opacity-40 group-hover:opacity-100 transition-opacity'>
+              Özel Baskı Videoları Alanı
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* --- SÜREÇ BÖLÜMÜ --- */}
+      <section className='bg-secondary/50 dark:bg-card/30 py-24 border-y border-border/20'>
+        <div className='max-w-7xl mx-auto px-6 text-center'>
+          <h3 className='text-3xl md:text-5xl font-black mb-16 text-foreground tracking-tight'>
+            Baskı Sürecimiz <span className='text-primary'>Nasıl İşliyor?</span>
+          </h3>
+
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-8'>
+            {[
+              {
+                step: '01',
+                title: 'Dosyanı Yükle',
+                desc: 'Tasarımını PDF veya AI formatında panelimize aktar.'
+              },
+              {
+                step: '02',
+                title: 'Onayla',
+                desc: 'Uzmanlarımız dosyayı kontrol etsin ve onayını alsın.'
+              },
+              {
+                step: '03',
+                title: 'Teslim Al',
+                desc: 'Hızla üretilen siparişin kapına kadar gelsin.'
+              }
+            ].map((item, i) => (
+              <div
+                key={i}
+                className='group p-10 bg-card border border-border/40 rounded-[2rem] hover:border-primary/50 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2'
+              >
+                <div className='text-primary font-black text-4xl mb-6 opacity-40 group-hover:opacity-100 transition-opacity'>
+                  {item.step}
+                </div>
+                <h4 className='text-xl font-bold text-foreground mb-4'>
+                  {item.title}
+                </h4>
+                <p className='text-sm text-muted-foreground leading-relaxed'>
+                  {item.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  )
 }

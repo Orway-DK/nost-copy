@@ -28,7 +28,7 @@ export default function LoadingOverlay ({
     <div
       className={`
         fixed inset-0 z-[9999] flex flex-col items-center justify-center 
-        bg-[#ecf2ff] dark:bg-[#0f172a] text-slate-900 dark:text-white 
+        bg-[#ecf2ff] dark:bg-background text-slate-900 dark:text-white 
         w-screen h-screen
         transition-opacity duration-700 ease-in-out
         ${isFadingOut ? 'opacity-0 pointer-events-none' : 'opacity-100'}

@@ -264,17 +264,20 @@ export default function Footer () {
     <footer className='w-full bg-secondary text-secondary-foreground font-sans'>
       {/* 1. ABONELİK BÖLÜMÜ */}
       <div className='relative w-full overflow-hidden'>
-        {/* Dalga Efekti SVG: Renkler temaya uyarlandı (fill-background ve bg-secondary) */}
         <div className='block border-none rotate-180 w-full overflow-hidden'>
           <svg
-            className='bg-secondary h-[90px] w-[calc(100%+2px)]'
+            className='h-[90px] w-[calc(100%+2px)]'
             xmlns='http://www.w3.org/2000/svg'
             viewBox='0 0 1000 100'
             preserveAspectRatio='none'
           >
             <path
-              className='fill-background' // Sayfa arkaplan rengiyle birleşmesi için
+              // DÜZELTME BURADA:
+              // Tailwind class yerine style prop kullandık.
+              // fill: var(--background) -> CSS değişkeninden gelen ana zemin rengi
+              style={{ fill: 'var(--background)' }}
               d='M500,97C126.7,96.3,0.8,19.8,0,0v100l1000,0V1C1000,19.4,873.3,97.8,500,97z'
+              fillOpacity='1' // Opaklığı %100 zorla
             ></path>
           </svg>
         </div>

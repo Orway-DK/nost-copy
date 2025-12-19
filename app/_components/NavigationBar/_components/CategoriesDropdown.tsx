@@ -7,10 +7,10 @@ import Link from 'next/link'
 /**
  * Kategoriler için basit dropdown.
  * Props:
- *  - label: Üst buton yazısı (Kategoriler / Categories / Kategorien)
- *  - items: { label, href }[]
- *  - loading: yükleniyor mu
- *  - error: hata oldu mu
+ * - label: Üst buton yazısı (Kategoriler / Categories / Kategorien)
+ * - items: { label, href }[]
+ * - loading: yükleniyor mu
+ * - error: hata oldu mu
  */
 export default function CategoriesDropdown ({
   label,
@@ -52,13 +52,13 @@ export default function CategoriesDropdown ({
         ref={btnRef}
         type='button'
         onClick={() => setOpen(o => !o)}
-        className='inline-flex items-center gap-1 text-gray-700 hover:text-blue-600 transition-colors'
+        className='inline-flex items-center gap-1.5 text-foreground/80 hover:text-primary transition-colors font-bold'
         aria-haspopup='true'
         aria-expanded={open}
       >
         <span>{label}</span>
         <svg
-          className={`w-2.5 h-2.5 transition-transform ${
+          className={`w-3 h-3 transition-transform duration-200 ${
             open ? 'rotate-180' : ''
           }`}
           viewBox='0 0 10 6'
@@ -74,17 +74,21 @@ export default function CategoriesDropdown ({
           />
         </svg>
       </button>
+
       {open && (
         <div
           ref={popRef}
-          className='absolute left-0 mt-2 bg-white rounded-lg shadow-lg ring-1 ring-black/5 z-50 min-w-[12rem]'
+          /* DÜZELTME: 'left-auto right-0' eklenerek menünün sola doğru açılması sağlandı */
+          className='absolute right-0 left-auto mt-3 bg-popover text-popover-foreground rounded-xl shadow-xl ring-1 ring-border/50 z-[100] min-w-[14rem] overflow-hidden animate-in fade-in zoom-in-95 duration-200'
         >
-          <ul className='py-2 max-h-72 overflow-auto'>
+          <ul className='py-2 max-h-[70vh] overflow-y-auto'>
             {loading && (
-              <li className='px-4 py-2 text-xs text-gray-400'>Yükleniyor...</li>
+              <li className='px-4 py-3 text-sm text-muted-foreground animate-pulse'>
+                Yükleniyor...
+              </li>
             )}
             {error && !loading && (
-              <li className='px-4 py-2 text-xs text-red-600'>
+              <li className='px-4 py-3 text-sm text-destructive font-medium'>
                 Kategoriler alınamadı
               </li>
             )}
@@ -94,7 +98,7 @@ export default function CategoriesDropdown ({
                 <li key={it.href}>
                   <Link
                     href={it.href}
-                    className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100'
+                    className='block px-4 py-2.5 text-sm hover:bg-accent hover:text-accent-foreground transition-colors whitespace-nowrap'
                     onClick={() => setOpen(false)}
                   >
                     {it.label}
@@ -102,7 +106,9 @@ export default function CategoriesDropdown ({
                 </li>
               ))}
             {!loading && !error && items.length === 0 && (
-              <li className='px-4 py-2 text-xs text-gray-400'>Kategori Yok</li>
+              <li className='px-4 py-3 text-sm text-muted-foreground italic'>
+                Kategori Yok
+              </li>
             )}
           </ul>
         </div>

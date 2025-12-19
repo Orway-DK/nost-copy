@@ -149,7 +149,7 @@ export default function LanguageDropdown () {
         ref={btnRef}
         type='button'
         onClick={() => setIsOpen(s => !s)}
-        className='inline-flex items-center gap-2 text-white/90 hover:text-white transition-colors'
+        className='inline-flex items-center gap-2 text-background/90 dark:text-foreground hover:text-background transition-colors'
         aria-haspopup='listbox'
         aria-expanded={isOpen}
         aria-label='Change language'
@@ -178,7 +178,7 @@ export default function LanguageDropdown () {
       {isOpen && (
         <div
           ref={popRef}
-          className='absolute right-0 mt-2 w-44 rounded-lg shadow-xl bg-card border border-muted-light/20 z-50 overflow-hidden'
+          className='absolute right-0 mt-2 w-44 rounded-lg shadow-xl bg-secondary border border-muted-light/20 z-50 overflow-hidden'
           role='listbox'
           aria-label='Languages'
         >
@@ -192,16 +192,11 @@ export default function LanguageDropdown () {
                   className={`block w-full text-left px-4 py-2.5 text-sm transition-colors
                     ${
                       lang === l.code
-                        ? 'font-bold text-primary bg-primary/10'
+                        ? 'font-bold text-white bg-foreground/20'
                         : 'text-foreground/80 hover:bg-muted/10 hover:text-foreground'
                     }`}
                 >
                   {l.name}
-                  {l.is_default && (
-                    <span className='ml-2 text-[10px] uppercase text-muted/60'>
-                      (def)
-                    </span>
-                  )}
                 </button>
               </li>
             ))}

@@ -118,7 +118,7 @@ export default function WhyUs () {
 
   if (isLoading)
     return (
-      <div className='h-96 w-full bg-gray-100 animate-pulse my-20 rounded-xl'></div>
+      <div className='h-96 w-full bg-muted animate-pulse my-20 rounded-xl container mx-auto'></div>
     )
 
   const base = data?.base
@@ -130,70 +130,59 @@ export default function WhyUs () {
   return (
     <section
       ref={sectionRef}
-      className='container mx-auto px-4 py-0 lg:py-24 overflow-hidden'
+      className='container mx-auto px-4 py-12 md:py-20 lg:py-24 overflow-hidden'
     >
-      {/* Flex-col mobilde alt alta, lg:flex-row masaüstünde yan yana */}
-      <div className='flex flex-col lg:flex-row items-center gap-12 lg:gap-20'>
+      <div className='flex flex-col lg:flex-row items-center gap-12 md:gap-16 lg:gap-12 xl:gap-20'>
         {/* --- SOL BLOK (GÖRSELLER) --- */}
-        {/* min-h değerini mobilde biraz düşürdük, masaüstünde artırdık */}
-        <div className='w-full lg:w-1/2 relative min-h-[350px] lg:min-h-[500px] flex items-center justify-center'>
-          {/* Görsel 1: Mobilde ortada (relative), Masaüstünde solda (absolute) */}
+        <div className='w-full lg:w-1/2 relative min-h-[400px] md:min-h-[500px] lg:min-h-[550px] flex items-center justify-center lg:justify-start'>
+          {/* Görsel 1 */}
           <div
-            className='relative lg:absolute lg:left-0 lg:top:-12 lg:-top-12 w-full max-w-[400px] lg:max-w-none lg:w-3/4 z-10 transition-all duration-1000 ease-out'
+            className='relative lg:absolute lg:left-0 lg:-top-12 w-full max-w-[450px] lg:w-4/5 z-10 transition-all duration-1000 ease-out'
             style={{
               opacity: visible ? 1 : 0,
-              // Mobilde translateY efekti, Masaüstünde translateX efekti veriyoruz
-              transform: visible
-                ? 'translate(0, 0)'
-                : typeof window !== 'undefined' && window.innerWidth < 1024
-                ? 'translateY(50px)'
-                : 'translateX(-100px)'
+              transform: visible ? 'translate(0, 0)' : 'translateY(40px)'
             }}
           >
             <Image
               src={img1Src}
               alt='Factory'
-              width={500}
-              height={500}
-              className='rounded-3xl w-full h-auto object-cover shadow-xl'
+              width={600}
+              height={600}
+              className='rounded-3xl w-full h-auto object-cover shadow-2xl border border-border/50'
               unoptimized
             />
           </div>
 
-          {/* Görsel 2: SADECE Masaüstünde görünür (hidden lg:block) */}
+          {/* Görsel 2: Masaüstü ve Geniş Tablette görünür */}
           <div
-            className='hidden lg:block absolute right-0 bottom-0 lg:top-40 w-2/3 z-20 transition-all duration-1000 ease-out delay-200'
+            className='hidden md:block absolute right-0 bottom-4 lg:-right-4 lg:bottom-0 w-1/2 lg:w-3/5 z-20 transition-all duration-1000 ease-out delay-200'
             style={{
               opacity: visible ? 1 : 0,
-              transform: visible ? 'translateY(0)' : 'translateY(100px)'
+              transform: visible ? 'translateY(0)' : 'translateY(60px)'
             }}
           >
             <Image
               src={img2Src}
               alt='Process'
-              width={400}
-              height={400}
-              className='rounded-3xl w-full h-auto object-cover shadow-xl border-4 border-white'
+              width={450}
+              height={450}
+              className='rounded-3xl w-full h-auto object-cover shadow-2xl border-4 border-background'
               unoptimized
             />
           </div>
 
-          {/* Badge: Mobilde görselin altına ortalanır, Masaüstünde sol alta geçer */}
+          {/* Badge (Deneyim Kartı) */}
           <div
-            className='absolute -bottom-6 left-1/2 -translate-x-1/2 lg:translate-x-0 lg:left-10 z-30 p-4 rounded-xl flex flex-col items-center transition-all duration-700 delay-500 bg-white shadow-lg border border-gray-100 min-w-[140px]'
+            className='absolute -bottom-4 md:bottom-10 left-1/2 -translate-x-1/2 lg:translate-x-0 lg:left-8 z-30 p-5 rounded-2xl flex flex-col items-center transition-all duration-700 delay-500 bg-background dark:bg-secondary shadow-2xl border border-border min-w-[150px]'
             style={{
               opacity: visible ? 1 : 0,
-              transform: visible
-                ? typeof window !== 'undefined' && window.innerWidth < 1024
-                  ? 'translateX(-50%) scale(1)'
-                  : 'scale(1)'
-                : 'scale(0.5)'
+              transform: visible ? 'scale(1)' : 'scale(0.8)'
             }}
           >
-            <span className='text-4xl lg:text-5xl font-bold text-blue-700'>
+            <span className='text-4xl lg:text-5xl font-bold text-primary'>
               {years}+
             </span>
-            <span className='text-sm lg:text-lg text-gray-600 font-medium whitespace-nowrap'>
+            <span className='text-xs lg:text-sm text-muted-foreground font-semibold uppercase tracking-wider text-center'>
               {lang === 'tr'
                 ? 'Yıl Deneyim'
                 : lang === 'de'
@@ -204,65 +193,63 @@ export default function WhyUs () {
         </div>
 
         {/* --- SAĞ BLOK (İÇERİK) --- */}
-        {/* Mobilde text-center veya text-left tercih edilebilir, şu an left bıraktık ama w-full yaptık */}
-        <div className='w-full lg:w-1/2 flex flex-col items-start space-y-6 mt-4 lg:mt-0'>
-          <span className='rounded-full bg-blue-50 px-4 py-2 text-blue-700 font-bold text-sm tracking-wide uppercase self-start'>
+        <div className='w-full lg:w-1/2 flex flex-col items-start space-y-6 lg:space-y-8'>
+          <span className='rounded-full bg-primary/10 dark:bg-primary/20 px-4 py-2 text-primary font-bold text-xs tracking-widest uppercase self-start'>
             {tr?.badge_label ?? base?.badge_code ?? 'BEST PRINTING COMPANY'}
           </span>
 
-          <h2 className='text-3xl lg:text-5xl font-extrabold text-gray-900 leading-tight'>
+          <h2 className='text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground leading-tight'>
             {tr?.headline_prefix ?? 'Reason To'}{' '}
-            <span className='text-blue-700'>
+            <span className='text-primary'>
               {tr?.headline_emphasis ?? 'Get Printing'}
             </span>{' '}
             {tr?.headline_suffix ?? 'Started With Us'}
           </h2>
 
-          <p className='text-lg text-gray-600 leading-relaxed'>
+          <p className='text-lg text-muted-foreground leading-relaxed max-w-xl'>
             {tr?.description ??
               'We are 100+ professional printing experts with more than 10 years of experience.'}
           </p>
 
-          <ul className='grid gap-6 mt-4 w-full'>
-            <li className='flex items-start gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors'>
-              <div className='p-3 bg-blue-100 rounded-lg text-blue-700 shrink-0'>
-                <BiDollarCircle className='text-3xl' />
-              </div>
-              <div>
-                <h3 className='font-bold text-xl text-gray-900'>
-                  {tr?.item1_title ?? 'High Profit Margin'}
-                </h3>
-                <p className='text-gray-500 mt-1 text-sm lg:text-base'>
-                  {tr?.item1_text ?? 'Effective optimization of cost...'}
-                </p>
-              </div>
-            </li>
-            <li className='flex items-start gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors'>
-              <div className='p-3 bg-blue-100 rounded-lg text-blue-700 shrink-0'>
-                <BiWorld className='text-3xl' />
-              </div>
-              <div>
-                <h3 className='font-bold text-xl text-gray-900'>
-                  {tr?.item2_title ?? 'Global Shipping'}
-                </h3>
-                <p className='text-gray-500 mt-1 text-sm lg:text-base'>
-                  {tr?.item2_text ?? 'Reach the global market easily...'}
-                </p>
-              </div>
-            </li>
-            <li className='flex items-start gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors'>
-              <div className='p-3 bg-blue-100 rounded-lg text-blue-700 shrink-0'>
-                <BiTrendingUp className='text-3xl' />
-              </div>
-              <div>
-                <h3 className='font-bold text-xl text-gray-900'>
-                  {tr?.item3_title ?? 'Trending Products'}
-                </h3>
-                <p className='text-gray-500 mt-1 text-sm lg:text-base'>
-                  {tr?.item3_text ?? 'Maximize your sales volume...'}
-                </p>
-              </div>
-            </li>
+          <ul className='grid gap-4 md:gap-6 mt-2 w-full max-w-2xl'>
+            {[
+              {
+                icon: BiDollarCircle,
+                title: tr?.item1_title,
+                text: tr?.item1_text,
+                defTitle: 'High Profit Margin'
+              },
+              {
+                icon: BiWorld,
+                title: tr?.item2_title,
+                text: tr?.item2_text,
+                defTitle: 'Global Shipping'
+              },
+              {
+                icon: BiTrendingUp,
+                title: tr?.item3_title,
+                text: tr?.item3_text,
+                defTitle: 'Trending Products'
+              }
+            ].map((item, i) => (
+              <li
+                key={i}
+                className='flex items-start gap-5 p-4 md:p-5 rounded-2xl hover:bg-muted/50 dark:hover:bg-muted/20 transition-all border border-transparent hover:border-border'
+              >
+                <div className='p-3 bg-primary/10 dark:bg-primary/20 rounded-xl text-primary shrink-0'>
+                  <item.icon className='text-3xl' />
+                </div>
+                <div>
+                  <h3 className='font-bold text-xl text-foreground'>
+                    {item.title ?? item.defTitle}
+                  </h3>
+                  <p className='text-muted-foreground mt-1 text-sm md:text-base leading-snug'>
+                    {item.text ??
+                      'Effective optimization of cost and process...'}
+                  </p>
+                </div>
+              </li>
+            ))}
           </ul>
         </div>
       </div>

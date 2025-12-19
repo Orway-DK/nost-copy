@@ -5,13 +5,15 @@
   position: relative;
   width: 100%;
   overflow: hidden;
-  padding: 10rem 0 8rem; /* Masaüstü boşlukları */
+  padding: 4rem 0 0rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  /* Arkaplan global'den gelir ama garanti olsun diye ekleyebilirsiniz */
+  background-color: var(--background);
 }
 
-/* --- MARQUEE (KAYAN BAŞLIK - SADECE MASAÜSTÜ) --- */
+/* --- MARQUEE (KAYAN BAŞLIK) --- */
 .marqueeContainer {
   position: absolute;
   top: 0;
@@ -20,6 +22,7 @@
   z-index: 0;
   user-select: none;
   pointer-events: none;
+  /* Maskeleme aynı kalabilir */
   mask-image: linear-gradient(
     to right,
     transparent,
@@ -49,7 +52,8 @@
   font-weight: 700;
   font-size: 10vw;
   line-height: 1;
-  color: rgba(81, 55, 255, 0.06); /* Biraz daha silik */
+  /* Statik renk yerine Primary rengin %6 opak hali */
+  color: color-mix(in srgb, var(--primary), transparent 90%);
   text-transform: uppercase;
   margin-right: 2rem;
 }
@@ -63,9 +67,9 @@
   }
 }
 
-/* --- MOBİL BAŞLIK (SADECE MOBİL) --- */
+/* --- MOBİL BAŞLIK --- */
 .mobileHeader {
-  display: none; /* Masaüstünde gizli */
+  display: none;
   text-align: center;
   margin-bottom: 2rem;
   padding: 0 1.5rem;
@@ -77,7 +81,8 @@
   font-weight: 700;
   font-size: 2rem;
   line-height: 1.2;
-  color: #111827; /* Koyu renk, okunabilir */
+  /* Koyu renk -> Foreground */
+  color: var(--foreground);
   text-transform: uppercase;
   letter-spacing: -0.5px;
 }
@@ -86,7 +91,8 @@
   display: block;
   margin-top: 0.5rem;
   font-size: 0.9rem;
-  color: #6b7280;
+  /* Gri renk -> Muted Foreground */
+  color: var(--muted-foreground);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -100,7 +106,6 @@
   margin-top: 5vw;
 }
 
-/* Swiper ayarları */
 .sliderContainer :global(.swiper) {
   width: 100%;
   padding-bottom: 4rem !important;
@@ -113,28 +118,36 @@
 
 /* --- KART TASARIMI --- */
 .card {
-  background: #fff;
+  /* Statik beyaz yerine Card değişkeni */
+  background: var(--card);
   border-radius: 24px;
   padding: 2.5rem;
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.06);
+  /* Gölgeyi tema rengiyle hafifçe harmanlayalım */
+  box-shadow: 0 10px 30px -5px color-mix(in srgb, var(--foreground), transparent
+        94%);
   height: auto;
   min-height: 400px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border: 1px solid rgba(0, 0, 0, 0.03);
-  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  /* Border -> Border değişkeni */
+  border: 1px solid var(--border);
+  transition: transform 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
 }
 
 .sliderContainer :global(.swiper-slide-active) .card {
   transform: scale(1.1);
-  box-shadow: 0 25px 50px -12px rgba(81, 55, 255, 0.2);
-  border-color: rgba(81, 55, 255, 0.2);
+  /* Aktif kart gölgesi -> Primary rengin %20 opak hali */
+  box-shadow: 0 25px 50px -12px color-mix(in srgb, var(--primary), transparent
+        80%);
+  /* Aktif kart kenarlığı -> Primary */
+  border-color: var(--primary);
   z-index: 20;
 }
 
 .stars {
-  color: #f59e0b;
+  /* Sarı yıldız yerine Primary (Marka rengi) kullanıldı */
+  color: var(--primary);
   font-size: 1.5rem;
   letter-spacing: 4px;
   margin-bottom: 1.5rem;
@@ -143,7 +156,8 @@
 .content {
   font-size: 1.1rem;
   line-height: 1.6;
-  color: #374151;
+  /* Yazı rengi -> Card Foreground */
+  color: var(--card-foreground);
   font-style: italic;
   font-weight: 500;
   flex-grow: 1;
@@ -155,7 +169,8 @@
   gap: 1rem;
   margin-top: 2rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #f3f4f6;
+  /* Çizgi rengi -> Border */
+  border-top: 1px solid var(--border);
 }
 
 .avatar,
@@ -163,17 +178,22 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  border: 2px solid #fff;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  /* Avatar çerçevesi -> Card rengi (Arkaplanla kaynaşması için) */
+  border: 2px solid var(--card);
+  box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--foreground), transparent
+        90%);
 }
 
 .avatar {
   object-fit: cover;
-  background: #e5e7eb;
+  /* Resim yüklenmezse zemin -> Muted */
+  background: var(--muted);
 }
+
 .avatarPlaceholder {
-  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-  color: #4338ca;
+  /* Placeholder gradient yerine tema renkleri */
+  background: var(--muted);
+  color: var(--primary);
   font-weight: 700;
   font-size: 1.25rem;
   display: flex;
@@ -185,50 +205,55 @@
   display: flex;
   flex-direction: column;
 }
+
 .authorName {
   font-weight: 700;
-  color: #111827;
+  /* İsim -> Foreground */
+  color: var(--foreground);
   font-size: 1.05rem;
 }
+
 .authorJob {
   font-size: 0.8rem;
-  color: #6b7280;
+  /* Meslek -> Muted Foreground */
+  color: var(--muted-foreground);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+
 .loadingState {
   text-align: center;
   font-size: 1.2rem;
-  color: #9ca3af;
+  /* Loading yazısı -> Muted Foreground */
+  color: var(--muted-foreground);
   padding: 4rem;
 }
 
-/* --- RESPONSIVE (MOBİL AYARLARI) --- */
+/* --- RESPONSIVE (MOBİL) --- */
 @media (max-width: 768px) {
   .sectionWrapper {
-    padding: 2rem 0 3rem; /* Mobilde dikey boşluğu azalttık */
+    padding: 2rem 0 3rem;
   }
 
   .marqueeContainer {
-    display: none; /* Mobilde kayan yazıyı gizle */
+    display: none;
   }
 
   .mobileHeader {
-    display: block; /* Mobilde statik başlığı göster */
+    display: block;
   }
 
   .sliderContainer {
-    margin-top: 1rem; /* Başlık ile slider arasını yakınlaştır */
+    margin-top: 1rem;
   }
 
   .card {
-    padding: 1.5rem; /* Mobilde kart iç boşluğunu azalt */
-    min-height: 320px; /* Mobilde kart boyunu kısalt */
+    padding: 1.5rem;
+    min-height: 320px;
     border-radius: 20px;
   }
 
-  /* Mobilde scale efektini biraz yumuşat */
   .sliderContainer :global(.swiper-slide-active) .card {
     transform: scale(1.05);
   }

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { IoChevronDown } from 'react-icons/io5'
 
 type DropdownItem = {
@@ -23,7 +23,22 @@ export default function Dropdown ({
   errorLabel
 }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement | null>(null)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Dışarı tıklandığında kapatma mantığı
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleMouseEnter = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
@@ -36,14 +51,21 @@ export default function Dropdown ({
     }, 150)
   }
 
+  // Tıklama ile aç/kapat mantığı
+  const handleButtonClick = (e: React.MouseEvent) => {
+    // Hover durumunda zaten açıksa, tıklama ile kapatma imkanı verir
+    setIsOpen(prev => !prev)
+  }
+
   return (
     <div
+      ref={containerRef}
       className='relative group h-full flex items-center'
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* BUTON STİLİ GÜNCELLENDİ: font-bold ve renkler */}
       <button
+        onClick={handleButtonClick}
         className={`
           flex items-center gap-1 
           text-sm font-bold font-sans 
@@ -62,12 +84,12 @@ export default function Dropdown ({
 
       <div
         className={`
-          absolute left-0 top-full pt-4 w-56
-          transition-all duration-200 origin-top-left
+          absolute right-0 top-full pt-4 w-56
+          transition-all duration-200 origin-top-right z-[100]
           ${
             isOpen
-              ? 'opacity-100 visible scale-100'
-              : 'opacity-0 invisible scale-95'
+              ? 'opacity-100 visible scale-100 translate-y-0'
+              : 'opacity-0 invisible scale-95 -translate-y-2'
           }
         `}
       >
@@ -78,7 +100,7 @@ export default function Dropdown ({
                 key={index}
                 href={item.href}
                 onClick={() => setIsOpen(false)}
-                className='block px-4 py-2.5 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/30 transition-colors'
+                className='block px-4 py-2.5 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/30 transition-colors whitespace-nowrap'
               >
                 {item.label}
               </Link>

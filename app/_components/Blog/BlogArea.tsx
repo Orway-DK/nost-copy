@@ -56,14 +56,10 @@ export default function HomeBlogArea () {
   useEffect(() => {
     async function fetchPosts () {
       const supabase = createSupabaseBrowserClient()
-
       const { data, error } = await supabase
         .from('blog_posts')
         .select(
-          `
-          id, slug, image_url, author, created_at,
-          blog_post_translations!inner (title, excerpt, lang_code)
-        `
+          `id, slug, image_url, author, created_at, blog_post_translations!inner (title, excerpt, lang_code)`
         )
         .order('created_at', { ascending: false })
         .limit(3)
@@ -74,7 +70,6 @@ export default function HomeBlogArea () {
             item.blog_post_translations.find(
               (t: any) => t.lang_code === lang
             ) || item.blog_post_translations[0]
-
           return {
             id: item.id,
             slug: item.slug,
@@ -89,133 +84,97 @@ export default function HomeBlogArea () {
       }
       setLoading(false)
     }
-
     fetchPosts()
   }, [lang])
 
   return (
-    <section className='py-12 md:py-24 bg-background overflow-hidden'>
+    <section className='py-12 md:py-24 bg-background transition-colors duration-300'>
       <div className='max-w-[1400px] mx-auto px-4'>
         <div className='grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20'>
-          {/* SOL KOLON (Başlık & Açıklama) */}
-          <div className='lg:col-span-4 relative text-center lg:text-left'>
-            <div className='sticky top-24'>
-              {/* Dekoratif Daire - Mobilde Gizle, Dark Mode'da Opaklığı Düşür */}
-              <div className='hidden lg:block absolute -top-20 -left-20 w-[300px] h-[300px] opacity-10 dark:opacity-5 pointer-events-none'>
-                <Image
-                  src='/h1-bg01.svg'
-                  alt='decoration'
-                  width={300}
-                  height={300}
-                  className='animate-spin-slow dark:invert' // Dark mode'da invert edilebilir
-                />
-              </div>
-
-              <div className='relative z-10'>
-                <span className='text-xs md:text-sm font-bold tracking-widest text-muted-foreground uppercase mb-3 block'>
-                  {t.badge}
+          {/* SOL KOLON */}
+          <header className='lg:col-span-4 relative'>
+            <div className='sticky top-24 text-center lg:text-left'>
+              <span className='text-xs md:text-sm font-black tracking-[0.2em] text-primary uppercase mb-4 block'>
+                {t.badge}
+              </span>
+              <h2 className='text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-[1.1]'>
+                {t.title_1} <br className='hidden lg:block' />
+                <span className='text-primary'>{t.title_2}</span>
+              </h2>
+              {/* DÜZELTME: text-foreground/80 ve leading-relaxed ile okunabilirlik artırıldı */}
+              <p className='text-lg text-foreground/80 dark:text-muted-foreground mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0'>
+                {t.desc}
+              </p>
+              <Link
+                href='/blog'
+                className='group inline-flex items-center gap-3 text-foreground font-bold hover:text-primary transition-all underline underline-offset-8 decoration-primary/30 hover:decoration-primary'
+              >
+                {t.btn}{' '}
+                <span className='group-hover:translate-x-2 transition-transform'>
+                  →
                 </span>
-                <h2 className='text-3xl md:text-5xl font-bold text-foreground mb-4 md:mb-6 leading-tight'>
-                  {t.title_1} <br className='hidden md:block' />
-                  <span className='text-primary'>{t.title_2}</span>
-                </h2>
-                <p className='text-base md:text-lg text-muted-foreground mb-6 md:mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0'>
-                  {t.desc}
-                </p>
-
-                <Link
-                  href='/blog'
-                  className='group inline-flex items-center gap-3 text-foreground font-bold hover:text-primary transition-colors mb-8 lg:mb-0'
-                >
-                  <span className='border-b-2 border-foreground group-hover:border-primary pb-1 transition-colors'>
-                    {t.btn}
-                  </span>
-                  <span className='group-hover:translate-x-2 transition-transform duration-300'>
-                    →
-                  </span>
-                </Link>
-              </div>
+              </Link>
             </div>
-          </div>
+          </header>
 
-          {/* SAĞ KOLON (Blog Listesi) */}
-          <div className='lg:col-span-8 flex flex-col gap-6 md:gap-10'>
-            {loading
-              ? // Loading Skeleton
-                [1, 2, 3].map(i => (
-                  <div
-                    key={i}
-                    className='flex flex-col md:flex-row gap-6 animate-pulse bg-card p-4 rounded-xl border border-border/50'
-                  >
-                    <div className='w-full md:w-[280px] h-[200px] bg-muted/20 rounded-lg'></div>
-                    <div className='flex-1 space-y-4 py-2'>
-                      <div className='h-4 bg-muted/20 rounded w-1/4'></div>
-                      <div className='h-6 bg-muted/20 rounded w-3/4'></div>
-                      <div className='h-4 bg-muted/20 rounded w-full'></div>
-                    </div>
+          {/* SAĞ KOLON */}
+          <div className='lg:col-span-8 flex flex-col gap-8 md:gap-12'>
+            {loading ? (
+              <div className='space-y-8 animate-pulse'>
+                {[1, 2].map(i => (
+                  <div key={i} className='h-64 bg-card rounded-3xl' />
+                ))}
+              </div>
+            ) : (
+              posts.map(post => (
+                <article
+                  key={post.id}
+                  className='group flex flex-col md:flex-row gap-8 items-stretch bg-card border border-border/40 p-5 md:p-6 rounded-[2rem] hover:shadow-2xl hover:border-primary/20 transition-all duration-500'
+                >
+                  {/* Görsel */}
+                  <div className='relative w-full md:w-[320px] aspect-video md:aspect-[4/5] shrink-0 rounded-2xl overflow-hidden shadow-lg'>
+                    <Image
+                      src={post.image_url || '/nost.png'}
+                      alt={post.title}
+                      fill
+                      className='object-cover transition-transform duration-700 group-hover:scale-110'
+                    />
                   </div>
-                ))
-              : posts.map(post => (
-                  <article
-                    key={post.id}
-                    className='group flex flex-col md:flex-row gap-6 items-start bg-card rounded-2xl border border-border/40 p-4 md:p-0 md:bg-transparent md:border-0 hover:border-primary/20 transition-all duration-300 shadow-sm md:shadow-none hover:shadow-md'
-                  >
-                    {/* Görsel */}
-                    <Link
-                      href={`/blog/${post.slug}`}
-                      className='relative w-full md:w-[280px] aspect-[4/3] md:aspect-[4/3] lg:h-[220px] shrink-0 rounded-xl overflow-hidden bg-muted/10'
-                    >
-                      {post.image_url && (
-                        <Image
-                          src={post.image_url}
-                          alt={post.title}
-                          fill
-                          className='object-cover transition-transform duration-500 group-hover:scale-105'
-                        />
-                      )}
-                      {/* Tarih Rozeti */}
-                      <div className='absolute top-3 left-3 bg-background/95 backdrop-blur text-foreground text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-full shadow-sm border border-border/50'>
+
+                  {/* İçerik Alanı */}
+                  <div className='flex flex-col justify-center py-2'>
+                    <div className='flex items-center gap-4 mb-4'>
+                      <span className='px-3 py-1 bg-primary/10 text-primary text-[10px] font-bold rounded-full uppercase tracking-widest'>
                         {new Date(post.created_at).toLocaleDateString(
                           lang === 'tr' ? 'tr-TR' : 'en-US'
                         )}
-                      </div>
-                    </Link>
-
-                    {/* İçerik */}
-                    <div className='flex-1 py-1 md:py-2 px-1 md:px-0 flex flex-col justify-between h-full'>
-                      <div>
-                        <div className='flex items-center gap-3 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3'>
-                          <span className='text-primary flex items-center gap-1'>
-                            <span className='w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px]'>
-                              👤
-                            </span>
-                            {post.author}
-                          </span>
-                          <span className='w-1 h-1 rounded-full bg-muted-foreground'></span>
-                          <span>3 {t.comments}</span>
-                        </div>
-
-                        <h3 className='text-lg md:text-2xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors line-clamp-2'>
-                          <Link href={`/blog/${post.slug}`}>{post.title}</Link>
-                        </h3>
-
-                        <p className='text-sm md:text-base text-muted-foreground mb-4 line-clamp-2 md:line-clamp-2 leading-relaxed'>
-                          {post.excerpt}
-                        </p>
-                      </div>
-
-                      <Link
-                        href={`/blog/${post.slug}`}
-                        className='inline-flex items-center text-sm font-bold text-foreground hover:text-primary transition-colors mt-auto'
-                      >
-                        {t.read_more}{' '}
-                        <span className='ml-2 group-hover:ml-3 transition-all'>
-                          →
-                        </span>
-                      </Link>
+                      </span>
+                      <span className='text-xs font-bold text-muted-foreground uppercase'>
+                        by{' '}
+                        <span className='text-foreground'>{post.author}</span>
+                      </span>
                     </div>
-                  </article>
-                ))}
+
+                    {/* SEO & OKUNURLUK: Başlık daha belirgin */}
+                    <h3 className='text-2xl md:text-3xl font-bold text-foreground mb-4 group-hover:text-primary transition-colors leading-tight'>
+                      <Link href={`/blog/${post.slug}`}>{post.title}</Link>
+                    </h3>
+
+                    {/* OKUNURLUK: text-foreground/70 dark:text-muted-foreground kullanıldı */}
+                    <p className='text-base md:text-lg text-foreground/70 dark:text-muted-foreground leading-relaxed line-clamp-3 mb-6'>
+                      {post.excerpt}
+                    </p>
+
+                    <Link
+                      href={`/blog/${post.slug}`}
+                      className='mt-auto flex items-center gap-2 text-sm font-black text-primary hover:gap-4 transition-all'
+                    >
+                      {t.read_more} <span>→</span>
+                    </Link>
+                  </div>
+                </article>
+              ))
+            )}
           </div>
         </div>
       </div>

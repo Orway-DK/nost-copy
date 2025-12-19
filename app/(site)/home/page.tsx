@@ -3,19 +3,14 @@
 import dynamic from 'next/dynamic'
 import HeroBackground from '@/app/_components/HeroBackground'
 
-/*
-    import WhyUs from '@/app/_components/WhyUsBanner/WhyUsBanner'
-    import DualScrollingCategories from '@/app/_components/slidingBand/DualScrollingCategories'
-    import MakeItEasier from '@/app/_components/MakeItEasier/makeItEasier'
-    import ReadyProducts from '@/app/_components/ReadyProducts'
-    import TestimonialsCarousel from '@/app/_components/Testimonials/TestimonialsSection'
-    import HomeBlogArea from '@/app/_components/Blog/BlogArea'
-*/
-
 const LandingPlaceholder = () => (
   <div className='w-full min-h-[500px] md:min-h-[60vh] bg-transparent'></div>
 )
 
+const ScrollToTop = dynamic(() => import('@/app/_components/ScrollToTop'), {
+  ssr: false,
+  loading: () => <LandingPlaceholder />
+})
 const LandingSlider = dynamic(
   () => import('@/app/_components/LandingSlider/LandingSlider'),
   { ssr: false, loading: () => <LandingPlaceholder /> }
@@ -63,6 +58,7 @@ export default function HomeWorking () {
       <ReadyProducts />
       <TestimonialsCarousel />
       <HomeBlogArea />
+      <ScrollToTop />
     </div>
   )
 }

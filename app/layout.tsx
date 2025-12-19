@@ -43,7 +43,7 @@ export default function RootLayout ({
   return (
     <html lang='tr'>
       <body
-        className={`${geistSans.variable} ${oswald.variable} ${poppins.variable} ${onest.variable} antialiased`}
+        className={`${geistSans.variable} ${oswald.variable} ${poppins.variable} ${onest.variable} antialiased bg-white`}
       >
         <LanguageProvider>{children}</LanguageProvider>
       </body>

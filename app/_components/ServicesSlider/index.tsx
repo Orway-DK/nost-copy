@@ -102,7 +102,7 @@ export default function ServicesSlider () {
       <div className='w-full px-0 md:pl-[16vw] min-w-0'>
         {/* Başlık Alanı */}
         <div className='mb-8 md:mb-12 px-4 md:px-0 text-center md:text-left'>
-          <div className='text-sm font-bold tracking-widest text-muted uppercase mb-2'>
+          <div className='text-sm font-bold tracking-widest text-foreground/80 uppercase mb-2'>
             {ui.subtitle}
           </div>
           <h2 className='text-3xl md:text-5xl font-bold text-foreground leading-tight'>
@@ -136,7 +136,6 @@ export default function ServicesSlider () {
               disableOnInteraction: false,
               pauseOnMouseEnter: true
             }}
-            pagination={{ clickable: true, dynamicBullets: true }}
             breakpoints={{
               // Tablet
               640: {

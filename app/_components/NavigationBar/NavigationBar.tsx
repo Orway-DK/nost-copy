@@ -53,23 +53,28 @@ const fetchSiteName = async () => {
   return data?.site_name || 'Nost Copy'
 }
 
-function useStaticMenu (lang: string) {
-  return useMemo(() => {
+export default function NavigationBar () {
+  const { lang } = useLanguage()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  // Çok dilli etiketleri ve linkleri tek bir hook içinde topladık
+  const menuData = useMemo(() => {
     const t = (tr: string, en: string, de: string) =>
       lang === 'tr' ? tr : lang === 'de' ? de : en
 
-    return [
-      { label: t('Anasayfa', 'Home', 'Startseite'), href: '/home' },
-      { label: t('Hakkımızda', 'About Us', 'Über uns'), href: '/about' },
-      { label: t('İletişim', 'Contact', 'Kontakt'), href: '/contact' }
-    ]
+    return {
+      home: { label: t('Anasayfa', 'Home', 'Startseite'), href: '/home' },
+      about: { label: t('Hakkımızda', 'About Us', 'Über uns'), href: '/about' },
+      contact: { label: t('İletişim', 'Contact', 'Kontakt'), href: '/contact' },
+      //blog: { label: 'Blog', href: '/blog' },
+      labels: {
+        categories: t('Kategoriler', 'Categories', 'Kategorien'),
+        services: t('Hizmetler', 'Services', 'Dienstleistungen'),
+        empty: t('Veri Yok', 'No Data', 'Keine Daten'),
+        error: t('Hata', 'Error', 'Fehler')
+      }
+    }
   }, [lang])
-}
-
-export default function NavigationBar () {
-  const { lang } = useLanguage()
-  const staticMenu = useStaticMenu(lang)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // Mobil menü açıldığında body scroll'u kilitle
   useEffect(() => {
@@ -86,10 +91,7 @@ export default function NavigationBar () {
   const { data: categories } = useSWR(
     ['categories-nav', lang],
     () => fetchCategories(lang),
-    {
-      revalidateOnFocus: false,
-      suspense: true
-    }
+    { revalidateOnFocus: false, suspense: true }
   )
   const { data: services } = useSWR('services-nav', fetchServices, {
     revalidateOnFocus: false,
@@ -126,67 +128,56 @@ export default function NavigationBar () {
     })
   }, [services, lang])
 
-  const labels = useMemo(() => {
-    const isTr = lang === 'tr'
-    const isDe = lang === 'de'
-    return {
-      categories: isTr ? 'Kategoriler' : isDe ? 'Kategorien' : 'Categories',
-      services: isTr ? 'Hizmetler' : isDe ? 'Dienstleistungen' : 'Services',
-      empty: isTr ? 'Veri Yok' : isDe ? 'Keine Daten' : 'No Data',
-      error: isTr ? 'Hata' : isDe ? 'Fehler' : 'Error',
-      blog: 'Blog'
-    }
-  }, [lang])
-
   return (
     <>
-      {/* DÜZELTME 1: Navbar Kapsayıcısı (Sticky Header)
-        backdrop-blur burada kalıyor ama menü buradan çıkarıldı.
-      */}
-      <div className='w-full flex justify-center bg-background/80 backdrop-blur-md border-b border-border/40 shadow-sm sticky top-0 z-50 transition-all duration-300'>
-        <nav className='relative w-full max-w-7xl h-20 md:h-24 flex items-center justify-between px-4 md:px-0 font-sans font-medium'>
-          {/* LOGO */}
+      <div className='w-full flex justify-center backdrop-blur-md  border-b border-border/40 sticky top-0 z-50 transition-all duration-300
+      shadow-primary/20 shadow-md'>
+        <nav className='relative w-full max-w-7xl h-20 md:h-24 flex items-center justify-between px-4 lg:px-6 xl:px-0 font-sans font-medium'>
           <div className='text-2xl md:text-3xl font-bold tracking-tight text-primary z-50'>
             <Link href='/home' onClick={closeMobileMenu}>
               {siteName}
             </Link>
           </div>
 
-          {/* DESKTOP MENU */}
-          <ul className='hidden md:flex space-x-8 items-center text-sm font-bold'>
-            {staticMenu.map((item, i) => (
-              <li
-                key={i}
-                className='text-foreground/80 hover:text-primary transition-colors'
-              >
-                <Link href={item.href!}>{item.label}</Link>
-              </li>
-            ))}
-
-            <li>
-              <Dropdown
-                label={labels.services}
-                items={serviceItems}
-                emptyLabel={labels.empty}
-                errorLabel={labels.error}
-              />
-            </li>
-            <li>
-              <Dropdown
-                label={labels.categories}
-                items={categoryItems}
-                emptyLabel={labels.empty}
-                errorLabel={labels.error}
-              />
+          {/* MASAÜSTÜ MENÜ - SIRALAMA GÜNCELLENDİ */}
+          <ul className='hidden lg:flex space-x-6 xl:space-x-8 items-center text-sm font-bold'>
+            <li className='text-foreground/80 hover:text-primary transition-colors'>
+              <Link href={menuData.home.href}>{menuData.home.label}</Link>
             </li>
             <li className='text-foreground/80 hover:text-primary transition-colors'>
-              <Link href='/blog'>{labels.blog}</Link>
+              <Link href={menuData.about.href}>{menuData.about.label}</Link>
+            </li>
+
+            {/* Dinamik Dropdown'lar Ortada */}
+            <li>
+              <Dropdown
+                label={menuData.labels.services}
+                items={serviceItems}
+                emptyLabel={menuData.labels.empty}
+                errorLabel={menuData.labels.error}
+              />
+            </li>
+            <li>
+              <Dropdown
+                label={menuData.labels.categories}
+                items={categoryItems}
+                emptyLabel={menuData.labels.empty}
+                errorLabel={menuData.labels.error}
+              />
+            </li>
+
+            {/* İletişim ve Blog En Sonda 
+            <li className='text-foreground/80 hover:text-primary transition-colors'>
+              <Link href={menuData.blog.href}>{menuData.blog.label}</Link>
+            </li>
+            */}
+            <li className='text-foreground/80 hover:text-primary transition-colors'>
+              <Link href={menuData.contact.href}>{menuData.contact.label}</Link>
             </li>
           </ul>
 
-          {/* MOBILE HAMBURGER BUTTON */}
           <button
-            className='md:hidden text-2xl text-foreground p-2 z-50 focus:outline-none hover:bg-muted/20 rounded-md transition-colors'
+            className='lg:hidden text-2xl text-foreground p-2 z-50 focus:outline-none hover:bg-muted/20 rounded-md transition-colors'
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? <SlClose /> : <SlMenu />}
@@ -194,49 +185,42 @@ export default function NavigationBar () {
         </nav>
       </div>
 
-      {/* DÜZELTME 2: MOBİL MENÜ (PORTAL GİBİ DIŞARI ALINDI)
-        Artık 'sticky' kapsayıcının dışında olduğu için tüm ekranı kaplayabilir.
-        Z-Index 49 yapıldı (Header 50'de kalsın diye, butona basılabilsin).
-      */}
+      {/* MOBİL MENÜ - SIRALAMA GÜNCELLENDİ */}
       <div
-        className={`fixed inset-0 z-40 bg-background/95 backdrop-blur-xl flex flex-col pt-32 px-6 gap-8 overflow-y-auto transition-all duration-300 ease-in-out md:hidden ${
+        className={`fixed inset-0 z-40 bg-background/95 backdrop-blur-xl flex flex-col pt-32 px-6 gap-8 overflow-y-auto transition-all duration-300 ease-in-out lg:hidden ${
           mobileMenuOpen
             ? 'opacity-100 visible translate-y-0'
             : 'opacity-0 invisible -translate-y-5 pointer-events-none'
         }`}
       >
-        {/* Statik Linkler */}
         <div className='flex flex-col gap-4'>
-          {staticMenu.map((item, i) => (
-            <Link
-              key={i}
-              href={item.href!}
-              onClick={closeMobileMenu}
-              className='text-2xl font-bold text-foreground border-b border-border/30 pb-3 hover:text-primary transition-colors'
-            >
-              {item.label}
-            </Link>
-          ))}
           <Link
-            href='/blog'
+            href={menuData.home.href}
             onClick={closeMobileMenu}
-            className='text-2xl font-bold text-foreground border-b border-border/30 pb-3 hover:text-primary transition-colors'
+            className='text-2xl font-bold text-foreground border-b border-border/30 pb-3 hover:text-primary'
           >
-            {labels.blog}
+            {menuData.home.label}
+          </Link>
+          <Link
+            href={menuData.about.href}
+            onClick={closeMobileMenu}
+            className='text-2xl font-bold text-foreground border-b border-border/30 pb-3 hover:text-primary'
+          >
+            {menuData.about.label}
           </Link>
         </div>
 
         {/* Mobil Hizmetler */}
         <div className='flex flex-col gap-3'>
           <div className='text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1'>
-            {labels.services}
+            {menuData.labels.services}
           </div>
           {serviceItems.map((item, i) => (
             <Link
               key={i}
               href={item.href}
               onClick={closeMobileMenu}
-              className='text-lg text-foreground/90 pl-3 border-l-2 border-border/40 hover:border-primary hover:text-primary transition-all py-1'
+              className='text-lg text-foreground/90 pl-3 border-l-2 border-border/40 hover:border-primary py-1'
             >
               {item.label}
             </Link>
@@ -244,20 +228,39 @@ export default function NavigationBar () {
         </div>
 
         {/* Mobil Kategoriler */}
-        <div className='flex flex-col gap-3 pb-10'>
+        <div className='flex flex-col gap-3'>
           <div className='text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1'>
-            {labels.categories}
+            {menuData.labels.categories}
           </div>
           {categoryItems.map((item, i) => (
             <Link
               key={i}
               href={item.href}
               onClick={closeMobileMenu}
-              className='text-lg text-foreground/90 pl-3 border-l-2 border-border/40 hover:border-primary hover:text-primary transition-all py-1'
+              className='text-lg text-foreground/90 pl-3 border-l-2 border-border/40 hover:border-primary py-1'
             >
               {item.label}
             </Link>
           ))}
+        </div>
+
+        <div className='flex flex-col gap-4 pb-10'>
+          {/* Mobil Alt Linkler (Blog & İletişim)
+          <Link
+            href={menuData.blog.href}
+            onClick={closeMobileMenu}
+            className='text-2xl font-bold text-foreground border-b border-border/30 pb-3 hover:text-primary'
+          >
+            {menuData.blog.label}
+          </Link>
+           */}
+          <Link
+            href={menuData.contact.href}
+            onClick={closeMobileMenu}
+            className='text-2xl font-bold text-foreground border-b border-border/30 pb-3 hover:text-primary'
+          >
+            {menuData.contact.label}
+          </Link>
         </div>
       </div>
     </>
