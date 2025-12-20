@@ -1,4 +1,4 @@
-// C:\Projeler\nost-copy\app\admin\(protected)\settings\top-info-bar\page.tsx
+// C:\Projeler\nost-copy\app\admin\(protected)\top-info-bar\page.tsx
 'use client'
 
 import React, { useEffect, useState } from 'react'

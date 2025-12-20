@@ -1,10 +1,17 @@
-// C:\Projeler\nost-copy\app\admin\(protected)\settings\footer\page.tsx
+// C:\Projeler\nost-copy\app\admin\(protected)\footer\page.tsx
 'use client'
 
 import React, { useEffect, useState } from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { toast } from 'react-hot-toast'
-import { SlPlus, SlTrash, SlCheck, SlRefresh } from 'react-icons/sl'
+import {
+  SlPlus,
+  SlTrash,
+  SlCheck,
+  SlRefresh,
+  SlMenu,
+  SlLink
+} from 'react-icons/sl'
 import { translateTextAction } from '@/app/admin/actions'
 
 const SECTIONS = [
@@ -32,6 +39,7 @@ export default function FooterSettingsPage () {
   const [activeLang, setActiveLang] = useState<LangCode>('tr')
   const [translating, setTranslating] = useState(false)
 
+  // --- VERİ YÜKLEME ---
   useEffect(() => {
     const load = async () => {
       setLoading(true)
@@ -59,6 +67,7 @@ export default function FooterSettingsPage () {
     load()
   }, [])
 
+  // --- HANDLERS ---
   const handleAdd = (section: string) => {
     const sectionLinks = links.filter(l => l.section === section)
     const newSort =
@@ -179,7 +188,6 @@ export default function FooterSettingsPage () {
         .from('footer_links_translations')
         .upsert(translationUpserts, { onConflict: 'link_id, lang_code' })
       toast.success('Kaydedildi!', { id: toastId })
-      window.location.reload()
     } catch (e: any) {
       toast.error(e.message, { id: toastId })
     }
@@ -193,106 +201,150 @@ export default function FooterSettingsPage () {
     )
 
   return (
-    <div className='pb-20 space-y-6'>
-      <div className='card-admin flex flex-col md:flex-row justify-between items-center gap-4 sticky top-2 z-20 shadow-sm'>
-        <div className='flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0'>
+    <div className='pb-20 space-y-6 w-full'>
+      {/* --- HEADER --- */}
+      <div className='sticky top-2 z-20 bg-[var(--admin-card)] p-4 rounded-xl border border-[var(--admin-card-border)] shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4'>
+        {/* Dil Seçimi */}
+        <div className='flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-hide'>
           {LANGUAGES.map(lang => (
             <button
               key={lang}
               onClick={() => setActiveLang(lang)}
-              className={`px-4 py-1.5 rounded text-sm font-bold uppercase border transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-bold uppercase border transition-all ${
                 activeLang === lang
-                  ? 'bg-[var(--admin-accent)] text-[var(--admin-input-bg)] border-transparent'
-                  : 'bg-[var(--admin-input-bg)] border-[var(--admin-border)]'
+                  ? 'bg-[var(--admin-accent)] text-white shadow-md border-transparent'
+                  : 'bg-[var(--admin-input-bg)] border-transparent text-[var(--admin-muted)] hover:text-[var(--admin-fg)]'
               }`}
             >
               {lang}
             </button>
           ))}
         </div>
-        <div className='flex gap-2 w-full md:w-auto'>
+
+        {/* Aksiyonlar */}
+        <div className='flex gap-2 w-full sm:w-auto'>
           <button
             onClick={handleDistributeLanguage}
             disabled={translating}
-            className='btn-admin btn-admin-secondary text-xs flex-1 md:flex-none justify-center'
+            className='btn-admin btn-admin-secondary text-xs flex-1 sm:flex-none justify-center gap-2'
           >
-            <SlRefresh className={translating ? 'animate-spin' : ''} /> Çevir
+            <SlRefresh className={translating ? 'animate-spin' : ''} />
+            <span className='hidden sm:inline'>Çevir</span>
           </button>
           <button
             onClick={handleSaveAll}
             disabled={translating}
-            className='btn-admin btn-admin-primary text-xs flex-1 md:flex-none justify-center'
+            className='btn-admin btn-admin-primary text-xs flex-1 sm:flex-none justify-center px-6 gap-2'
           >
             <SlCheck /> Kaydet
           </button>
         </div>
       </div>
 
+      {/* --- KOLONLAR --- */}
       <div className='grid grid-cols-1 xl:grid-cols-3 gap-6'>
         {SECTIONS.map(sec => (
-          <div key={sec.key} className='card-admin h-full flex flex-col'>
-            <h3 className='font-bold text-lg border-b border-[var(--admin-border)] pb-3 mb-4'>
+          <div
+            key={sec.key}
+            className='card-admin h-full flex flex-col bg-[var(--admin-card)] border border-[var(--admin-card-border)] rounded-xl shadow-sm'
+          >
+            {/* Kolon Başlığı */}
+            <h3 className='font-bold text-lg border-b border-[var(--admin-card-border)] pb-3 mb-4 px-1 text-[var(--admin-fg)]'>
               {sec.label}
             </h3>
-            <div className='flex-1 space-y-4'>
+
+            {/* Link Listesi */}
+            <div className='flex-1 space-y-3 min-h-[100px]'>
+              {links.filter(l => l.section === sec.key).length === 0 && (
+                <div className='h-full flex flex-col items-center justify-center text-sm text-[var(--admin-muted)] border-2 border-dashed border-[var(--admin-input-border)] rounded-lg p-6'>
+                  <span className='opacity-60'>Link eklenmemiş.</span>
+                </div>
+              )}
+
               {links
                 .filter(l => l.section === sec.key)
                 .map(link => (
                   <div
                     key={link.id}
-                    className='bg-[var(--admin-bg)] p-3 rounded border border-[var(--admin-border)] space-y-2'
+                    className='group relative bg-[var(--admin-input-bg)] hover:bg-[var(--admin-bg)] p-3 rounded-lg border border-transparent hover:border-[var(--admin-card-border)] transition-all duration-200 shadow-sm'
                   >
-                    <div className='flex gap-2'>
+                    {/* Üst Satır: Tutma Yeri, Başlık, Toggle, Sil */}
+                    <div className='flex items-center gap-3 mb-2'>
+                      {/* Drag Handle */}
+                      <SlMenu className='text-[var(--admin-muted)] cursor-grab hover:text-[var(--admin-fg)] flex-shrink-0' />
+
+                      {/* Başlık Input */}
                       <input
-                        className='admin-input flex-1 font-semibold'
+                        className='flex-1 bg-transparent font-semibold text-[var(--admin-fg)] placeholder-[var(--admin-muted)]/50 focus:outline-none focus:border-b focus:border-[var(--admin-accent)] transition-colors'
                         placeholder={`Başlık (${activeLang})`}
                         value={link.titles[activeLang] || ''}
                         onChange={e =>
                           handleTitleChange(link.id, e.target.value)
                         }
                       />
-                      <input
-                        type='checkbox'
-                        checked={link.active}
-                        onChange={e =>
-                          handleGlobalChange(
-                            link.id,
-                            'active',
-                            e.target.checked
-                          )
-                        }
-                        className='w-5 h-5 accent-[var(--admin-success)] mt-2'
-                      />
+
+                      {/* --- DÜZELTİLEN TOGGLE --- */}
+                      <label className='relative inline-flex items-center cursor-pointer flex-shrink-0'>
+                        <input
+                          type='checkbox'
+                          className='sr-only peer'
+                          checked={link.active}
+                          onChange={e =>
+                            handleGlobalChange(
+                              link.id,
+                              'active',
+                              e.target.checked
+                            )
+                          }
+                        />
+                        {/* Değişiklik Yapıldı:
+                            - translate-x-full YERİNE translate-x-4
+                            - w-8 (32px) kapsayıcı, w-3 (12px) daire.
+                            - Sol: 2px. 
+                            - Sağ hedef: 16px kayma ile 18px sol pozisyonu (30px sağ kenar).
+                            - Kalan sağ boşluk: 32-30 = 2px. Simetrik.
+                        */}
+                        <div
+                          className="w-8 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 
+                                        peer-checked:after:translate-x-4 
+                                        peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
+                                        after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 
+                                        after:transition-all dark:border-gray-600 peer-checked:bg-[var(--admin-success)]"
+                        ></div>
+                      </label>
+
+                      {/* Sil Butonu */}
+                      <button
+                        onClick={() => handleDelete(link.id)}
+                        className='text-[var(--admin-muted)] hover:text-[var(--admin-danger)] transition-colors p-1'
+                        title='Sil'
+                      >
+                        <SlTrash size={14} />
+                      </button>
                     </div>
-                    <div className='flex gap-2'>
+
+                    {/* Alt Satır: URL Input */}
+                    <div className='flex items-center gap-2 pl-7'>
+                      <SlLink size={10} className='text-[var(--admin-muted)]' />
                       <input
-                        className='admin-input text-xs font-mono flex-1'
-                        placeholder='URL'
+                        className='w-full text-xs font-mono text-[var(--admin-muted)] bg-transparent focus:text-[var(--admin-fg)] focus:outline-none focus:border-b focus:border-[var(--admin-accent)] placeholder-[var(--admin-muted)]/40'
+                        placeholder='/url-adresi'
                         value={link.url}
                         onChange={e =>
                           handleGlobalChange(link.id, 'url', e.target.value)
                         }
                       />
-                      <button
-                        onClick={() => handleDelete(link.id)}
-                        className='btn-admin btn-admin-danger p-2'
-                      >
-                        <SlTrash />
-                      </button>
                     </div>
                   </div>
                 ))}
-              {links.filter(l => l.section === sec.key).length === 0 && (
-                <div className='text-center text-sm text-[var(--admin-muted)] py-4 border-2 border-dashed border-[var(--admin-border)] rounded'>
-                  Link yok.
-                </div>
-              )}
             </div>
+
+            {/* Ekle Butonu */}
             <button
               onClick={() => handleAdd(sec.key)}
-              className='btn-admin btn-admin-secondary w-full mt-4 border-dashed'
+              className='btn-admin btn-admin-secondary w-full mt-4 border-dashed justify-center text-sm py-2.5 opacity-70 hover:opacity-100'
             >
-              <SlPlus /> Ekle
+              <SlPlus /> Yeni Link Ekle
             </button>
           </div>
         ))}

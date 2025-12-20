@@ -1,3 +1,4 @@
+// C:\Projeler\nost-copy\app\(site)\about\page.tsx
 import React from "react";
 import Image from "next/image";
 import AboutContent from "@/app/_components/About/AboutContent";
@@ -9,7 +10,7 @@ export const metadata = {
 
 export default function AboutPage() {
     return (
-        <div className="relative w-screen min-h-screen left-1/2 -translate-x-1/2 overflow-x-hidden">
+        <div className="relative w-screen min-h-screen pt-8 pb-16 left-1/2 -translate-x-1/2 overflow-x-hidden">
 
             {/* --- ARKAPLAN DESENLERİ (Contact Page ile uyumlu) --- */}
             <div className="absolute inset-0 w-full h-full pointer-events-none z-0">

@@ -140,7 +140,7 @@ export default function SliderCard ({
                            xl:w-[520px] xl:h-[520px] 
                            2xl:w-[600px] 2xl:h-[600px]
                            rounded-full origin-center animate-pulse-scale 
-                           bg-white/25 backdrop-blur-3xl border border-white/45 shadow-sm shadow-white/10'
+                           bg-foreground/20 border border-foreground/45 shadow-sm shadow-foreground'
               ></div>
 
               <Image

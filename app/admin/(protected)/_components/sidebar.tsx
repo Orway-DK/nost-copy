@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import {
   IoChevronDown,
+  IoChevronBack,
+  IoChevronForward,
   IoSettingsOutline,
   IoFolderOpenOutline,
   IoGridOutline,
@@ -13,7 +15,7 @@ import {
   IoPeopleOutline,
   IoLocationOutline,
   IoClose,
-  IoBriefcaseOutline // YENİ İKON EKLENDİ
+  IoBriefcaseOutline
 } from 'react-icons/io5'
 
 // --- TİP TANIMLAMALARI ---
@@ -29,10 +31,12 @@ function getCookie (name: string) {
 
 type TranslationKey =
   | 'dashboard'
-  | 'components'
   | 'site_settings'
   | 'general'
   | 'social_links'
+  | 'footer'
+  | 'top_info_bar'
+  | 'components'
   | 'categories'
   | 'all_categories'
   | 'add_category'
@@ -49,10 +53,9 @@ type TranslationKey =
   | 'scrolling_cats'
   | 'testimonials_page'
   | 'make_it_easier'
-  | 'footer'
   | 'locations'
-  | 'top_info_bar'
   | 'services'
+  | 'about_page'
 
 type MenuItem = {
   key: string
@@ -65,10 +68,12 @@ type MenuItem = {
 
 const DICTIONARY: Record<TranslationKey, { tr: string; en: string }> = {
   dashboard: { tr: 'Kontrol Paneli', en: 'Dashboard' },
-  components: { tr: 'Site Bileşenleri', en: 'Components' },
   site_settings: { tr: 'Site Ayarları', en: 'Site Settings' },
-  general: { tr: 'Genel', en: 'General' },
-  social_links: { tr: 'Sosyal Medya', en: 'Social Links' },
+  general: { tr: 'Genel Ayarlar', en: 'General Settings' },
+  social_links: { tr: 'Sosyal Linkler', en: 'Social Links' },
+  footer: { tr: 'Alt Bilgi (Footer)', en: 'Footer' },
+  top_info_bar: { tr: 'Üst Bilgi Çubuğu', en: 'Top Info Bar' },
+  components: { tr: 'Site Bileşenleri', en: 'Components' },
   categories: { tr: 'Kategoriler', en: 'Categories' },
   all_categories: { tr: 'Tüm Kategoriler', en: 'All Categories' },
   add_category: { tr: 'Kategori Ekle', en: 'Add New Category' },
@@ -85,27 +90,32 @@ const DICTIONARY: Record<TranslationKey, { tr: string; en: string }> = {
   scrolling_cats: { tr: 'Kayan Kategoriler', en: 'Scrolling Categories' },
   testimonials_page: { tr: 'Referanslar', en: 'Testimonials' },
   make_it_easier: { tr: 'Kolaylaştır', en: 'Make It Easier' },
-  footer: { tr: 'Footer', en: 'Footer' },
   locations: { tr: 'Lokasyonlar', en: 'Locations' },
-  top_info_bar: { tr: 'Üst Bilgi Çubuğu', en: 'Top Info Bar' },
-  services: { tr: 'Hizmetler', en: 'Services' } // Türkçe çeviri düzeltildi (Servisler -> Hizmetler)
+  services: { tr: 'Hizmetler', en: 'Services' },
+  about_page: { tr: 'Hakkımızda', en: 'About Us' }
 }
 
-const STORAGE_KEY = 'admin.sidebar.expanded'
+const STORAGE_KEY_EXPANDED = 'admin.sidebar.expanded'
 
 type AdminSidebarProps = {
   isOpen?: boolean
   onClose?: () => void
+  isCollapsed: boolean
+  toggleCollapse: () => void
 }
 
 export default function AdminSidebar ({
   isOpen = false,
-  onClose
+  onClose,
+  isCollapsed,
+  toggleCollapse
 }: AdminSidebarProps) {
   const pathname = usePathname()
   const [lang, setLang] = useState<Lang>('en')
   const [mounted, setMounted] = useState(false)
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+  const [expandedSubmenus, setExpandedSubmenus] = useState<
+    Record<string, boolean>
+  >({})
 
   useEffect(() => {
     setMounted(true)
@@ -120,8 +130,8 @@ export default function AdminSidebar ({
     }
 
     try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) setExpanded(JSON.parse(stored))
+      const storedExpanded = localStorage.getItem(STORAGE_KEY_EXPANDED)
+      if (storedExpanded) setExpandedSubmenus(JSON.parse(storedExpanded))
     } catch {}
   }, [])
 
@@ -136,11 +146,44 @@ export default function AdminSidebar ({
         href: '/admin',
         match: 'exact'
       },
+      // --- DÜZELTME: Settings artık bir dropdown ---
       {
         key: 'settings',
         labelKey: 'site_settings',
         icon: IoSettingsOutline,
-        href: '/admin/settings',
+        match: 'startsWith', // /admin/settings ile başlayan her şeyde aktif görünsün (parent)
+        children: [
+          {
+            key: 'settings_general',
+            labelKey: 'general',
+            href: '/admin/settings', // Genel Ayarlar (Ana sayfa)
+            match: 'exact'
+          },
+          {
+            key: 'settings_social',
+            labelKey: 'social_links',
+            href: '/admin/settings/social',
+            match: 'exact'
+          },
+          {
+            key: 'settings_footer',
+            labelKey: 'footer',
+            href: '/admin/settings/footer',
+            match: 'exact'
+          },
+          {
+            key: 'settings_topbar',
+            labelKey: 'top_info_bar',
+            href: '/admin/settings/top-info-bar',
+            match: 'exact'
+          }
+        ]
+      },
+      {
+        key: 'about',
+        labelKey: 'about_page',
+        icon: IoLocationOutline,
+        href: '/admin/about',
         match: 'exact'
       },
       {
@@ -153,7 +196,7 @@ export default function AdminSidebar ({
       {
         key: 'services',
         labelKey: 'services',
-        icon: IoBriefcaseOutline, // GÜNCELLENDİ: IoBriefcaseOutline
+        icon: IoBriefcaseOutline,
         href: '/admin/services',
         match: 'exact'
       },
@@ -247,10 +290,13 @@ export default function AdminSidebar ({
     [lang]
   )
 
-  const toggle = (key: string) => {
-    setExpanded(prev => {
+  const toggleSubmenu = (key: string) => {
+    if (isCollapsed) {
+      toggleCollapse()
+    }
+    setExpandedSubmenus(prev => {
       const next = { ...prev, [key]: !prev[key] }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      localStorage.setItem(STORAGE_KEY_EXPANDED, JSON.stringify(next))
       return next
     })
   }
@@ -266,7 +312,7 @@ export default function AdminSidebar ({
 
   return (
     <>
-      {/* MOBİL OVERLAY (Backdrop) */}
+      {/* MOBİL OVERLAY */}
       <div
         className={`fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity duration-300 ${
           isOpen
@@ -279,20 +325,28 @@ export default function AdminSidebar ({
       {/* SIDEBAR CONTAINER */}
       <aside
         className={`
-                    fixed top-0 left-0 z-50 h-full w-64
-                    bg-[var(--admin-card)] border-r border-[var(--admin-card-border)]
-                    transform transition-transform duration-300 ease-in-out
-                    lg:translate-x-0 
-                    ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-                `}
+            fixed top-0 left-0 z-50 h-full
+            bg-[var(--admin-card)] border-r border-[var(--admin-card-border)]
+            transition-all duration-300 ease-in-out
+            lg:translate-x-0
+            ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+            ${isCollapsed ? 'w-20' : 'w-64'}
+        `}
       >
         {/* Header */}
-        <div className='h-16 flex items-center justify-between px-6 border-b border-[var(--admin-card-border)]'>
-          <span className='font-bold text-xl tracking-tight text-[var(--admin-fg)]'>
-            Nost<span className='text-[var(--admin-muted)]'>Copy</span>
-          </span>
+        <div
+          className={`h-16 flex items-center border-b border-[var(--admin-card-border)] ${
+            isCollapsed ? 'justify-center px-0' : 'justify-between px-6'
+          }`}
+        >
+          {!isCollapsed ? (
+            <span className='font-bold text-xl tracking-tight text-[var(--admin-fg)] whitespace-nowrap overflow-hidden'>
+              Nost<span className='text-[var(--admin-muted)]'>Copy</span>
+            </span>
+          ) : (
+            <span className='font-bold text-xl text-[var(--admin-fg)]'>N</span>
+          )}
 
-          {/* Kapat Butonu (Sadece Mobilde) */}
           <button
             onClick={onClose}
             className='lg:hidden p-1 hover:bg-[var(--admin-input-bg)] rounded text-[var(--admin-muted)]'
@@ -302,52 +356,82 @@ export default function AdminSidebar ({
         </div>
 
         {/* Menü */}
-        <nav className='p-4 overflow-y-auto h-[calc(100vh-4rem)]'>
+        <nav className='p-3 overflow-y-auto h-[calc(100vh-8rem)] scrollbar-hide'>
           <ul className='space-y-1'>
             {menuItems.map(item => {
               const hasChildren = item.children && item.children.length > 0
               const active = isActive(item.href, item.match)
-              const open = expanded[item.key]
+              const open = expandedSubmenus[item.key]
               const Icon = item.icon
+
+              // Parent (Ana Menü) aktif mi? (Alt sayfalardan biri seçiliyse parent da aktif görünsün)
+              // match: 'startsWith' olduğu için pathname '/admin/settings/social' ise '/admin/settings' true döner.
+              const isParentActive = hasChildren
+                ? item.children?.some(child =>
+                    isActive(child.href, child.match)
+                  )
+                : active
 
               return (
                 <li key={item.key}>
                   <div
-                    className={`group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm cursor-pointer select-none transition-colors ${
-                      active && !hasChildren
-                        ? 'bg-[var(--admin-accent)] text-[var(--admin-bg)] font-medium'
-                        : 'text-[var(--admin-muted)] hover:bg-[var(--admin-input-bg)] hover:text-[var(--admin-fg)]'
-                    }`}
+                    className={`
+                        group flex items-center rounded-lg cursor-pointer select-none transition-all duration-200 relative
+                        ${
+                          isCollapsed
+                            ? 'justify-center px-0 py-3'
+                            : 'justify-between px-3 py-2.5'
+                        }
+                        ${
+                          isParentActive && !open // Alt menü kapalıyken parent'ı vurgula
+                            ? 'bg-[var(--admin-input-bg)] text-[var(--admin-fg)] font-medium'
+                            : active && !hasChildren // Tekil link aktifse
+                            ? 'bg-[var(--admin-accent)] text-[var(--admin-bg)] font-medium'
+                            : 'text-[var(--admin-muted)] hover:bg-[var(--admin-input-bg)] hover:text-[var(--admin-fg)]'
+                        }
+                    `}
                     onClick={() =>
-                      hasChildren ? toggle(item.key) : onClose?.()
+                      hasChildren ? toggleSubmenu(item.key) : onClose?.()
                     }
+                    title={isCollapsed ? t(item.labelKey) : ''}
                   >
                     {item.href && !hasChildren ? (
                       <Link
                         href={item.href}
-                        className='flex-1 flex items-center gap-3'
+                        className={`flex items-center ${
+                          isCollapsed ? 'justify-center w-full' : 'flex-1 gap-3'
+                        }`}
                       >
-                        {Icon && <Icon size={18} />}
-                        <span>{t(item.labelKey)}</span>
+                        {Icon && <Icon size={isCollapsed ? 22 : 18} />}
+                        {!isCollapsed && <span>{t(item.labelKey)}</span>}
                       </Link>
                     ) : (
-                      <div className='flex-1 flex items-center gap-3'>
-                        {Icon && <Icon size={18} />}
-                        <span>{t(item.labelKey)}</span>
+                      <div
+                        className={`flex items-center ${
+                          isCollapsed ? 'justify-center w-full' : 'flex-1 gap-3'
+                        }`}
+                      >
+                        {Icon && <Icon size={isCollapsed ? 22 : 18} />}
+                        {!isCollapsed && <span>{t(item.labelKey)}</span>}
                       </div>
                     )}
-                    {hasChildren && (
+
+                    {!isCollapsed && hasChildren && (
                       <IoChevronDown
                         size={14}
-                        className={`transition-transform ${
+                        className={`transition-transform duration-200 ${
                           open ? 'rotate-180' : ''
                         }`}
                       />
                     )}
+
+                    {isCollapsed && hasChildren && (
+                      <div className='absolute right-1 top-1 w-1.5 h-1.5 bg-[var(--admin-muted)] rounded-full opacity-50' />
+                    )}
                   </div>
 
-                  {hasChildren && open && (
-                    <ul className='mt-1 ml-4 pl-3 border-l border-[var(--admin-card-border)] space-y-1'>
+                  {!isCollapsed && hasChildren && open && (
+                    <ul className='mt-1 ml-4 pl-3 border-l border-[var(--admin-card-border)] space-y-1 animate-in slide-in-from-top-1 duration-200'>
                       {item.children!.map(child => {
                         const childActive = isActive(child.href, child.match)
                         return (
@@ -373,22 +457,44 @@ export default function AdminSidebar ({
             })}
 
             <li className='pt-4 pb-2'>
-              <span className='px-3 text-xs font-bold uppercase tracking-wider opacity-40 text-[var(--admin-muted)]'>
-                {t('management')}
-              </span>
+              {!isCollapsed && (
+                <span className='px-3 text-xs font-bold uppercase tracking-wider opacity-40 text-[var(--admin-muted)] animate-in fade-in'>
+                  {t('management')}
+                </span>
+              )}
+              {isCollapsed && (
+                <div className='h-[1px] mx-2 bg-[var(--admin-card-border)]'></div>
+              )}
             </li>
             <li>
               <Link
                 href='/admin/users'
                 onClick={onClose}
-                className='flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--admin-muted)] hover:bg-[var(--admin-input-bg)] opacity-50 cursor-not-allowed'
+                className={`flex items-center rounded-lg text-sm text-[var(--admin-muted)] hover:bg-[var(--admin-input-bg)] opacity-50 cursor-not-allowed
+                    ${isCollapsed ? 'justify-center py-3' : 'px-3 py-2.5 gap-3'}
+                `}
+                title={isCollapsed ? t('users') : ''}
               >
-                <IoPeopleOutline size={18} />
-                <span>{t('users')}</span>
+                <IoPeopleOutline size={isCollapsed ? 22 : 18} />
+                {!isCollapsed && <span>{t('users')}</span>}
               </Link>
             </li>
           </ul>
         </nav>
+
+        {/* Footer Toggle */}
+        <div className='absolute bottom-0 w-full p-4 border-t border-[var(--admin-card-border)] hidden lg:flex justify-end bg-[var(--admin-card)]'>
+          <button
+            onClick={toggleCollapse}
+            className='p-2 rounded-lg hover:bg-[var(--admin-input-bg)] text-[var(--admin-muted)] hover:text-[var(--admin-fg)] transition-colors'
+          >
+            {isCollapsed ? (
+              <IoChevronForward size={20} />
+            ) : (
+              <IoChevronBack size={20} />
+            )}
+          </button>
+        </div>
       </aside>
     </>
   )

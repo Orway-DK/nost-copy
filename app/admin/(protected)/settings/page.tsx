@@ -18,7 +18,7 @@ import {
 } from 'react-icons/sl'
 import { translateTextAction } from '@/app/admin/actions'
 
-// --- TİPLER ---
+// --- TİP TANIMLARI ---
 type GlobalSettings = {
   id?: number
   logo_url: string
@@ -162,7 +162,7 @@ export default function GeneralSettingsPage () {
     }))
   }
 
-  // --- OTOMATİK ÇEVİRİLİ DAĞIT ---
+  // --- OTOMATİK ÇEVİRİ DAĞIT ---
   const handleDistributeLanguage = async () => {
     if (
       !confirm(
@@ -209,218 +209,248 @@ export default function GeneralSettingsPage () {
     toast.success('Çeviriler tamamlandı.', { id: toastId })
   }
 
-  if (loading)
+  // --- SKELETON LOADING (Placeholder UI) ---
+  if (loading) {
     return (
-      <div className='p-10 text-center text-[var(--admin-muted)]'>
-        Yükleniyor...
+      <div className='space-y-6 pb-20 animate-pulse'>
+        {/* Title Skeleton */}
+        <div className='space-y-2 mb-6'>
+          <div className='h-8 w-48 bg-[var(--admin-card-border)] rounded'></div>
+          <div className='h-4 w-72 bg-[var(--admin-card-border)] rounded opacity-60'></div>
+        </div>
+
+        {/* Toolbar Skeleton */}
+        <div className='h-16 bg-[var(--admin-card)] rounded-xl border border-[var(--admin-card-border)]'></div>
+
+        {/* Grid Skeleton */}
+        <div className='grid grid-cols-1 xl:grid-cols-2 gap-6'>
+          <div className='h-[400px] bg-[var(--admin-card)] rounded-xl border border-[var(--admin-card-border)]'></div>
+          <div className='h-[400px] bg-[var(--admin-card)] rounded-xl border border-[var(--admin-card-border)]'></div>
+        </div>
       </div>
     )
+  }
 
   return (
-    <form onSubmit={handleSave} className='space-y-6 pb-20'>
-      {/* BAŞLIK & DİL SEÇİMİ */}
-      <div className='card-admin sticky top-2 z-20 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4'>
-        <div className='flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide'>
-          {LANGUAGES.map(lang => (
+    <>
+      {/* Sayfa Başlığı */}
+      <div className='mb-6'>
+        <h1 className='admin-page-title'>Genel Ayarlar</h1>
+        <p className='text-[var(--admin-muted)] text-sm'>
+          Site kimliği, logo ve iletişim bilgileri.
+        </p>
+      </div>
+
+      <form onSubmit={handleSave} className='space-y-6 pb-20'>
+        {/* --- HEADER / TOOLBAR --- */}
+        <div className='sticky top-0 z-20 bg-[var(--admin-card)] p-4 rounded-xl border border-[var(--admin-card-border)] shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4'>
+          {/* Sol Taraf: Dil Seçimi */}
+          <div className='flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-hide'>
+            {LANGUAGES.map(lang => (
+              <button
+                type='button'
+                key={lang}
+                onClick={() => setActiveLang(lang)}
+                className={`px-4 py-2 rounded-lg font-bold uppercase text-sm transition-all border border-transparent whitespace-nowrap ${
+                  activeLang === lang
+                    ? 'bg-[var(--admin-accent)] text-white shadow-md'
+                    : 'bg-[var(--admin-input-bg)] text-[var(--admin-muted)] hover:text-[var(--admin-fg)] hover:border-[var(--admin-input-border)]'
+                }`}
+              >
+                {lang}
+              </button>
+            ))}
+          </div>
+
+          {/* Sağ Taraf: Aksiyon Butonları (Çevir & Kaydet) */}
+          <div className='flex items-center gap-3 w-full sm:w-auto'>
+            {/* Çeviri Butonu */}
             <button
               type='button'
-              key={lang}
-              onClick={() => setActiveLang(lang)}
-              className={`px-4 py-2 rounded-lg font-bold uppercase text-sm transition-all border border-transparent whitespace-nowrap ${
-                activeLang === lang
-                  ? 'bg-[var(--admin-accent)] text-white shadow-md'
-                  : 'bg-[var(--admin-input-bg)] text-[var(--admin-muted)] hover:text-[var(--admin-fg)] hover:border-[var(--admin-input-border)]'
-              }`}
+              onClick={handleDistributeLanguage}
+              className='btn-admin btn-admin-secondary text-xs flex-1 sm:flex-none justify-center'
+              title='Otomatik Çevir'
             >
-              {lang}
+              <SlRefresh />{' '}
+              <span className='hidden sm:inline'>Çevir & Dağıt</span>
             </button>
-          ))}
+
+            {/* Kaydet Butonu */}
+            <button
+              type='submit'
+              disabled={saving}
+              className='btn-admin btn-admin-primary text-xs gap-2 flex-1 sm:flex-none justify-center px-6'
+            >
+              <SlCheck /> {saving ? 'Kaydediliyor...' : 'Kaydet'}
+            </button>
+
+            {/* Dil Göstergesi */}
+            <div className='hidden sm:block h-6 w-px bg-[var(--admin-card-border)]'></div>
+            <span className='text-xs font-bold uppercase text-[var(--admin-muted)] hidden sm:inline-block'>
+              {activeLang}
+            </span>
+          </div>
         </div>
 
-        <div className='flex items-center gap-3 w-full md:w-auto'>
-          <button
-            type='button'
-            onClick={handleDistributeLanguage}
-            className='btn-admin btn-admin-secondary text-xs flex-1 md:flex-none'
-            title='Otomatik Çevir'
-          >
-            <SlRefresh />{' '}
-            <span className='hidden sm:inline'>Çevir & Dağıt</span>
-          </button>
-          <div className='hidden md:block h-6 w-px bg-[var(--admin-card-border)]'></div>
-          <span className='text-xs font-bold uppercase text-[var(--admin-muted)] hidden md:inline-block'>
-            {activeLang}
-          </span>
-        </div>
-      </div>
+        <div className='grid grid-cols-1 xl:grid-cols-2 gap-6'>
+          {/* SOL KOLON: Site Kimliği */}
+          <div className='card-admin h-fit'>
+            <h3 className='text-lg font-bold mb-6 flex items-center gap-2 pb-2 border-b border-[var(--admin-card-border)]'>
+              <SlGlobe className='text-[var(--admin-accent)]' /> Site Kimliği
+            </h3>
 
-      <div className='grid grid-cols-1 xl:grid-cols-2 gap-6'>
-        {/* SOL KOLON: Site Kimliği */}
-        <div className='card-admin h-fit'>
-          <h3 className='text-lg font-bold mb-6 flex items-center gap-2 pb-2 border-b border-[var(--admin-card-border)]'>
-            <SlGlobe className='text-[var(--admin-accent)]' /> Site Kimliği
-          </h3>
+            <div className='space-y-5'>
+              {/* Site Adı */}
+              <div>
+                <label className='admin-label flex justify-between items-center'>
+                  <span className='flex items-center gap-2'>
+                    Site Adı (Title)
+                  </span>
+                  <span className='badge-admin badge-admin-default text-[10px] uppercase'>
+                    {activeLang}
+                  </span>
+                </label>
+                <input
+                  className='admin-input'
+                  value={formData.translations[activeLang].site_name}
+                  onChange={e => handleLocalChange('site_name', e.target.value)}
+                  placeholder='Site Başlığı'
+                />
+              </div>
 
-          <div className='space-y-5'>
-            {/* Site Adı */}
-            <div>
-              <label className='admin-label flex justify-between items-center'>
-                <span className='flex items-center gap-2'>
-                  Site Adı (Title)
-                </span>
-                <span className='badge-admin badge-admin-default text-[10px] uppercase'>
-                  {activeLang}
-                </span>
-              </label>
-              <input
-                className='admin-input'
-                value={formData.translations[activeLang].site_name}
-                onChange={e => handleLocalChange('site_name', e.target.value)}
-                placeholder='Site Başlığı'
-              />
+              {/* Logo URL */}
+              <div>
+                <label className='admin-label flex items-center gap-2'>
+                  <SlPicture className='text-[var(--admin-muted)]' /> Logo URL
+                </label>
+                <input
+                  className='admin-input'
+                  placeholder='https://...'
+                  value={formData.global.logo_url || ''}
+                  onChange={e => handleGlobalChange('logo_url', e.target.value)}
+                />
+                {formData.global.logo_url && (
+                  <div className='mt-3 p-2 border border-dashed border-[var(--admin-card-border)] rounded-lg bg-[var(--admin-input-bg)] inline-block'>
+                    <img
+                      src={formData.global.logo_url}
+                      alt='Logo Önizleme'
+                      className='h-8 w-auto object-contain'
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Footer Text */}
+              <div>
+                <label className='admin-label flex justify-between items-center'>
+                  <span className='flex items-center gap-2'>
+                    <SlNote className='text-[var(--admin-muted)]' /> Footer
+                    Hakkında Metni
+                  </span>
+                  <span className='badge-admin badge-admin-default text-[10px] uppercase'>
+                    {activeLang}
+                  </span>
+                </label>
+                <textarea
+                  className='admin-textarea min-h-[100px]'
+                  value={formData.translations[activeLang].footer_text}
+                  onChange={e =>
+                    handleLocalChange('footer_text', e.target.value)
+                  }
+                  placeholder='Kısa açıklama...'
+                />
+              </div>
             </div>
+          </div>
 
-            {/* Logo URL */}
-            <div>
-              <label className='admin-label flex items-center gap-2'>
-                <SlPicture className='text-[var(--admin-muted)]' /> Logo URL
-              </label>
-              <input
-                className='admin-input'
-                placeholder='https://...'
-                value={formData.global.logo_url || ''}
-                onChange={e => handleGlobalChange('logo_url', e.target.value)}
-              />
-              {formData.global.logo_url && (
-                <div className='mt-3 p-2 border border-dashed border-[var(--admin-card-border)] rounded-lg bg-[var(--admin-input-bg)] inline-block'>
-                  <img
-                    src={formData.global.logo_url}
-                    alt='Logo Önizleme'
-                    className='h-8 w-auto object-contain'
+          {/* SAĞ KOLON: İletişim */}
+          <div className='card-admin h-fit'>
+            <h3 className='text-lg font-bold mb-6 flex items-center gap-2 pb-2 border-b border-[var(--admin-card-border)]'>
+              <SlPhone className='text-[var(--admin-accent)]' /> İletişim
+              Bilgileri
+            </h3>
+
+            <div className='space-y-5'>
+              {/* Telefon & Email */}
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div>
+                  <label className='admin-label flex items-center gap-2'>
+                    <SlPhone className='text-[var(--admin-muted)]' /> Telefon
+                  </label>
+                  <input
+                    className='admin-input'
+                    value={formData.global.phone || ''}
+                    onChange={e => handleGlobalChange('phone', e.target.value)}
+                    placeholder='+90...'
                   />
                 </div>
-              )}
-            </div>
+                <div>
+                  <label className='admin-label flex items-center gap-2'>
+                    <SlEnvolope className='text-[var(--admin-muted)]' /> E-Posta
+                  </label>
+                  <input
+                    type='email'
+                    className='admin-input'
+                    value={formData.global.email || ''}
+                    onChange={e => handleGlobalChange('email', e.target.value)}
+                    placeholder='info@...'
+                  />
+                </div>
+              </div>
 
-            {/* Footer Text */}
-            <div>
-              <label className='admin-label flex justify-between items-center'>
-                <span className='flex items-center gap-2'>
-                  <SlNote className='text-[var(--admin-muted)]' /> Footer
-                  Hakkında Metni
-                </span>
-                <span className='badge-admin badge-admin-default text-[10px] uppercase'>
-                  {activeLang}
-                </span>
-              </label>
-              <textarea
-                className='admin-textarea min-h-[100px]'
-                value={formData.translations[activeLang].footer_text}
-                onChange={e => handleLocalChange('footer_text', e.target.value)}
-                placeholder='Kısa açıklama...'
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* SAĞ KOLON: İletişim */}
-        <div className='card-admin h-fit'>
-          <h3 className='text-lg font-bold mb-6 flex items-center gap-2 pb-2 border-b border-[var(--admin-card-border)]'>
-            <SlPhone className='text-[var(--admin-accent)]' /> İletişim
-            Bilgileri
-          </h3>
-
-          <div className='space-y-5'>
-            {/* Telefon & Email */}
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              {/* Adres */}
               <div>
-                <label className='admin-label flex items-center gap-2'>
-                  <SlPhone className='text-[var(--admin-muted)]' /> Telefon
+                <label className='admin-label flex justify-between items-center'>
+                  <span className='flex items-center gap-2'>
+                    <SlLocationPin className='text-[var(--admin-muted)]' /> Açık
+                    Adres
+                  </span>
+                  <span className='badge-admin badge-admin-default text-[10px] uppercase'>
+                    {activeLang}
+                  </span>
                 </label>
-                <input
-                  className='admin-input'
-                  value={formData.global.phone || ''}
-                  onChange={e => handleGlobalChange('phone', e.target.value)}
-                  placeholder='+90...'
+                <textarea
+                  className='admin-textarea min-h-[80px]'
+                  value={formData.translations[activeLang].address}
+                  onChange={e => handleLocalChange('address', e.target.value)}
+                  placeholder='Adres bilgisi...'
                 />
               </div>
-              <div>
-                <label className='admin-label flex items-center gap-2'>
-                  <SlEnvolope className='text-[var(--admin-muted)]' /> E-Posta
-                </label>
-                <input
-                  type='email'
-                  className='admin-input'
-                  value={formData.global.email || ''}
-                  onChange={e => handleGlobalChange('email', e.target.value)}
-                  placeholder='info@...'
-                />
-              </div>
-            </div>
 
-            {/* Adres */}
-            <div>
-              <label className='admin-label flex justify-between items-center'>
-                <span className='flex items-center gap-2'>
-                  <SlLocationPin className='text-[var(--admin-muted)]' /> Açık
-                  Adres
-                </span>
-                <span className='badge-admin badge-admin-default text-[10px] uppercase'>
-                  {activeLang}
-                </span>
-              </label>
-              <textarea
-                className='admin-textarea min-h-[80px]'
-                value={formData.translations[activeLang].address}
-                onChange={e => handleLocalChange('address', e.target.value)}
-                placeholder='Adres bilgisi...'
-              />
-            </div>
-
-            {/* Çalışma Saatleri & Harita */}
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-              <div>
-                <label className='admin-label flex items-center gap-2'>
-                  <SlClock className='text-[var(--admin-muted)]' /> Çalışma
-                  Saatleri
-                </label>
-                <input
-                  className='admin-input'
-                  value={formData.global.working_hours || ''}
-                  onChange={e =>
-                    handleGlobalChange('working_hours', e.target.value)
-                  }
-                  placeholder='Pzt-Cum 09:00...'
-                />
-              </div>
-              <div>
-                <label className='admin-label flex items-center gap-2'>
-                  <SlMap className='text-[var(--admin-muted)]' /> Harita Linki
-                </label>
-                <input
-                  className='admin-input'
-                  placeholder='Google Maps URL'
-                  value={formData.global.store_location_url || ''}
-                  onChange={e =>
-                    handleGlobalChange('store_location_url', e.target.value)
-                  }
-                />
+              {/* Çalışma Saatleri & Harita */}
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div>
+                  <label className='admin-label flex items-center gap-2'>
+                    <SlClock className='text-[var(--admin-muted)]' /> Çalışma
+                    Saatleri
+                  </label>
+                  <input
+                    className='admin-input'
+                    value={formData.global.working_hours || ''}
+                    onChange={e =>
+                      handleGlobalChange('working_hours', e.target.value)
+                    }
+                    placeholder='Pzt-Cum 09:00...'
+                  />
+                </div>
+                <div>
+                  <label className='admin-label flex items-center gap-2'>
+                    <SlMap className='text-[var(--admin-muted)]' /> Harita Linki
+                  </label>
+                  <input
+                    className='admin-input'
+                    placeholder='Google Maps URL'
+                    value={formData.global.store_location_url || ''}
+                    onChange={e =>
+                      handleGlobalChange('store_location_url', e.target.value)
+                    }
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* ACTION BAR */}
-      <div className='fixed bottom-0 right-0 left-0 lg:left-64 p-4 bg-[var(--admin-card)] border-t border-[var(--admin-card-border)] flex justify-end z-30'>
-        <button
-          type='submit'
-          disabled={saving}
-          className='btn-admin btn-admin-primary px-8 py-2.5 shadow-lg'
-        >
-          <SlCheck /> {saving ? 'Kaydediliyor...' : 'Kaydet'}
-        </button>
-      </div>
-    </form>
+      </form>
+    </>
   )
 }

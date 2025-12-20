@@ -1,3 +1,4 @@
+// C:\Projeler\nost-copy\app\admin\(protected)\services\services-list.tsx
 'use client'
 
 import { useState } from 'react'

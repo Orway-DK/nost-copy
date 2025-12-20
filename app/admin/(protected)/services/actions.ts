@@ -1,3 +1,4 @@
+// C:\Projeler\nost-copy\app\admin\(protected)\services\actions.ts
 "use server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
