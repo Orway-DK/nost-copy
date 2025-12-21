@@ -1,3 +1,4 @@
+// C:\Projeler\nost-copy\app\_components\NavigationBar\NavigationBar.tsx
 'use client'
 
 import { useMemo, useState, useEffect } from 'react'
@@ -7,6 +8,7 @@ import { SlMenu, SlClose } from 'react-icons/sl'
 import { useLanguage } from '@/components/LanguageProvider'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import Dropdown from './_components/Dropdown'
+import CategoriesDropdown from './_components/CategoriesDropdown'
 
 // --- TİP TANIMLARI ---
 type CategoryRow = {
@@ -20,6 +22,13 @@ type ServiceRow = {
   id: number
   slug: string
   service_translations: { title: string; lang_code: string }[]
+}
+
+// Navigasyon ağacı için tip (Diğer bileşenlerde kullanmak üzere export edilebilir)
+export type NavItem = {
+  label: string
+  href: string
+  children?: NavItem[]
 }
 
 // --- DATA FETCHING ---
@@ -57,7 +66,7 @@ export default function NavigationBar () {
   const { lang } = useLanguage()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Çok dilli etiketleri ve linkleri tek bir hook içinde topladık
+  // Dil verileri
   const menuData = useMemo(() => {
     const t = (tr: string, en: string, de: string) =>
       lang === 'tr' ? tr : lang === 'de' ? de : en
@@ -66,7 +75,6 @@ export default function NavigationBar () {
       home: { label: t('Anasayfa', 'Home', 'Startseite'), href: '/home' },
       about: { label: t('Hakkımızda', 'About Us', 'Über uns'), href: '/about' },
       contact: { label: t('İletişim', 'Contact', 'Kontakt'), href: '/contact' },
-      //blog: { label: 'Blog', href: '/blog' },
       labels: {
         categories: t('Kategoriler', 'Categories', 'Kategorien'),
         services: t('Hizmetler', 'Services', 'Dienstleistungen'),
@@ -76,7 +84,7 @@ export default function NavigationBar () {
     }
   }, [lang])
 
-  // Mobil menü açıldığında body scroll'u kilitle
+  // Mobil menü açıldığında scroll kilitleme
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = 'hidden'
@@ -88,15 +96,20 @@ export default function NavigationBar () {
     }
   }, [mobileMenuOpen])
 
-  const { data: categories } = useSWR(
-    ['categories-nav', lang],
-    () => fetchCategories(lang),
-    { revalidateOnFocus: false, suspense: true }
-  )
+  // Veri Çekme
+  const {
+    data: categories,
+    isLoading: catLoading,
+    error: catError
+  } = useSWR(['categories-nav', lang], () => fetchCategories(lang), {
+    revalidateOnFocus: false
+  })
+
   const { data: services } = useSWR('services-nav', fetchServices, {
     revalidateOnFocus: false,
     suspense: true
   })
+
   const { data: siteName = 'Nost Copy' } = useSWR('site_name', fetchSiteName, {
     revalidateOnFocus: false,
     suspense: true
@@ -104,16 +117,58 @@ export default function NavigationBar () {
 
   const closeMobileMenu = () => setMobileMenuOpen(false)
 
-  const categoryItems = useMemo(() => {
+  // --- 1. MASAÜSTÜ İÇİN AĞAÇ YAPISI (HIERARCHY) ---
+  const categoryTree = useMemo(() => {
+    if (!categories) return []
+
+    // Önce tüm kategorileri NavItem formatına çevir
+    const mappedCategories = categories.map(c => {
+      const tr =
+        c.category_translations.find(t => t.lang_code === lang) ||
+        c.category_translations.find(t => t.lang_code === 'tr')
+
+      return {
+        id: c.id,
+        parent_id: c.parent_id,
+        label: tr?.name || c.slug,
+        href: `/c/${c.slug}`,
+        children: [] as NavItem[]
+      }
+    })
+
+    // Parent-Child ilişkisini kur
+    const tree: NavItem[] = []
+    const lookup = new Map(mappedCategories.map(c => [c.id, c]))
+
+    mappedCategories.forEach(cat => {
+      if (cat.parent_id === null) {
+        tree.push(cat)
+      } else {
+        const parent = lookup.get(cat.parent_id)
+        if (parent) {
+          parent.children!.push(cat)
+        } else {
+          // Babası yoksa root'a ekle (güvenlik için)
+          tree.push(cat)
+        }
+      }
+    })
+
+    return tree
+  }, [categories, lang])
+
+  // --- 2. MOBİL İÇİN DÜZ LİSTE (FLAT LIST) ---
+  const categoryListMobile = useMemo(() => {
     if (!categories) return []
     return categories.map(c => {
       const tr =
         c.category_translations.find(t => t.lang_code === lang) ||
         c.category_translations.find(t => t.lang_code === 'tr')
-      return { label: tr?.name || c.slug, href: `/collections/${c.slug}` }
+      return { label: tr?.name || c.slug, href: `/c/${c.slug}` }
     })
   }, [categories, lang])
 
+  // --- HİZMETLER LİSTESİ ---
   const serviceItems = useMemo(() => {
     if (!services) return []
     return services.map(s => {
@@ -130,8 +185,7 @@ export default function NavigationBar () {
 
   return (
     <>
-      <div className='w-full flex justify-center backdrop-blur-md  border-b border-border/40 sticky top-0 z-50 transition-all duration-300
-      shadow-primary/20 shadow-md'>
+      <div className='w-full flex justify-center backdrop-blur-md border-b border-border/40 sticky top-0 z-50 transition-all duration-300 shadow-primary/20 shadow-md'>
         <nav className='relative w-full max-w-7xl h-20 md:h-24 flex items-center justify-between px-4 lg:px-6 xl:px-0 font-sans font-medium'>
           <div className='text-2xl md:text-3xl font-bold tracking-tight text-primary z-50'>
             <Link href='/home' onClick={closeMobileMenu}>
@@ -139,7 +193,7 @@ export default function NavigationBar () {
             </Link>
           </div>
 
-          {/* MASAÜSTÜ MENÜ - SIRALAMA GÜNCELLENDİ */}
+          {/* MASAÜSTÜ MENÜ */}
           <ul className='hidden lg:flex space-x-6 xl:space-x-8 items-center text-sm font-bold'>
             <li className='text-foreground/80 hover:text-primary transition-colors'>
               <Link href={menuData.home.href}>{menuData.home.label}</Link>
@@ -148,7 +202,7 @@ export default function NavigationBar () {
               <Link href={menuData.about.href}>{menuData.about.label}</Link>
             </li>
 
-            {/* Dinamik Dropdown'lar Ortada */}
+            {/* Hizmetler Dropdown */}
             <li>
               <Dropdown
                 label={menuData.labels.services}
@@ -157,20 +211,18 @@ export default function NavigationBar () {
                 errorLabel={menuData.labels.error}
               />
             </li>
+
+            {/* Kategoriler Dropdown (AĞAÇ YAPISI) */}
             <li>
-              <Dropdown
+              <CategoriesDropdown
                 label={menuData.labels.categories}
-                items={categoryItems}
+                items={categoryTree}
+                loading={catLoading}
+                error={!!catError}
                 emptyLabel={menuData.labels.empty}
-                errorLabel={menuData.labels.error}
               />
             </li>
 
-            {/* İletişim ve Blog En Sonda 
-            <li className='text-foreground/80 hover:text-primary transition-colors'>
-              <Link href={menuData.blog.href}>{menuData.blog.label}</Link>
-            </li>
-            */}
             <li className='text-foreground/80 hover:text-primary transition-colors'>
               <Link href={menuData.contact.href}>{menuData.contact.label}</Link>
             </li>
@@ -185,7 +237,7 @@ export default function NavigationBar () {
         </nav>
       </div>
 
-      {/* MOBİL MENÜ - SIRALAMA GÜNCELLENDİ */}
+      {/* MOBİL MENÜ */}
       <div
         className={`fixed inset-0 z-40 bg-background/95 backdrop-blur-xl flex flex-col pt-32 px-6 gap-8 overflow-y-auto transition-all duration-300 ease-in-out lg:hidden ${
           mobileMenuOpen
@@ -227,12 +279,12 @@ export default function NavigationBar () {
           ))}
         </div>
 
-        {/* Mobil Kategoriler */}
+        {/* Mobil Kategoriler (DÜZ LİSTE - Okunabilirlik için) */}
         <div className='flex flex-col gap-3'>
           <div className='text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1'>
             {menuData.labels.categories}
           </div>
-          {categoryItems.map((item, i) => (
+          {categoryListMobile.map((item, i) => (
             <Link
               key={i}
               href={item.href}
@@ -245,15 +297,6 @@ export default function NavigationBar () {
         </div>
 
         <div className='flex flex-col gap-4 pb-10'>
-          {/* Mobil Alt Linkler (Blog & İletişim)
-          <Link
-            href={menuData.blog.href}
-            onClick={closeMobileMenu}
-            className='text-2xl font-bold text-foreground border-b border-border/30 pb-3 hover:text-primary'
-          >
-            {menuData.blog.label}
-          </Link>
-           */}
           <Link
             href={menuData.contact.href}
             onClick={closeMobileMenu}

@@ -1,3 +1,4 @@
+// C:\Projeler\nost-copy\app\admin\(protected)\products\[id]\product-localizations.tsx
 "use client";
 
 import { useState } from "react";

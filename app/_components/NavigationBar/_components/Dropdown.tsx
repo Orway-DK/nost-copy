@@ -26,7 +26,6 @@ export default function Dropdown ({
   const containerRef = useRef<HTMLDivElement | null>(null)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Dışarı tıklandığında kapatma mantığı
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -51,9 +50,7 @@ export default function Dropdown ({
     }, 150)
   }
 
-  // Tıklama ile aç/kapat mantığı
   const handleButtonClick = (e: React.MouseEvent) => {
-    // Hover durumunda zaten açıksa, tıklama ile kapatma imkanı verir
     setIsOpen(prev => !prev)
   }
 
@@ -93,14 +90,15 @@ export default function Dropdown ({
           }
         `}
       >
-        <div className='bg-background/95 backdrop-blur-xl border border-border/40 rounded-xl shadow-xl overflow-hidden py-2 ring-1 ring-black/5'>
+        {/* DÜZELTME: Arka plan 'bg-white' ve 'dark:bg-zinc-950' yapıldı (Tam opak) */}
+        <div className='bg-white dark:bg-zinc-950 border border-border rounded-xl shadow-xl overflow-hidden py-2'>
           {items && items.length > 0 ? (
             items.map((item, index) => (
               <Link
                 key={index}
                 href={item.href}
                 onClick={() => setIsOpen(false)}
-                className='block px-4 py-2.5 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/30 transition-colors whitespace-nowrap'
+                className='block px-4 py-2.5 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 transition-colors whitespace-nowrap'
               >
                 {item.label}
               </Link>

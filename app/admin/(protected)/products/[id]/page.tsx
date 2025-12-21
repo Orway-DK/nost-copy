@@ -1,4 +1,4 @@
-// app/admin/(protected)/products/[id]/page.tsx
+// C:\Projeler\nost-copy\app\admin\(protected)\products\[id]\page.tsx
 import { adminSupabase } from "@/lib/supabase/admin";
 import ProductForm from "./product-form";
 

@@ -1,4 +1,4 @@
-// app/admin/(protected)/products/product-list-client.tsx
+// C:\Projeler\nost-copy\app\admin\(protected)\products\product-list-client.tsx
 "use client";
 
 import { useState } from "react";

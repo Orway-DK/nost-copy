@@ -14,7 +14,7 @@ interface ProductCardProps {
   currency?: string
 }
 
-export default function ProductCard ({
+export default function RelatedProductsProductCard ({
   slug,
   name,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -24,22 +24,9 @@ export default function ProductCard ({
   currency = 'TL'
 }: ProductCardProps) {
   return (
-    <Link href={`/p/${slug}`} className='group block h-full'>
-      {/* Kartın Ana Çerçevesi 
-          - overflow-hidden kaldırıldı, çünkü içteki köşelerin kendi yuvarlaklığı olacak.
-          - rounded-xl yapıldı, biraz daha modern durması için.
-      */}
+    <Link href={`/product/${slug}`} className='group block h-full'>
       <div className='relative h-full bg-card border border-border/40 rounded-xl transition-all duration-300 hover:shadow-xl hover:border-primary/30 flex flex-col'>
-        {/* --- GÖRSEL ÇERÇEVE ALANI (Yeni Eklenen Kısım) --- 
-            1. p-2: Dış çerçeveden içeriye doğru 2 birimlik (-2 padding dediğiniz) boşluk yaratır.
-            2. Bu div, görselin etrafındaki "mat" alanı görevi görür.
-        */}
         <div className='p-2'>
-          {/* Görselin Asıl Kapsayıcısı (İç Çerçeve)
-              - border border-border/50: Görselin hemen etrafındaki ince çerçeve.
-              - rounded-lg: Çerçevenin köşelerini yuvarlar.
-              - group-hover:border-primary/40: Hover olunca iç çerçeve de hafif renklenir.
-          */}
           <div className='relative aspect-[4/5] w-full bg-muted/50 overflow-hidden rounded-lg border border-border/50 transition-colors duration-300 group-hover:border-primary/40'>
             {imageUrl ? (
               <Image
@@ -77,15 +64,13 @@ export default function ProductCard ({
         </div>
 
         {/* --- İÇERİK ALANI --- */}
-        {/* pt-0 yapıldı çünkü yukarıdaki p-2 zaten yeterli boşluk bıraktı */}
-        <div className='p-4 pt-1 flex flex-col gap-2 flex-1 justify-between'>
-          {/* Başlık */}
+        <div className='absolute bottom-0 left-0 bg-background/80 rounded-r-2xl p-4 pt-1 flex flex-col gap-2 flex-1 justify-between'>
           <h3 className='text-sm font-semibold text-foreground line-clamp-2 leading-snug group-hover:text-primary transition-colors mt-2'>
             {name}
           </h3>
 
           {/* Fiyat Alanı */}
-          <div className='flex items-center justify-between mt-auto pt-3 border-t border-border/30'>
+          <div className='flex item-center justify-between mt-auto border-t border-border/30'>
             {price ? (
               <div className='flex flex-col'>
                 <span className='text-[10px] text-muted-foreground font-medium'>

@@ -1,4 +1,4 @@
-// app/admin/(protected)/products/page.tsx
+// C:\Projeler\nost-copy\app\admin\(protected)\products\page.tsx
 import { adminSupabase } from "@/lib/supabase/admin";
 import ProductListClient from "./product-list-client";
 import Link from "next/link";

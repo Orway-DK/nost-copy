@@ -9,7 +9,7 @@
   :root {
     /* --- LIGHT MODE (Aydınlık) --- */
     --background: #ecf2ff; /* SABİT */
-    --foreground: #0f172a; /* Slate 900 - Okunabilirlik için derinlik */
+    --foreground: #0f172a; /* Slate 900 */
 
     --card: #ffffff;
     --card-foreground: #0f172a;
@@ -19,26 +19,42 @@
     --primary-foreground: #ffffff;
     --primary-hover: #1d4ed8;
 
-    /* Secondary: Arka plan ile metin arasında daha net bir ayrım */
-    --secondary: #dbeafe; /* Hafif mavi/gri - Background ile uyumlu ama farklı */
-    --secondary-foreground: #1e40af; /* Daha koyu mavi - Okunurluk için */
+    --secondary: #dbeafe;
+    --secondary-foreground: #1e40af;
 
     --muted: #f8fafc;
-    --muted-foreground: #475569; /* Slate 600 */
+    --muted-foreground: #475569;
 
     --border: #cbd5e1;
-    --accent: #facc15; /* Vurgu rengi eklendi */
+    --accent: #facc15;
     --accent-foreground: #422006;
+
+    --input: #cbd5e1; /* Input rengi eksikti, border ile aynı yaptık */
+    --ring: #0f172a; /* Focus ring rengi */
+
+    /* --- YENİ E-TİCARET RENKLERİ (HSL formatında daha esnek) --- */
+    /* Turuncu (Fiyat) - HSL: 24, 95%, 53% -> Hex: #fa640a */
+    --price: hsl(24 95% 53%);
+    --price-foreground: hsl(0 0% 100%);
+
+    /* Sarı/Altın (Yıldız/Değerlendirme) - HSL: 48, 96%, 53% -> Hex: #fbbf10 */
+    --rating: hsl(48 96% 53%);
+
+    /* Mavi (Bilgi/Kargo) - HSL: 217, 91%, 60% -> Hex: #3b82f6 */
+    --info: hsl(217 91% 60%);
+
+    /* Yeşil (Başarı/Stok) - HSL: 142, 71%, 45% -> Hex: #22c55e */
+    --success: hsl(142 71% 45%);
   }
 
   /* --- DARK MODE (Karanlık) --- */
+  /* Hem class (.dark) hem de media query desteği için */
   @media (prefers-color-scheme: dark) {
     :root {
-      --background: rgba(25, 25, 25, 1); /* SABİT */
-      --foreground: #f8fafc; /* Daha parlak beyaz (Slate 50) */
+      --background: rgba(25, 25, 25, 1);
+      --foreground: #f8fafc;
 
-      /* Kartlar: Zeminden net ayrılmalı */
-      --card: #1e1e1e; /* Background'dan bir tık daha açık */
+      --card: #1e1e1e;
       --card-foreground: #f8fafc;
       --card-hover: #2a2a2a;
 
@@ -46,18 +62,27 @@
       --primary-foreground: #ffffff;
       --primary-hover: #60a5fa;
 
-      /* Secondary: Dark mode'da en büyük çakışma buradaydı. 
-         Arka plandan belirgin şekilde farklı (daha açık/gri) olmalı. */
       --secondary: #333333;
-      --secondary-foreground: #e2e8f0; /* İçindeki yazıları daha açık yaptık */
+      --secondary-foreground: #e2e8f0;
 
-      /* Muted: Okunabilirlik için foreground'a yaklaştırıldı */
       --muted: #262626;
-      --muted-foreground: #94a3b8; /* Slate 400 - Yazılar için ideal kontrast */
+      --muted-foreground: #94a3b8;
 
-      --border: #3f3f46; /* Zinc 700 */
+      --border: #3f3f46;
       --accent: #fbbf24;
       --accent-foreground: #000000;
+
+      --input: #3f3f46;
+      --ring: #f8fafc;
+
+      /* Dark Mode E-Ticaret Renkleri (Biraz daha soft) */
+      --price: hsl(24 90% 60%);
+      --price-foreground: hsl(0 0% 100%);
+
+      --rating: hsl(48 96% 53%);
+
+      --info: hsl(217 91% 70%);
+      --success: hsl(142 70% 50%);
     }
   }
 }
@@ -82,8 +107,22 @@
   --color-muted-foreground: var(--muted-foreground);
 
   --color-border: var(--border);
+  --color-input: var(--input); /* Eklendi */
+  --color-ring: var(--ring); /* Eklendi */
+
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+
+  /* --- YENİ RENK EŞLEŞTİRMELERİ --- */
+  --color-price: var(--price);
+  --color-price-foreground: var(--price-foreground);
+
+  --color-rating: var(--rating);
+
+  --color-info: var(--info);
+
+  --color-success: var(--success);
+  /* -------------------------------- */
 
   --font-sans: var(--font-geist-sans);
   --font-oswald: var(--font-oswald);
@@ -106,17 +145,15 @@ body {
   font-weight: 400;
   margin: 0;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility; /* Yazı kalitesini artırır */
+  text-rendering: optimizeLegibility;
 }
 
 /* === Okunabilirliği Artıran Ek Katmanlar === */
 @layer utilities {
-  /* Cam efekti (Bento kartları için arka planda desen varsa çok işe yarar) */
   .glass-card {
     @apply bg-card/80 backdrop-blur-md border border-border/50;
   }
 
-  /* Metin üzerine hafif gölge (Görsel üstü yazılar için) */
   .text-shadow-sm {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
