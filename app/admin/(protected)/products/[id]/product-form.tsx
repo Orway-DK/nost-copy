@@ -1,25 +1,27 @@
-// C:\Projeler\nost-copy\app\admin\(protected)\products\[id]\product-form.tsx
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { upsertProductAction } from '../actions'
+import { upsertProductAction, getProductDetailsAction } from '../actions' // Yeni action import edildi
 import {
   IoImageOutline,
   IoCubeOutline,
   IoConstructOutline,
   IoLanguageOutline,
-  IoSave
+  IoSave,
+  IoRefresh
 } from 'react-icons/io5'
-import ProductVariants from './product-variants'
+import ProductVariantsDynamic from './product-variants-dynamic'
 import ProductLocalizations from './product-localizations'
 import MediaPickerModal from '@/app/admin/(protected)/_components/MediaPickerModal'
-import ProductAttributeEditor from './product-attribute-editor' // YENİ IMPORT
+import DynamicSchemaRender from '@/app/admin/(protected)/_components/DynamicSchemaRender'
+import { ProductTemplate } from '@/types'
 
 type Props = {
   isNew: boolean
   categories: string[]
+  templates?: ProductTemplate[]
   initialProduct: any
   initialVariants: any[]
   initialLocalizations: any[]
@@ -28,9 +30,10 @@ type Props = {
 export default function ProductForm ({
   isNew,
   categories,
+  templates = [],
   initialProduct,
-  initialVariants,
-  initialLocalizations
+  initialVariants = [],
+  initialLocalizations = []
 }: Props) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<
@@ -38,23 +41,57 @@ export default function ProductForm ({
   >('general')
   const [saving, setSaving] = useState(false)
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false)
+  const [loadingDetails, setLoadingDetails] = useState(false)
+
+  // --- STATE YÖNETİMİ ---
+  // Prop'tan gelen veriyi state'e alıyoruz ki sonradan fetch edip güncelleyebilelim
+  const [variants, setVariants] = useState(initialVariants)
+  const [localizations, setLocalizations] = useState(initialLocalizations)
 
   // Form State
   const [form, setForm] = useState({
     id: initialProduct?.id,
+    template_id:
+      initialProduct?.template_id ||
+      (templates.length > 0 ? templates[0].id : null),
     name: initialProduct?.name || '',
     sku: initialProduct?.sku || '',
     category_slug: initialProduct?.category_slug || '',
     description: initialProduct?.description || '',
-    size: initialProduct?.size || '35x50',
-    min_quantity: initialProduct?.min_quantity || 20,
-    media_base_path:
-      initialProduct?.media_base_path || '/public/media/products',
     active: initialProduct?.active ?? true,
     slug: initialProduct?.slug || '',
-    main_image_url: initialProduct?.main_image_url || '', // Boş bırak, Image component aşağıda handle edecek
-    attributes: initialProduct?.attributes || {} // YENİ: attributes eklendi
+    main_image_url: initialProduct?.main_image_url || '',
+    attributes: initialProduct?.attributes || {}
   })
+
+  // Seçili şablonu bul
+  const selectedTemplate = templates.find(
+    t => t.id === Number(form.template_id)
+  )
+
+  // --- DATA FETCHING (SLIDEOVER İÇİN) ---
+  useEffect(() => {
+    // Eğer ürün yeniyse veya zaten varyantlar dolu geldiyse (SSR sayfası) gerek yok.
+    // Ama SlideOver'da variants boş gelir, bu yüzden çekmemiz lazım.
+    const shouldFetch = !isNew && form.id && initialVariants.length === 0
+
+    if (shouldFetch) {
+      const fetchData = async () => {
+        setLoadingDetails(true)
+        const res = await getProductDetailsAction(form.id)
+        if (res.success && res.data) {
+          setVariants(res.data.variants)
+          setLocalizations(res.data.localizations)
+        }
+        setLoadingDetails(false)
+      }
+      fetchData()
+    } else {
+      // Eğer props dolu geldiyse state'i senkronize et (Edit sayfasından gelirse)
+      setVariants(initialVariants)
+      setLocalizations(initialLocalizations)
+    }
+  }, [form.id, isNew, initialVariants, initialLocalizations]) // Bağımlılıklar önemli
 
   const handleSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
@@ -67,8 +104,12 @@ export default function ProductForm ({
 
     if (res.success) {
       alert('✅ ' + res.message)
+      // Eğer yeni ürünse ve ID döndüyse state'i güncelle ki varyant ekleyebilelim
       if (isNew && res.data?.id) {
-        router.replace(`/admin/products/${res.data.id}`)
+        setForm(prev => ({ ...prev, id: res.data.id }))
+        // URL'i değiştirmeden SPA modunda kalabiliriz veya router.refresh yapabiliriz
+        // SlideOver modunda olduğumuz için router.refresh ana listeyi günceller, bu iyi.
+        router.refresh()
       } else {
         router.refresh()
       }
@@ -78,50 +119,51 @@ export default function ProductForm ({
   }
 
   return (
-    <div className='grid gap-6 pb-20'>
+    <div className='grid gap-6 pb-20 relative'>
+      {/* Loading Overlay (Detaylar Yüklenirken) */}
+      {loadingDetails && (
+        <div className='absolute top-0 right-0 p-2 bg-yellow-50 text-yellow-700 text-xs rounded z-10 flex items-center gap-2'>
+          <IoRefresh className='animate-spin' /> Veriler yükleniyor...
+        </div>
+      )}
+
       {/* TABS */}
       <div
         className='border-b'
         style={{ borderColor: 'var(--admin-card-border)' }}
       >
-        <nav className='flex space-x-6'>
+        <nav className='flex space-x-6 overflow-x-auto'>
           {[
             { id: 'general', label: 'Genel Bilgiler', icon: IoCubeOutline },
             {
               id: 'variants',
-              label: 'Varyasyonlar',
+              label: `Varyasyonlar (${variants.length})`,
               icon: IoConstructOutline,
-              disabled: isNew
+              disabled: isNew && !form.id
             },
             {
               id: 'localizations',
               label: 'Çeviriler',
               icon: IoLanguageOutline,
-              disabled: isNew
+              disabled: isNew && !form.id
             },
             {
               id: 'media',
               label: 'Medya',
               icon: IoImageOutline,
-              disabled: isNew
+              disabled: isNew && !form.id
             }
           ].map((tab: any) => (
             <button
               key={tab.id}
               onClick={() => !tab.disabled && setActiveTab(tab.id)}
               disabled={tab.disabled}
-              className={`pb-3 flex items-center gap-2 font-medium transition-colors border-b-2 ${
+              className={`pb-3 flex items-center gap-2 font-medium transition-colors border-b-2 whitespace-nowrap ${
                 activeTab === tab.id
-                  ? 'border-[var(--admin-accent)]'
+                  ? 'border-[var(--admin-accent)] text-[var(--admin-accent)]'
                   : 'border-transparent opacity-60 hover:opacity-100'
               }`}
-              style={{
-                color:
-                  activeTab === tab.id
-                    ? 'var(--admin-accent)'
-                    : 'var(--admin-muted)',
-                cursor: tab.disabled ? 'not-allowed' : 'pointer'
-              }}
+              style={{ cursor: tab.disabled ? 'not-allowed' : 'pointer' }}
             >
               <tab.icon /> {tab.label}
             </button>
@@ -131,14 +173,40 @@ export default function ProductForm ({
 
       {/* --- GENEL SEKME --- */}
       {activeTab === 'general' && (
-        <form
-          onSubmit={handleSave}
-          className='card-admin grid gap-8 animate-in fade-in'
-        >
+        <form onSubmit={handleSave} className='grid gap-8 animate-in fade-in'>
           <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
-            {/* SOL: Inputs */}
+            {/* SOL: Temel Bilgiler */}
             <div className='lg:col-span-2 space-y-6'>
-              {/* ... INPUTLAR AYNI KALDI ... */}
+              {/* 1. Şablon Seçimi */}
+              <div className='p-4 rounded-xl border border-[var(--admin-accent)]/20 bg-[var(--admin-accent)]/5'>
+                <div className='flex justify-between items-center mb-2'>
+                  <label className='text-xs font-bold text-[var(--admin-accent)] uppercase tracking-wide'>
+                    Ürün Şablonu (Class)
+                  </label>
+                  <a
+                    href='/admin/templates'
+                    target='_blank'
+                    className='text-xs hover:underline opacity-60'
+                  >
+                    + Yönet
+                  </a>
+                </div>
+                <select
+                  className='admin-select font-bold'
+                  value={form.template_id || ''}
+                  onChange={e =>
+                    setForm({ ...form, template_id: Number(e.target.value) })
+                  }
+                >
+                  <option value=''>-- Şablon Seçiniz --</option>
+                  {templates.map(t => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className='grid grid-cols-2 gap-4'>
                 <div>
                   <label className='admin-label'>Ürün Adı</label>
@@ -146,14 +214,16 @@ export default function ProductForm ({
                     className='admin-input'
                     value={form.name}
                     onChange={e => setForm({ ...form, name: e.target.value })}
+                    placeholder='Örn: Seramik Kupa'
                   />
                 </div>
                 <div>
-                  <label className='admin-label'>SKU</label>
+                  <label className='admin-label'>SKU (Stok Kodu)</label>
                   <input
                     className='admin-input'
                     value={form.sku}
                     onChange={e => setForm({ ...form, sku: e.target.value })}
+                    placeholder='Örn: KUPA-001'
                   />
                 </div>
               </div>
@@ -162,7 +232,7 @@ export default function ProductForm ({
                 <label className='admin-label'>Açıklama</label>
                 <textarea
                   className='admin-textarea'
-                  rows={4}
+                  rows={3}
                   value={form.description}
                   onChange={e =>
                     setForm({ ...form, description: e.target.value })
@@ -170,7 +240,24 @@ export default function ProductForm ({
                 />
               </div>
 
-              <div className='grid grid-cols-3 gap-4'>
+              {/* 2. DİNAMİK GENEL ÖZELLİKLER (Attributes) */}
+              {selectedTemplate && (
+                <div className='mt-6 pt-6 border-t border-dashed border-[var(--admin-border)]'>
+                  <h4 className='font-bold mb-4 opacity-80 text-sm'>
+                    Genel Özellikler (Filtreleme)
+                  </h4>
+                  <DynamicSchemaRender
+                    schema={selectedTemplate.schema}
+                    values={form.attributes}
+                    onChange={newAttrs =>
+                      setForm({ ...form, attributes: newAttrs })
+                    }
+                  />
+                </div>
+              )}
+
+              {/* 3. Diğer Ayarlar */}
+              <div className='grid grid-cols-2 gap-4'>
                 <div>
                   <label className='admin-label'>Kategori</label>
                   <select
@@ -188,51 +275,28 @@ export default function ProductForm ({
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className='admin-label'>Boyut</label>
-                  <input
-                    className='admin-input'
-                    value={form.size}
-                    onChange={e => setForm({ ...form, size: e.target.value })}
-                  />
+                <div className='flex items-end pb-3'>
+                  <div
+                    className='flex items-center gap-2 cursor-pointer'
+                    onClick={() => setForm({ ...form, active: !form.active })}
+                  >
+                    <input
+                      type='checkbox'
+                      checked={form.active}
+                      onChange={e =>
+                        setForm({ ...form, active: e.target.checked })
+                      }
+                      className='w-5 h-5 accent-[var(--admin-accent)] cursor-pointer'
+                    />
+                    <span className='text-sm select-none'>
+                      Yayında (Active)
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <label className='admin-label'>Min. Adet</label>
-                  <input
-                    type='number'
-                    className='admin-input'
-                    value={form.min_quantity}
-                    onChange={e =>
-                      setForm({ ...form, min_quantity: Number(e.target.value) })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div>
-                <ProductAttributeEditor
-                  initialAttributes={form.attributes}
-                  onChange={newAttrs =>
-                    setForm({ ...form, attributes: newAttrs })
-                  }
-                />
-              </div>
-
-              <div
-                className='flex items-center gap-3 border p-3 rounded'
-                style={{ borderColor: 'var(--admin-input-border)' }}
-              >
-                <input
-                  type='checkbox'
-                  checked={form.active}
-                  onChange={e => setForm({ ...form, active: e.target.checked })}
-                  className='w-5 h-5 accent-[var(--admin-accent)]'
-                />
-                <label>Yayında (Active)</label>
               </div>
             </div>
 
-            {/* SAĞ: Medya (GÖRSEL ALANI) */}
+            {/* SAĞ: Medya (Kapak) */}
             <div>
               <div
                 className='p-4 rounded-xl border'
@@ -246,7 +310,6 @@ export default function ProductForm ({
                   className='relative aspect-square w-full bg-[var(--admin-card)] rounded-lg overflow-hidden border flex items-center justify-center group'
                   style={{ borderColor: 'var(--admin-card-border)' }}
                 >
-                  {/* Görseli direkt form.main_image_url'den alıyoruz */}
                   {form.main_image_url ? (
                     <Image
                       src={form.main_image_url}
@@ -272,14 +335,6 @@ export default function ProductForm ({
                     </button>
                   </div>
                 </div>
-                <div
-                  className='mt-2 text-xs opacity-50 truncate'
-                  title={form.main_image_url}
-                >
-                  {form.main_image_url
-                    ? form.main_image_url.split('/').pop()
-                    : 'Seçili değil'}
-                </div>
               </div>
             </div>
           </div>
@@ -300,23 +355,25 @@ export default function ProductForm ({
         </form>
       )}
 
-      {/* Diğer sekmeler aynı... */}
+      {/* VARYANT SEKMESİ */}
       {activeTab === 'variants' && (
         <div className='animate-in fade-in'>
-          <ProductVariants
+          <ProductVariantsDynamic
             productId={form.id!}
-            initialVariants={initialVariants}
+            initialVariants={variants} // State'ten gelen veri
+            template={selectedTemplate || null}
           />
         </div>
       )}
 
+      {/* ÇEVİRİ SEKMESİ */}
       {activeTab === 'localizations' && (
         <div className='animate-in fade-in'>
           <ProductLocalizations
             productId={form.id!}
             defaultName={form.name}
             defaultDescription={form.description}
-            initialLocalizations={initialLocalizations}
+            initialLocalizations={localizations} // State'ten gelen veri
           />
         </div>
       )}

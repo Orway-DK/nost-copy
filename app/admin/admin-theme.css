@@ -1,140 +1,172 @@
 /* C:\Projeler\nost-copy\app\admin\admin-theme.css */
 @import 'tailwindcss';
 
-.admin-root {
-  --admin-bg: #f8fafc;
-  --admin-fg: #0f172a;
-  --admin-card: #ffffff;
-  --admin-card-border: #e5e7eb;
-  --admin-muted: #6b7280;
-  --admin-input-bg: #f9fafb;
-  --admin-input-fg: #0f172a;
-  --admin-input-placeholder: #9ca3af;
-  --admin-input-border: #d1d5db;
-  --admin-input-focus: #9ca3af;
-  --admin-ring: #9ca3af;
-  --admin-accent: #4b5563;
-  --admin-accent-2: #374151;
-  --admin-danger: #ef4444;
-  --admin-success: #22c55e;
-  --admin-info: #3b82f6;
-}
-
+/* --- TAILWIND KONFİGÜRASYONU (Design Tokens) --- */
 @theme inline {
+  /* 1. RENK EŞLEŞTİRMELERİ */
   --color-admin-bg: var(--admin-bg);
   --color-admin-fg: var(--admin-fg);
   --color-admin-card: var(--admin-card);
-  --color-admin-border: var(--admin-card-border);
+  --color-admin-card-border: var(--admin-card-border);
   --color-admin-muted: var(--admin-muted);
+
   --color-admin-input-bg: var(--admin-input-bg);
   --color-admin-input-fg: var(--admin-input-fg);
-  --color-admin-input-placeholder: var(--admin-input-placeholder);
   --color-admin-input-border: var(--admin-input-border);
   --color-admin-input-focus: var(--admin-input-focus);
   --color-admin-ring: var(--admin-ring);
+
   --color-admin-accent: var(--admin-accent);
   --color-admin-accent-2: var(--admin-accent-2);
   --color-admin-danger: var(--admin-danger);
   --color-admin-success: var(--admin-success);
   --color-admin-info: var(--admin-info);
-  --font-admin-sans: var(--font-sans, ui-sans-serif, system-ui);
+
+  /* 2. BOYUTLAR (Spacing & Sizing) */
+  /* Kullanım: h-admin-field, w-admin-icon, p-admin-field vb. */
+  --spacing-admin-field: var(--admin-h-field); /* 32px (Standart Yükseklik) */
+  --spacing-admin-icon: var(--admin-s-icon); /* 28px (Kare Butonlar) */
+
+  /* 3. FONT BOYUTLARI */
+  /* Kullanım: text-admin-tiny, text-admin-base vb. */
+  --text-admin-tiny: var(--admin-fz-tiny); /* 10px */
+  --text-admin-tiny--line-height: 1;
+
+  --text-admin-sm: var(--admin-fz-sm); /* 12px */
+  --text-admin-sm--line-height: 1.3;
+
+  --text-admin-base: var(--admin-fz-base); /* 13px */
+  --text-admin-base--line-height: 1.5;
+
+  --text-admin-lg: var(--admin-fz-lg); /* 16px */
+  --text-admin-lg--line-height: 1.4;
+
+  /* 4. YUVARLAKLIK */
+  /* Kullanım: rounded-admin */
+  --radius-admin: var(--admin-radius); /* 6px */
+
+  /* 5. FONT AİLESİ */
+  --font-admin-sans: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
 }
 
-@media (prefers-color-scheme: dark) {
-  .admin-root {
-    --admin-bg: #0b1220;
-    --admin-fg: #e5e7eb;
-    --admin-card: #111827;
-    --admin-card-border: #374151;
-    --admin-muted: #9ca3af;
-    --admin-input-bg: #1f2937;
-    --admin-input-fg: #e5e7eb;
-    --admin-input-placeholder: #9ca3af;
-    --admin-input-border: #4b5563;
-    --admin-input-focus: #6b7280;
-    --admin-ring: #6b7280;
-    --admin-accent: #e5e7eb;
-    --admin-accent-2: #d1d5db;
-    --admin-danger: #f87171;
-    --admin-success: #34d399;
-    --admin-info: #60a5fa;
-  }
-}
-
+/* --- DEĞER TANIMLARI (ROOT) --- */
 .admin-root {
+  /* --- A. BOYUT AYARLARI (Buradan tüm paneli yönetirsin) --- */
+  --admin-fz-tiny: 0.625rem; /* 10px */
+  --admin-fz-sm: 0.75rem; /* 12px */
+  --admin-fz-base: 0.8125rem; /* 13px (Compact Standart) */
+  --admin-fz-lg: 1rem; /* 16px */
+
+  --admin-h-field: 2rem; /* 32px (Input/Button Yüksekliği) */
+  --admin-s-icon: 1.75rem; /* 28px (İkon Buton Boyutu) */
+  --admin-radius: 0.375rem; /* 6px  (Köşe Yuvarlaklığı) */
+
+  /* --- B. RENK PALETİ (LIGHT - Slate) --- */
+  --admin-bg: #f8fafc;
+  --admin-fg: #334155;
+  --admin-card: #ffffff;
+  --admin-card-border: #e2e8f0;
+  --admin-muted: #94a3b8;
+
+  --admin-input-bg: #ffffff;
+  --admin-input-fg: #0f172a;
+  --admin-input-border: #cbd5e1;
+  --admin-input-focus: #3b82f6;
+  --admin-ring: #3b82f6;
+
+  --admin-accent: #0f172a; /* Primary Dark */
+  --admin-accent-2: #334155; /* Hover */
+
+  --admin-danger: #ef4444;
+  --admin-success: #10b981;
+  --admin-info: #3b82f6;
+
+  /* Global Reset */
   min-height: 100vh;
   width: 100%;
   background-color: var(--admin-bg);
   color: var(--admin-fg);
   font-family: var(--font-admin-sans);
+  font-size: var(--admin-fz-base);
+  line-height: 1.5;
+  overflow: visible !important;
 }
 
-/* --- COMPONENT CLASSES --- */
+/* --- RENK PALETİ (DARK - Zinc) --- */
+:root.dark .admin-root {
+  --admin-bg: #09090b;
+  --admin-fg: #e4e4e7;
+  --admin-card: #18181b;
+  --admin-card-border: #27272a;
+  --admin-muted: #71717a;
 
-/* Page Header */
-.admin-page-header {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-@media (min-width: 768px) {
-  .admin-page-header {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-}
-.admin-page-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--admin-fg);
+  --admin-input-bg: #18181b;
+  --admin-input-fg: #ffffff;
+  --admin-input-border: #27272a;
+  --admin-input-focus: #3b82f6;
+
+  --admin-accent: #fafafa; /* Primary Light */
+  --admin-accent-2: #d4d4d8;
+
+  /* Dark modda buton yazısı siyah olmalı */
+  --btn-fg-override: #000000;
 }
 
-/* Inputs & Labels */
-.admin-label {
-  font-size: 0.875rem;
-  color: var(--admin-fg);
-  font-weight: 500;
-  margin-bottom: 0.375rem;
-  display: flex;
+/* --- GLOBAL GEÇİŞ ANİMASYONU --- */
+html.dark .admin-root *,
+.admin-root * {
+  transition-property: background-color, border-color, color, fill, stroke,
+    box-shadow !important;
+  transition-duration: 200ms !important;
+  transition-timing-function: ease-out !important;
 }
 
+/* --- BİLEŞEN SINIFLARI (Utility-First Yaklaşımıyla Sadeleştirildi) --- */
+
+/* 1. INPUT & SELECT */
 .admin-input,
-.admin-textarea,
-.admin-select {
+.admin-select,
+.admin-textarea {
+  display: block;
   width: 100%;
-  border-radius: 0.5rem;
-  padding: 0.625rem 0.875rem;
-  font-size: 0.875rem;
+  height: var(--admin-h-field);
+  border-radius: var(--admin-radius);
+  padding: 0 0.75rem;
+  font-size: var(--admin-fz-base);
   background-color: var(--admin-input-bg);
   color: var(--admin-input-fg);
   border: 1px solid var(--admin-input-border);
   outline: none;
-  transition: all 0.2s ease;
+}
+.admin-textarea {
+  height: auto;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 .admin-input:focus,
-.admin-textarea:focus,
-.admin-select:focus {
+.admin-select:focus,
+.admin-textarea:focus {
   border-color: var(--admin-input-focus);
-  box-shadow: 0 0 0 2px var(--admin-ring);
+  box-shadow: 0 0 0 1px var(--admin-ring);
 }
 
-/* Buttons */
+/* 2. BUTTONS */
 .btn-admin {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border-radius: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  font-size: 0.875rem;
+  height: var(--admin-h-field);
+  border-radius: var(--admin-radius);
+  padding: 0 1rem;
+  font-size: var(--admin-fz-sm);
   font-weight: 500;
+  white-space: nowrap;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: filter 0.2s;
 }
 .btn-admin:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 .btn-admin:active {
@@ -143,61 +175,78 @@
 
 .btn-admin-primary {
   background-color: var(--admin-accent);
-  color: var(--admin-bg);
+  color: #ffffff;
+}
+:root.dark .btn-admin-primary {
+  color: var(--btn-fg-override, #000000);
 }
 .btn-admin-primary:hover {
   background-color: var(--admin-accent-2);
 }
 
 .btn-admin-secondary {
-  background-color: var(--admin-card);
+  background-color: transparent;
   border: 1px solid var(--admin-card-border);
   color: var(--admin-fg);
 }
 .btn-admin-secondary:hover {
   background-color: var(--admin-input-bg);
+  border-color: var(--admin-input-border);
 }
 
-.btn-admin-danger {
-  background-color: var(--admin-danger);
-  color: white;
+/* 3. ICON BUTTON (Kare) */
+.admin-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--admin-s-icon);
+  height: var(--admin-s-icon);
+  border-radius: var(--admin-radius);
+  border: 1px solid var(--admin-card-border);
+  color: var(--admin-muted);
+  background-color: var(--admin-card);
+  cursor: pointer;
 }
-.btn-admin-danger:hover {
-  filter: brightness(0.9);
+.admin-btn-icon:hover:not(:disabled) {
+  background-color: var(--admin-input-bg);
+  color: var(--admin-fg);
 }
 
-/* Card */
+/* 4. UTILS */
+.admin-label {
+  display: block;
+  font-size: var(--admin-fz-sm);
+  font-weight: 600;
+  color: var(--admin-muted);
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.025em;
+}
+
 .card-admin {
   background-color: var(--admin-card);
   border: 1px solid var(--admin-card-border);
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border-radius: calc(var(--admin-radius) + 2px);
+  padding: 1.25rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
-/* Badges */
 .badge-admin {
   display: inline-flex;
-  padding: 0.25rem 0.625rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: var(--admin-fz-tiny);
   font-weight: 600;
-  border: 1px solid transparent;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 .badge-admin-success {
-  background-color: color-mix(in oklab, var(--admin-success), transparent 90%);
+  background-color: rgba(16, 185, 129, 0.1);
   color: var(--admin-success);
-  border-color: color-mix(in oklab, var(--admin-success), transparent 80%);
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 .badge-admin-default {
   background-color: var(--admin-input-bg);
   color: var(--admin-muted);
-  border-color: var(--admin-card-border);
-}
-
-/* Table Wrapper for Mobile */
-.table-responsive {
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--admin-card-border);
 }

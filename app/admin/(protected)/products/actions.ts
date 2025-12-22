@@ -9,11 +9,17 @@ import { slugify } from '@/lib/utils'
 // Yetki Kontrolü
 async function checkAuth () {
   const supabase = await createSupabaseServerClient()
+
   const {
     data: { user }
   } = await supabase.auth.getUser()
-  if (!user) throw new Error('Oturum açmanız gerekiyor.')
-  return user
+
+  if (!user) {
+    throw new Error('Oturum açmanız gerekiyor.')
+  }
+
+  // ÖNEMLİ: Burada 'user' değil 'supabase' (istemci) dönmeli
+  return supabase
 }
 
 // --- ÜRÜN İŞLEMLERİ (UPSERT) ---
@@ -162,4 +168,38 @@ export async function saveLocalizationsAction (
 export async function autoTranslateAction (text: string, targetLang: string) {
   await new Promise(resolve => setTimeout(resolve, 500))
   return { success: true, text: `[${targetLang.toUpperCase()}] ${text}` }
+}
+
+// --- DETAY VERİ ÇEKME (SLIDEOVER İÇİN) ---
+export async function getProductDetailsAction (productId: number) {
+  try {
+    const supabase = await checkAuth()
+
+    // 1. Varyantları Çek (Fiyatlarıyla birlikte)
+    const { data: variants, error: varError } = await supabase
+      .from('product_variants')
+      .select('*, product_prices(*)')
+      .eq('product_id', productId)
+      .order('id')
+
+    if (varError) throw new Error(varError.message)
+
+    // 2. Çevirileri Çek
+    const { data: localizations, error: locError } = await supabase
+      .from('product_localizations')
+      .select('*')
+      .eq('product_id', productId)
+
+    if (locError) throw new Error(locError.message)
+
+    return {
+      success: true,
+      data: {
+        variants: variants || [],
+        localizations: localizations || []
+      }
+    }
+  } catch (error: any) {
+    return { success: false, message: error.message }
+  }
 }

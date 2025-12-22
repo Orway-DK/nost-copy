@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import AdminNavbar from './navbar'
 import AdminSidebar from './sidebar'
 import { IoMenu } from 'react-icons/io5'
+import { Toaster } from 'react-hot-toast'
 
 const STORAGE_KEY_COLLAPSED = 'admin.sidebar.collapsed'
 
@@ -13,53 +14,45 @@ export default function AdminLayoutClient ({
 }: {
   children: React.ReactNode
 }) {
-  // State: Mobilde sidebar açık mı?
   const [isSidebarOpen, setSidebarOpen] = useState(false)
-
-  // State: Masaüstünde sidebar daraltılmış (ikon modu) mı?
   const [isCollapsed, setIsCollapsed] = useState(false)
-
-  // Hydration fix için
   const [mounted, setMounted] = useState(false)
-
   const pathname = usePathname()
 
-  // 1. Mount olduğunda LocalStorage'dan tercihi oku
   useEffect(() => {
     setMounted(true)
-    try {
-      const storedCollapsed = localStorage.getItem(STORAGE_KEY_COLLAPSED)
-      if (storedCollapsed) {
-        setIsCollapsed(JSON.parse(storedCollapsed))
-      }
-    } catch (e) {
-      console.error('LocalStorage error:', e)
-    }
+    const storedCollapsed = localStorage.getItem(STORAGE_KEY_COLLAPSED)
+    if (storedCollapsed) setIsCollapsed(JSON.parse(storedCollapsed))
   }, [])
 
-  // 2. Sayfa değiştiğinde mobilde sidebar'ı kapat
   useEffect(() => {
     setSidebarOpen(false)
   }, [pathname])
 
-  // 3. Sidebar daraltma/genişletme fonksiyonu
   const toggleCollapse = () => {
-    setIsCollapsed(prev => {
-      const next = !prev
-      localStorage.setItem(STORAGE_KEY_COLLAPSED, JSON.stringify(next))
-      return next
-    })
+    const next = !isCollapsed
+    setIsCollapsed(next)
+    localStorage.setItem(STORAGE_KEY_COLLAPSED, JSON.stringify(next))
   }
 
-  if (!mounted) {
-    // Hydration mismatch olmaması için boş veya loading dönebiliriz,
-    // ya da varsayılan bir yapı render edebiliriz.
-    return <div className='min-h-screen bg-[var(--admin-bg)]' />
-  }
+  if (!mounted) return <div className='min-h-screen bg-admin-bg' />
 
   return (
-    <div className='min-h-screen bg-[var(--admin-bg)] text-[var(--admin-fg)] font-sans flex relative'>
-      {/* SIDEBAR */}
+    // 1. ANA KAPSAYICI: Ekranı tamamen kapla ve taşmayı engelle (overflow-hidden)
+    <div className='h-screen w-screen bg-admin-bg text-admin-fg font-sans flex overflow-hidden'>
+      <Toaster
+        position='top-right'
+        toastOptions={{
+          className: 'text-sm font-medium shadow-md',
+          duration: 4000,
+          style: {
+            background: 'var(--admin-card)',
+            color: 'var(--admin-fg)',
+            border: '1px solid var(--admin-card-border)'
+          }
+        }}
+      />
+
       <AdminSidebar
         isOpen={isSidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -67,38 +60,37 @@ export default function AdminLayoutClient ({
         toggleCollapse={toggleCollapse}
       />
 
-      {/* ANA İÇERİK ALANI */}
-      {/* lg:ml-20 -> Sidebar daraltılmışsa (80px)
-          lg:ml-64 -> Sidebar açıksa (256px)
-          transition-all -> Yumuşak geçiş sağlar
-      */}
+      {/* 2. İÇERİK KOLONU: Sidebar yanındaki alan */}
       <div
         className={`
-            flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out
-            ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}
-        `}
+        flex-1 flex flex-col min-w-0 h-full
+        /* BURASI ÇOK ÖNEMLİ: Margin geçişini yumuşatıyoruz */
+        transition-[margin] duration-300 ease-in-out 
+        ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}
+      `}
       >
-        {/* NAVBAR */}
-        <div className='sticky top-0 z-20'>
-          {/* Mobilde hamburger menü */}
-          <div className='lg:hidden bg-[var(--admin-card)] border-b border-[var(--admin-card-border)] p-4 flex items-center gap-4'>
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className='p-2 -ml-2 text-[var(--admin-fg)] hover:bg-[var(--admin-input-bg)] rounded-md'
-            >
-              <IoMenu size={24} />
-            </button>
-            <span className='font-bold text-lg'>Admin Panel</span>
+        {/* NAVBAR: Sabit yükseklik */}
+        <div className='shrink-0 z-40 flex flex-col border-b border-admin-card-border'>
+          <div className='lg:hidden bg-admin-card p-4 flex items-center justify-between'>
+            <div className='flex items-center gap-3'>
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className='p-2 -ml-2 text-admin-fg hover:bg-admin-input-bg rounded-md'
+              >
+                <IoMenu size={24} />
+              </button>
+              <span className='font-bold text-lg'>Admin Panel</span>
+            </div>
           </div>
-
-          {/* Desktop Navbar */}
           <div className='hidden lg:block'>
             <AdminNavbar />
           </div>
         </div>
 
-        {/* CONTENT */}
-        <main className='p-4 md:p-8 w-full max-w-[1600px] mx-auto'>
+        {/* 3. SAYFA ALANI (MAIN): Burası flex-1 ile kalan tüm alanı kaplar */}
+        {/* ÖNEMLİ: overflow-hidden veriyoruz ki sayfa taşarsa window scroll çıkmasın. */}
+        {/* İçerik (Table vs.) kendi içinde scroll olacak. */}
+        <main className='flex-1 overflow-hidden p-4 w-full h-full relative'>
           {children}
         </main>
       </div>

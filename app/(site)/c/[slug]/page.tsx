@@ -33,7 +33,6 @@ type ProductRow = {
   id: number
   slug: string
   active: boolean
-  media_base_path: string | null
   attributes: Record<string, string[] | string> | null
   product_localizations: LocalizationRow[] | null
   product_media: MediaRow[]
@@ -93,7 +92,7 @@ export default async function CollectionPage ({
       .from('products')
       .select(
         `
-        id, slug, active, media_base_path, attributes,
+        id, slug, active, attributes,
         product_localizations ( lang_code, name, description ),
         product_media ( image_key, sort_order ),
         product_variants ( product_prices ( amount, currency ) )

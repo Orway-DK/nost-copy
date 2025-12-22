@@ -146,17 +146,16 @@ export default function AdminSidebar ({
         href: '/admin',
         match: 'exact'
       },
-      // --- DÜZELTME: Settings artık bir dropdown ---
       {
         key: 'settings',
         labelKey: 'site_settings',
         icon: IoSettingsOutline,
-        match: 'startsWith', // /admin/settings ile başlayan her şeyde aktif görünsün (parent)
+        match: 'startsWith',
         children: [
           {
             key: 'settings_general',
             labelKey: 'general',
-            href: '/admin/settings', // Genel Ayarlar (Ana sayfa)
+            href: '/admin/settings',
             match: 'exact'
           },
           {
@@ -291,9 +290,7 @@ export default function AdminSidebar ({
   )
 
   const toggleSubmenu = (key: string) => {
-    if (isCollapsed) {
-      toggleCollapse()
-    }
+    if (isCollapsed) toggleCollapse()
     setExpandedSubmenus(prev => {
       const next = { ...prev, [key]: !prev[key] }
       localStorage.setItem(STORAGE_KEY_EXPANDED, JSON.stringify(next))
@@ -326,7 +323,7 @@ export default function AdminSidebar ({
       <aside
         className={`
             fixed top-0 left-0 z-50 h-full
-            bg-[var(--admin-card)] border-r border-[var(--admin-card-border)]
+            bg-admin-card border-r border-admin-card-border
             transition-all duration-300 ease-in-out
             lg:translate-x-0
             ${isOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -335,37 +332,40 @@ export default function AdminSidebar ({
       >
         {/* Header */}
         <div
-          className={`h-16 flex items-center border-b border-[var(--admin-card-border)] ${
-            isCollapsed ? 'justify-center px-0' : 'justify-between px-6'
+          className={`h-12 flex items-center border-b border-admin-card-border ${
+            isCollapsed ? 'justify-center px-0' : 'justify-between px-4'
           }`}
         >
           {!isCollapsed ? (
-            <span className='font-bold text-xl tracking-tight text-[var(--admin-fg)] whitespace-nowrap overflow-hidden'>
-              Nost<span className='text-[var(--admin-muted)]'>Copy</span>
-            </span>
+            <h1 className='w-full text-admin-lg font-semibold flex flex-row items-center justify-between'>
+              <Link
+                href={'/admin'}
+                className='hover:text-admin-accent transition-colors tracking-tight text-admin-fg'
+              >
+                Nost Copy
+              </Link>
+              <span className='badge-admin badge-admin-default'>Admin</span>
+            </h1>
           ) : (
-            <span className='font-bold text-xl text-[var(--admin-fg)]'>N</span>
+            <span className='font-bold text-xl text-admin-accent'>N</span>
           )}
 
           <button
             onClick={onClose}
-            className='lg:hidden p-1 hover:bg-[var(--admin-input-bg)] rounded text-[var(--admin-muted)]'
+            className='lg:hidden p-1 hover:bg-admin-input-bg rounded-admin text-admin-muted'
           >
-            <IoClose size={24} />
+            <IoClose size={20} />
           </button>
         </div>
 
         {/* Menü */}
-        <nav className='p-3 overflow-y-auto h-[calc(100vh-8rem)] scrollbar-hide'>
+        <nav className='p-2 overflow-y-auto h-[calc(100vh-8rem)] scrollbar-hide'>
           <ul className='space-y-1'>
             {menuItems.map(item => {
               const hasChildren = item.children && item.children.length > 0
               const active = isActive(item.href, item.match)
               const open = expandedSubmenus[item.key]
               const Icon = item.icon
-
-              // Parent (Ana Menü) aktif mi? (Alt sayfalardan biri seçiliyse parent da aktif görünsün)
-              // match: 'startsWith' olduğu için pathname '/admin/settings/social' ise '/admin/settings' true döner.
               const isParentActive = hasChildren
                 ? item.children?.some(child =>
                     isActive(child.href, child.match)
@@ -376,18 +376,18 @@ export default function AdminSidebar ({
                 <li key={item.key}>
                   <div
                     className={`
-                        group flex items-center rounded-lg cursor-pointer select-none transition-all duration-200 relative
+                        group flex items-center rounded-admin cursor-pointer select-none transition-colors duration-200 text-admin-sm
                         ${
                           isCollapsed
                             ? 'justify-center px-0 py-3'
-                            : 'justify-between px-3 py-2.5'
+                            : 'justify-between px-3 py-2'
                         }
                         ${
-                          isParentActive && !open // Alt menü kapalıyken parent'ı vurgula
-                            ? 'bg-[var(--admin-input-bg)] text-[var(--admin-fg)] font-medium'
-                            : active && !hasChildren // Tekil link aktifse
-                            ? 'bg-[var(--admin-accent)] text-[var(--admin-bg)] font-medium'
-                            : 'text-[var(--admin-muted)] hover:bg-[var(--admin-input-bg)] hover:text-[var(--admin-fg)]'
+                          isParentActive && !open
+                            ? 'bg-admin-input-bg text-admin-fg font-medium'
+                            : active && !hasChildren
+                            ? 'bg-admin-accent text-white font-medium' // Active State: Accent Color + White Text
+                            : 'text-admin-muted hover:bg-admin-input-bg hover:text-admin-fg'
                         }
                     `}
                     onClick={() =>
@@ -402,7 +402,7 @@ export default function AdminSidebar ({
                           isCollapsed ? 'justify-center w-full' : 'flex-1 gap-3'
                         }`}
                       >
-                        {Icon && <Icon size={isCollapsed ? 22 : 18} />}
+                        {Icon && <Icon size={18} />}
                         {!isCollapsed && <span>{t(item.labelKey)}</span>}
                       </Link>
                     ) : (
@@ -411,27 +411,27 @@ export default function AdminSidebar ({
                           isCollapsed ? 'justify-center w-full' : 'flex-1 gap-3'
                         }`}
                       >
-                        {Icon && <Icon size={isCollapsed ? 22 : 18} />}
+                        {Icon && <Icon size={18} />}
                         {!isCollapsed && <span>{t(item.labelKey)}</span>}
                       </div>
                     )}
 
                     {!isCollapsed && hasChildren && (
                       <IoChevronDown
-                        size={14}
-                        className={`transition-transform duration-200 ${
+                        size={12}
+                        className={`transition-transform duration-200 opacity-60 ${
                           open ? 'rotate-180' : ''
                         }`}
                       />
                     )}
 
                     {isCollapsed && hasChildren && (
-                      <div className='absolute right-1 top-1 w-1.5 h-1.5 bg-[var(--admin-muted)] rounded-full opacity-50' />
+                      <div className='absolute right-2 top-2 w-1.5 h-1.5 bg-admin-accent rounded-full' />
                     )}
                   </div>
 
                   {!isCollapsed && hasChildren && open && (
-                    <ul className='mt-1 ml-4 pl-3 border-l border-[var(--admin-card-border)] space-y-1 animate-in slide-in-from-top-1 duration-200'>
+                    <ul className='mt-1 ml-3 pl-3 border-l border-admin-card-border space-y-0.5 animate-in slide-in-from-top-1 duration-200'>
                       {item.children!.map(child => {
                         const childActive = isActive(child.href, child.match)
                         return (
@@ -439,10 +439,10 @@ export default function AdminSidebar ({
                             <Link
                               href={child.href || '#'}
                               onClick={onClose}
-                              className={`block px-3 py-2 rounded-md text-sm transition-colors ${
+                              className={`block px-3 py-2 rounded-admin text-admin-sm transition-colors ${
                                 childActive
-                                  ? 'text-[var(--admin-accent)] font-medium bg-[var(--admin-input-bg)]'
-                                  : 'text-[var(--admin-muted)] hover:text-[var(--admin-fg)]'
+                                  ? 'text-admin-accent font-medium bg-admin-input-bg'
+                                  : 'text-admin-muted hover:text-admin-fg hover:bg-admin-bg'
                               }`}
                             >
                               {t(child.labelKey)}
@@ -456,26 +456,29 @@ export default function AdminSidebar ({
               )
             })}
 
-            <li className='pt-4 pb-2'>
+            {/* Ayraç ve Başlık */}
+            <li className='pt-4 pb-1'>
               {!isCollapsed && (
-                <span className='px-3 text-xs font-bold uppercase tracking-wider opacity-40 text-[var(--admin-muted)] animate-in fade-in'>
+                <span className='px-3 text-admin-tiny font-bold uppercase tracking-wider opacity-50 text-admin-muted animate-in fade-in'>
                   {t('management')}
                 </span>
               )}
               {isCollapsed && (
-                <div className='h-[1px] mx-2 bg-[var(--admin-card-border)]'></div>
+                <div className='h-[1px] mx-2 bg-admin-card-border'></div>
               )}
             </li>
+
+            {/* Pasif Link Örneği (Users) */}
             <li>
               <Link
                 href='/admin/users'
                 onClick={onClose}
-                className={`flex items-center rounded-lg text-sm text-[var(--admin-muted)] hover:bg-[var(--admin-input-bg)] opacity-50 cursor-not-allowed
-                    ${isCollapsed ? 'justify-center py-3' : 'px-3 py-2.5 gap-3'}
+                className={`flex items-center rounded-admin text-admin-sm text-admin-muted hover:bg-admin-input-bg opacity-50 cursor-not-allowed
+                    ${isCollapsed ? 'justify-center py-3' : 'px-3 py-2 gap-3'}
                 `}
                 title={isCollapsed ? t('users') : ''}
               >
-                <IoPeopleOutline size={isCollapsed ? 22 : 18} />
+                <IoPeopleOutline size={18} />
                 {!isCollapsed && <span>{t('users')}</span>}
               </Link>
             </li>
@@ -483,15 +486,15 @@ export default function AdminSidebar ({
         </nav>
 
         {/* Footer Toggle */}
-        <div className='absolute bottom-0 w-full p-4 border-t border-[var(--admin-card-border)] hidden lg:flex justify-end bg-[var(--admin-card)]'>
+        <div className='absolute bottom-0 w-full p-3 border-t border-admin-card-border hidden lg:flex justify-end bg-admin-card'>
           <button
             onClick={toggleCollapse}
-            className='p-2 rounded-lg hover:bg-[var(--admin-input-bg)] text-[var(--admin-muted)] hover:text-[var(--admin-fg)] transition-colors'
+            className='p-1.5 rounded-admin hover:bg-admin-input-bg text-admin-muted hover:text-admin-fg transition-colors'
           >
             {isCollapsed ? (
-              <IoChevronForward size={20} />
+              <IoChevronForward size={18} />
             ) : (
-              <IoChevronBack size={20} />
+              <IoChevronBack size={18} />
             )}
           </button>
         </div>
