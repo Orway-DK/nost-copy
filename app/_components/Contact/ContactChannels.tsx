@@ -56,8 +56,7 @@ export default function ContactChannels ({
   onOpenForm: () => void
 }) {
   const { lang } = useLanguage()
-  const t = UI_TEXT[lang] || UI_TEXT.tr
-
+  const t = UI_TEXT[lang as keyof typeof UI_TEXT] || UI_TEXT.tr
   return (
     <div className='w-full flex flex-col justify-center px-4 md:px-6 py-4 animate-in fade-in zoom-in duration-500'>
       {/* Grid: Mobilde 1, Tablette 2, Laptopta 3, Geniş Ekranda 5 kolon */}

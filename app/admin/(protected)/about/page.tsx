@@ -19,8 +19,7 @@ export default async function AboutAdminPage () {
           </p>
         </div>
       </div>
-
-      <AboutForm initialData={data} />
+      <AboutForm initialData={data || {}} />{' '}
     </div>
   )
 }
