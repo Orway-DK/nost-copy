@@ -1,20 +1,23 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { deleteTemplateAction } from '@/app/admin/actions/template-actions'
-import { IoPencil, IoTrash } from 'react-icons/io5'
+import { IoPencil, IoTrash, IoLayersOutline } from 'react-icons/io5'
 import { ProductTemplate } from '@/types'
+import { DataTable } from '@/app/admin/_components/DataTable'
+import { ColumnDef } from '@tanstack/react-table'
 
-export default function TemplateListClient ({
-  initialTemplates
-}: {
+interface Props {
   initialTemplates: ProductTemplate[]
-}) {
+  onEdit?: (id: number) => void
+}
+
+export default function TemplateListClient({ initialTemplates, onEdit }: Props) {
   const router = useRouter()
   const [busyId, setBusyId] = useState<number | null>(null)
 
+  // --- SİLME İŞLEMİ ---
   const handleDelete = async (id: number) => {
     if (
       !confirm(
@@ -22,6 +25,7 @@ export default function TemplateListClient ({
       )
     )
       return
+
     setBusyId(id)
     const res = await deleteTemplateAction(id)
     setBusyId(null)
@@ -33,54 +37,76 @@ export default function TemplateListClient ({
     }
   }
 
-  if (initialTemplates.length === 0) {
-    return (
-      <div className='p-8 text-center opacity-50'>
-        Henüz hiç şablon oluşturulmamış.
-      </div>
-    )
-  }
+  // --- KOLON TANIMLARI ---
+  const columns: ColumnDef<ProductTemplate>[] = [
+    {
+      accessorKey: 'id',
+      header: 'ID',
+      cell: ({ row }) => (
+        <span className='opacity-50 font-mono text-xs'>
+          #{row.getValue('id')}
+        </span>
+      )
+    },
+    {
+      accessorKey: 'name',
+      header: 'Şablon Adı',
+      cell: ({ row }) => (
+        <div className='flex items-center gap-2'>
+            <div className="w-8 h-8 rounded-admin bg-admin-input-bg border border-admin-input-border flex items-center justify-center text-admin-muted">
+                <IoLayersOutline />
+            </div>
+            <span className='font-medium text-admin-fg'>
+              {row.getValue('name')}
+            </span>
+        </div>
+      )
+    },
+    {
+      accessorKey: 'schema',
+      header: 'Alan Sayısı',
+      cell: ({ row }) => {
+        const schema = row.original.schema || [];
+        return (
+          <span className='badge-admin badge-admin-default bg-admin-input-bg border border-admin-card-border'>
+            {schema.length} Özellik
+          </span>
+        )
+      }
+    },
+    {
+      id: 'actions',
+      header: 'İşlem',
+      cell: ({ row }) => {
+        const t = row.original
+        return (
+          <div className='flex items-center gap-2'>
+            <button
+              onClick={() => onEdit?.(t.id)}
+              className='p-1.5 rounded hover:bg-admin-info hover:text-white text-admin-info transition-colors'
+              title='Düzenle'
+            >
+              <IoPencil size={16} />
+            </button>
+            <button
+              onClick={() => handleDelete(t.id)}
+              disabled={busyId === t.id}
+              className='p-1.5 rounded hover:bg-admin-danger hover:text-white text-admin-muted hover:opacity-100 transition-colors disabled:opacity-30'
+              title='Sil'
+            >
+              <IoTrash size={16} />
+            </button>
+          </div>
+        )
+      }
+    }
+  ]
 
   return (
-    <table className='table-admin'>
-      <thead className='thead-admin'>
-        <tr>
-          <th className='th-admin w-16'>ID</th>
-          <th className='th-admin'>Şablon Adı</th>
-          <th className='th-admin'>Alan Sayısı</th>
-          <th className='th-admin w-32 text-center'>İşlem</th>
-        </tr>
-      </thead>
-      <tbody>
-        {initialTemplates.map(t => (
-          <tr key={t.id} className='tr-admin'>
-            <td className='td-admin opacity-50 text-xs font-mono'>{t.id}</td>
-            <td className='td-admin font-bold'>{t.name}</td>
-            <td className='td-admin'>
-              <span className='badge-admin badge-admin-default bg-[var(--admin-input-bg)]'>
-                {t.schema?.length || 0} Özellik
-              </span>
-            </td>
-            <td className='td-admin text-center'>
-              <div className='flex items-center justify-center gap-2'>
-                <Link
-                  href={`/admin/templates/${t.id}`}
-                  className='p-2 rounded hover:bg-[var(--admin-info)] hover:text-white text-[var(--admin-info)] transition-colors'
-                >
-                  <IoPencil />
-                </Link>
-                <button
-                  onClick={() => handleDelete(t.id)}
-                  disabled={busyId === t.id}
-                  className='p-2 rounded hover:bg-[var(--admin-danger)] hover:text-white text-[var(--admin-muted)] transition-colors'
-                >
-                  <IoTrash />
-                </button>
-              </div>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <DataTable 
+        columns={columns} 
+        data={initialTemplates} 
+        searchKey="name" 
+    />
   )
 }

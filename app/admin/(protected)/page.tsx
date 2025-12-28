@@ -4,30 +4,29 @@ import {
   IoFolderOpenOutline,
   IoImagesOutline,
   IoFlashOutline,
-  IoCheckmarkCircleOutline
+  IoCheckmarkCircleOutline,
+  IoStatsChart,
+  IoGlobeOutline
 } from 'react-icons/io5'
 import Link from 'next/link'
+import DashboardTodoList from './_components/todo/DashboardTodoList'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminDashboard () {
-  // Paralel veri çekimi
+  // Paralel veri çekimi (To-Do'lar eklendi)
   const [
     { count: productsCount },
     { count: categoriesCount },
     { count: readyCount },
-    { count: slidesCount }
+    { count: slidesCount },
+    { data: todos } // To-Do verisi
   ] = await Promise.all([
     adminSupabase.from('products').select('*', { count: 'exact', head: true }),
-    adminSupabase
-      .from('categories')
-      .select('*', { count: 'exact', head: true }),
-    adminSupabase
-      .from('homepage_ready_products')
-      .select('*', { count: 'exact', head: true }),
-    adminSupabase
-      .from('landing_slides')
-      .select('*', { count: 'exact', head: true })
+    adminSupabase.from('categories').select('*', { count: 'exact', head: true }),
+    adminSupabase.from('homepage_ready_products').select('*', { count: 'exact', head: true }),
+    adminSupabase.from('landing_slides').select('*', { count: 'exact', head: true }),
+    adminSupabase.from('admin_todos').select('*').order('is_completed', { ascending: true }).order('created_at', { ascending: false })
   ])
 
   const stats = [
@@ -66,18 +65,18 @@ export default async function AdminDashboard () {
   ]
 
   return (
-    <div className='space-y-8 animate-in fade-in duration-500'>
+    <div className='space-y-6 animate-in fade-in duration-500 pb-10'>
       {/* Header */}
       <div className='admin-page-header'>
         <div>
           <h2 className='admin-page-title'>Kontrol Paneli</h2>
           <p className='text-[var(--admin-muted)] text-sm'>
-            Site durumuna genel bakış.
+            Sistem durumuna ve iş listene genel bakış.
           </p>
         </div>
       </div>
 
-      {/* İSTATİSTİK KARTLARI (Responsive Grid) */}
+      {/* 1. İSTATİSTİK KARTLARI (Responsive Grid) */}
       <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
         {stats.map(stat => (
           <Link
@@ -102,41 +101,66 @@ export default async function AdminDashboard () {
         ))}
       </div>
 
-      {/* ALT BÖLÜM (2 Kolonlu) */}
-      <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-        {/* Sistem Durumu */}
-        <div className='card-admin lg:col-span-2'>
-          <h3 className='text-lg font-bold mb-4 text-[var(--admin-fg)]'>
-            Sistem Durumu
-          </h3>
-          <div className='space-y-4'>
-            {/* Status Item */}
-            <div className='flex items-center gap-4 p-4 rounded-lg bg-[var(--admin-input-bg)] border border-[var(--admin-card-border)]'>
-              <div className='p-2 bg-green-100 text-green-600 rounded-full'>
-                <IoCheckmarkCircleOutline size={24} />
-              </div>
-              <div className='flex-1'>
-                <h4 className='font-medium text-[var(--admin-fg)]'>
-                  Veritabanı
-                </h4>
-                <p className='text-xs text-[var(--admin-muted)]'>
-                  Supabase bağlantısı aktif.
-                </p>
-              </div>
-              <span className='badge-admin badge-admin-success'>ONLINE</span>
+      {/* 2. ANA BÖLÜM (2 Kolonlu Layout) */}
+      <div className='grid grid-cols-1 xl:grid-cols-3 gap-6 items-start'>
+        
+        {/* SOL: Sistem Durumu ve Hızlı Grafikler (2 Birim Genişlik) */}
+        <div className='xl:col-span-2 space-y-6'>
+            
+            {/* Sistem Durum Kartı */}
+            <div className='card-admin'>
+                <h3 className='text-lg font-bold mb-4 text-[var(--admin-fg)] flex items-center gap-2'>
+                    <IoStatsChart className="text-[var(--admin-accent)]" /> Sistem Durumu
+                </h3>
+                <div className='space-y-4'>
+                    <div className='flex items-center gap-4 p-4 rounded-lg bg-[var(--admin-input-bg)] border border-[var(--admin-card-border)]'>
+                        <div className='p-2 bg-green-100 text-green-600 rounded-full dark:bg-green-900/30 dark:text-green-400'>
+                            <IoCheckmarkCircleOutline size={24} />
+                        </div>
+                        <div className='flex-1'>
+                            <h4 className='font-medium text-[var(--admin-fg)]'>
+                                Veritabanı Bağlantısı
+                            </h4>
+                            <p className='text-xs text-[var(--admin-muted)]'>
+                                Supabase bağlantısı aktif ve yanıt veriyor.
+                            </p>
+                        </div>
+                        <span className='badge-admin badge-admin-success'>ONLINE</span>
+                    </div>
+
+                    <div className='flex items-center gap-4 p-4 rounded-lg bg-[var(--admin-input-bg)] border border-[var(--admin-card-border)]'>
+                        <div className='p-2 bg-blue-100 text-blue-600 rounded-full dark:bg-blue-900/30 dark:text-blue-400'>
+                            <IoGlobeOutline size={24} />
+                        </div>
+                        <div className='flex-1'>
+                            <h4 className='font-medium text-[var(--admin-fg)]'>
+                                Public Site
+                            </h4>
+                            <p className='text-xs text-[var(--admin-muted)]'>
+                                Önyüz yayında ve erişilebilir durumda.
+                            </p>
+                        </div>
+                        <span className='badge-admin badge-admin-success'>ACTIVE</span>
+                    </div>
+                </div>
             </div>
-          </div>
+
+            {/* Ziyaretçi / Analitik Placeholder */}
+            <div className='card-admin'>
+                <h3 className='text-lg font-bold mb-4 text-[var(--admin-fg)]'>
+                    Ziyaretçi Grafiği
+                </h3>
+                <div className='flex flex-col items-center justify-center h-48 border-2 border-dashed border-[var(--admin-input-border)] rounded-xl bg-[var(--admin-input-bg)]/50 text-[var(--admin-muted)] text-sm text-center'>
+                    <p>Google Analytics veya Plausible verileri buraya entegre edilecek.</p>
+                </div>
+            </div>
         </div>
 
-        {/* Hızlı İpucu vs. */}
-        <div className='card-admin'>
-          <h3 className='text-lg font-bold mb-4 text-[var(--admin-fg)]'>
-            Ziyaretçiler
-          </h3>
-          <div className='flex flex-col items-center justify-center h-48 text-[var(--admin-muted)] text-sm text-center'>
-            <p>Analitik verileri buraya gelecek.</p>
-          </div>
+        {/* SAĞ: To-Do Listesi (1 Birim Genişlik, Uzun) */}
+        <div className='xl:col-span-1 h-full min-h-[500px]'>
+          <DashboardTodoList initialTodos={todos || []} />
         </div>
+
       </div>
     </div>
   )

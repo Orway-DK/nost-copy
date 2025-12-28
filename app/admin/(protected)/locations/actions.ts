@@ -1,73 +1,64 @@
-// C:\Projeler\nost-copy\app\admin\(protected)\locations\actions.ts
 'use server'
 
 import { createSupabaseServerClient } from '@/lib/supabase/server-client'
 import { revalidatePath } from 'next/cache'
 
-// Verileri Getir
 export async function getLocations() {
-    const supabase = await createSupabaseServerClient()
+  const supabase = await createSupabaseServerClient()
+  const { data, error } = await supabase
+    .from('contact_locations')
+    .select('*')
+    .order('lang_code', { ascending: true }) // Dile göre grupla
+    .order('is_default', { ascending: false })
 
-    const { data, error } = await supabase
-        .from('contact_locations')
-        .select('*')
-        .order('id', { ascending: true })
-
-    if (error) throw new Error(error.message)
-    return data
+  if (error) throw new Error(error.message)
+  return data
 }
 
-// Yeni Ekle
 export async function createLocation(formData: any) {
-    const supabase = await createSupabaseServerClient()
+  const supabase = await createSupabaseServerClient()
 
-    const payload = {
-        title: formData.title,
-        address: formData.address,
-        phone: formData.phone,
-        email: formData.email,
-        lat: parseFloat(formData.lat),
-        lng: parseFloat(formData.lng),
-        map_url: formData.map_url // YENİ EKLENDİ
-    }
+  // Eğer bu kayıt kendi dilinde varsayılan (HQ) yapılacaksa:
+  // Aynı dildeki diğerlerinin is_default değerini false yap.
+  if (formData.is_default) {
+    await supabase
+      .from('contact_locations')
+      .update({ is_default: false })
+      .eq('lang_code', formData.lang_code) // SADECE BU DİLDEKİLERİ
+  }
 
-    const { error } = await supabase.from('contact_locations').insert([payload])
+  const { error } = await supabase.from('contact_locations').insert(formData)
 
-    if (error) return { error: error.message }
-    revalidatePath('/admin/locations')
-    return { success: true }
+  if (error) return { error: error.message }
+  revalidatePath('/admin/locations')
+  return { success: true }
 }
 
-// Güncelle
 export async function updateLocation(id: number, formData: any) {
-    const supabase = await createSupabaseServerClient()
+  const supabase = await createSupabaseServerClient()
 
-    const payload = {
-        title: formData.title,
-        address: formData.address,
-        phone: formData.phone,
-        email: formData.email,
-        lat: parseFloat(formData.lat),
-        lng: parseFloat(formData.lng),
-        map_url: formData.map_url // YENİ EKLENDİ
-    }
+  if (formData.is_default) {
+    await supabase
+      .from('contact_locations')
+      .update({ is_default: false })
+      .eq('lang_code', formData.lang_code) // SADECE BU DİLDEKİLERİ
+      .neq('id', id)
+  }
 
-    const { error } = await supabase
-        .from('contact_locations')
-        .update(payload)
-        .eq('id', id)
+  const { error } = await supabase
+    .from('contact_locations')
+    .update(formData)
+    .eq('id', id)
 
-    if (error) return { error: error.message }
-    revalidatePath('/admin/locations')
-    return { success: true }
+  if (error) return { error: error.message }
+  revalidatePath('/admin/locations')
+  return { success: true }
 }
 
-// Sil
 export async function deleteLocation(id: number) {
-    const supabase = await createSupabaseServerClient()
-    const { error } = await supabase.from('contact_locations').delete().eq('id', id)
-
-    if (error) return { error: error.message }
-    revalidatePath('/admin/locations')
-    return { success: true }
+  const supabase = await createSupabaseServerClient()
+  const { error } = await supabase.from('contact_locations').delete().eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/locations')
+  return { success: true }
 }

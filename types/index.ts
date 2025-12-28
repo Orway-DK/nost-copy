@@ -1,14 +1,37 @@
 // C:\Projeler\nost-copy\types\index.ts
 
 // --- 1. ŞABLON (CLASS) TİPLERİ ---
-export type FieldType = 'text' | 'number' | 'select' | 'checkbox' | 'textarea'
+export type FieldType = 'text' | 'number' | 'select' | 'checkbox' | 'textarea' | 'paper';
+
+export interface TemplateField {
+  id: string;
+  key: string;
+  label: string;
+  type: FieldType;
+  required: boolean;
+  options?: string[];
+  is_variant?: boolean;
+}
+
+// Materyal Tipini de tanımlayalım (Frontend'de kullanmak için)
+export interface Material {
+  id: number;
+  name: string;
+  category_slug: string; // 'kagit'
+  type_code: string;     // 'kuse', 'bristol'
+  weight_g: number;
+  finish_type: string;   // 'mat', 'parlak'
+  is_active: boolean;
+}
+
+// ... Diğer tipler (ProductTemplate vb.) aynı kalır
 
 export interface TemplateField {
   key: string // DB'de tutulacak key: "paper_type", "volume"
   label: string // Ekranda görünen: "Kağıt Türü", "Hacim"
   type: FieldType // Input tipi
   options?: string[] // Eğer select ise seçenekler: ["Mat", "Parlak"]
-  required?: boolean // Zorunlu mu?
+  required: boolean | undefined;
   suffix?: string // Birim eki: "ml", "gr", "cm"
 }
 
@@ -59,3 +82,22 @@ export interface ProductMedia {
   image_key: string
   sort_order: number
 }
+
+// types.ts veya types/index.ts
+
+export interface TemplateField {
+  id: string; // <--- YENİ EKLENDİ (Unique ID)
+  key: string;
+  label: string;
+  type: FieldType;
+  required: boolean | undefined;
+  options?: string[];
+}
+
+export interface ProductTemplate {
+  id: number;
+  name: string;
+  schema: TemplateField[];
+  created_at?: string;
+}
+

@@ -1,456 +1,171 @@
-// C:\Projeler\nost-copy\app\admin\(protected)\settings\page.tsx
-'use client'
+"use client";
 
-import React, { useEffect, useState } from 'react'
-import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { toast } from 'react-hot-toast'
+import React, { useState, useRef } from "react";
 import {
-  SlPhone,
-  SlEnvolope,
-  SlLocationPin,
-  SlClock,
+  SlSettings,
+  SlSocialFacebook,
+  SlLink,
   SlGlobe,
-  SlPicture,
   SlCheck,
-  SlNote,
-  SlRefresh,
-  SlMap
-} from 'react-icons/sl'
-import { translateTextAction } from '@/app/admin/actions'
+} from "react-icons/sl";
+import { toast } from "react-hot-toast";
 
-// --- TİP TANIMLARI ---
-type GlobalSettings = {
-  id?: number
-  logo_url: string
-  favicon_url: string
-  phone: string
-  email: string
-  working_hours: string
-  store_location_url: string
-}
+// Bileşenler ve Tipler
+import { GeneralSettings } from "./_components/GeneralSettings";
+import { SocialSettings } from "./_components/SocialSettings";
+import { FooterSettings } from "./_components/FooterSettings";
+import { SettingsHandle } from "./_components/CategorySettings";
 
-type LocalizedSettings = {
-  site_name: string
-  footer_text: string
-  address: string
-}
+const LANGUAGES = ["tr", "en", "de"] as const;
+export type LangCode = (typeof LANGUAGES)[number];
 
-type FormState = {
-  global: GlobalSettings
-  translations: Record<string, LocalizedSettings>
-}
+export default function SettingsPage() {
+  const [activeTab, setActiveTab] = useState<"general" | "social" | "footer">(
+    "general"
+  );
+  const [activeLang, setActiveLang] = useState<LangCode>("tr");
+  const [saving, setSaving] = useState(false);
 
-const LANGUAGES = ['tr', 'en', 'de']
-const INITIAL_LOCALIZED: LocalizedSettings = {
-  site_name: '',
-  footer_text: '',
-  address: ''
-}
+  // Alt Bileşen Ref'leri
+  const generalRef = useRef<SettingsHandle>(null);
+  const socialRef = useRef<SettingsHandle>(null);
+  const footerRef = useRef<SettingsHandle>(null);
 
-export default function GeneralSettingsPage () {
-  const supabase = createSupabaseBrowserClient()
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [activeLang, setActiveLang] = useState('tr')
-
-  const [formData, setFormData] = useState<FormState>({
-    global: {
-      logo_url: '',
-      favicon_url: '',
-      phone: '',
-      email: '',
-      working_hours: '',
-      store_location_url: ''
-    },
-    translations: {
-      tr: { ...INITIAL_LOCALIZED },
-      en: { ...INITIAL_LOCALIZED },
-      de: { ...INITIAL_LOCALIZED }
-    }
-  })
-
-  // --- VERİ ÇEKME ---
-  useEffect(() => {
-    const fetch = async () => {
-      setLoading(true)
-      const { data: settings } = await supabase
-        .from('site_settings')
-        .select('*')
-        .limit(1)
-        .maybeSingle()
-
-      if (settings) {
-        const { data: trans } = await supabase
-          .from('site_settings_translations')
-          .select('*')
-          .eq('settings_id', settings.id)
-
-        const newTrans = { ...formData.translations }
-        trans?.forEach((t: any) => {
-          if (newTrans[t.lang_code]) {
-            newTrans[t.lang_code] = {
-              site_name: t.site_name || '',
-              footer_text: t.footer_text || '',
-              address: t.address || ''
-            }
-          }
-        })
-
-        setFormData({
-          global: settings,
-          translations: newTrans
-        })
-      }
-      setLoading(false)
-    }
-    fetch()
-  }, [])
-
-  // --- KAYDETME ---
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSaving(true)
+  // --- GLOBAL KAYDETME ---
+  const handleSaveAll = async () => {
+    setSaving(true);
+    const toastId = toast.loading("Tüm ayarlar kaydediliyor...");
 
     try {
-      const { data: savedGlobal, error: globalError } = await supabase
-        .from('site_settings')
-        .upsert(
-          formData.global.id
-            ? formData.global
-            : { ...formData.global, id: undefined }
-        )
-        .select()
-        .single()
+      // Tüm aktif ref'lerin save metodunu çağırıyoruz
+      const promises = [];
+      if (generalRef.current) promises.push(generalRef.current.save());
+      if (socialRef.current) promises.push(socialRef.current.save());
+      if (footerRef.current) promises.push(footerRef.current.save());
 
-      if (globalError) throw globalError
+      const results = await Promise.all(promises);
 
-      const translationsToUpsert = LANGUAGES.map(lang => ({
-        settings_id: savedGlobal.id,
-        lang_code: lang,
-        ...formData.translations[lang]
-      }))
-
-      const { error: transError } = await supabase
-        .from('site_settings_translations')
-        .upsert(translationsToUpsert, { onConflict: 'settings_id, lang_code' })
-
-      if (transError) throw transError
-
-      toast.success('Ayarlar başarıyla kaydedildi!')
-      setFormData(prev => ({
-        ...prev,
-        global: { ...prev.global, id: savedGlobal.id }
-      }))
-    } catch (err: any) {
-      toast.error('Hata: ' + err.message)
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleGlobalChange = (key: keyof GlobalSettings, val: string) => {
-    setFormData(prev => ({ ...prev, global: { ...prev.global, [key]: val } }))
-  }
-
-  const handleLocalChange = (key: keyof LocalizedSettings, val: string) => {
-    setFormData(prev => ({
-      ...prev,
-      translations: {
-        ...prev.translations,
-        [activeLang]: { ...prev.translations[activeLang], [key]: val }
+      // Hepsi true döndüyse başarılı
+      if (results.every((res) => res === true)) {
+        toast.success("Başarıyla kaydedildi!", { id: toastId });
+      } else {
+        toast.error("Bazı ayarlar kaydedilemedi.", { id: toastId });
       }
-    }))
-  }
+    } catch (error) {
+      console.error(error);
+      toast.error("Beklenmedik bir hata oluştu.", { id: toastId });
+    } finally {
+      setSaving(false);
+    }
+  };
 
-  // --- OTOMATİK ÇEVİRİ DAĞIT ---
-  const handleDistributeLanguage = async () => {
-    if (
-      !confirm(
-        `Şu anki (${activeLang.toUpperCase()}) metinleri diğer dillere çevirip dağıtmak istiyor musunuz?`
-      )
-    )
-      return
-
-    const toastId = toast.loading('Otomatik çeviri yapılıyor...')
-    const sourceData = formData.translations[activeLang]
-    const newTrans = { ...formData.translations }
-
-    await Promise.all(
-      LANGUAGES.map(async lang => {
-        if (lang === activeLang) return
-
-        const resName = await translateTextAction(
-          sourceData.site_name,
-          lang,
-          activeLang
-        )
-        const resFooter = await translateTextAction(
-          sourceData.footer_text,
-          lang,
-          activeLang
-        )
-        const resAddress = await translateTextAction(
-          sourceData.address,
-          lang,
-          activeLang
-        )
-
-        newTrans[lang] = {
-          site_name: resName.success ? resName.text : sourceData.site_name,
-          footer_text: resFooter.success
-            ? resFooter.text
-            : sourceData.footer_text,
-          address: resAddress.success ? resAddress.text : sourceData.address
-        }
-      })
-    )
-
-    setFormData(prev => ({ ...prev, translations: newTrans }))
-    toast.success('Çeviriler tamamlandı.', { id: toastId })
-  }
-
-  // --- SKELETON LOADING (Placeholder UI) ---
-  if (loading) {
-    return (
-      <div className='space-y-6 pb-20 animate-pulse'>
-        {/* Title Skeleton */}
-        <div className='space-y-2 mb-6'>
-          <div className='h-8 w-48 bg-[var(--admin-card-border)] rounded'></div>
-          <div className='h-4 w-72 bg-[var(--admin-card-border)] rounded opacity-60'></div>
-        </div>
-
-        {/* Toolbar Skeleton */}
-        <div className='h-16 bg-[var(--admin-card)] rounded-xl border border-[var(--admin-card-border)]'></div>
-
-        {/* Grid Skeleton */}
-        <div className='grid grid-cols-1 xl:grid-cols-2 gap-6'>
-          <div className='h-[400px] bg-[var(--admin-card)] rounded-xl border border-[var(--admin-card-border)]'></div>
-          <div className='h-[400px] bg-[var(--admin-card)] rounded-xl border border-[var(--admin-card-border)]'></div>
-        </div>
-      </div>
-    )
-  }
+  const TABS = [
+    { id: "general", label: "Genel & Görünüm", icon: SlSettings },
+    { id: "social", label: "Sosyal Medya", icon: SlSocialFacebook },
+    { id: "footer", label: "Footer Linkleri", icon: SlLink },
+  ];
 
   return (
-    <>
-      {/* Sayfa Başlığı */}
-      <div className='mb-6'>
-        <h1 className='admin-page-title'>Genel Ayarlar</h1>
-        <p className='text-[var(--admin-muted)] text-sm'>
-          Site kimliği, logo ve iletişim bilgileri.
-        </p>
-      </div>
+    <div className="h-full flex flex-col overflow-hidden">
+      {/* HEADER & GLOBAL TOOLS */}
+      <div className="shrink-0 mb-4 px-1 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="admin-page-title">Site Ayarları</h1>
+          <p className="text-admin-muted text-admin-sm">
+            Tüm site yapılandırmasını buradan yönetin.
+          </p>
+        </div>
 
-      <form onSubmit={handleSave} className='space-y-6 pb-20'>
-        {/* --- HEADER / TOOLBAR --- */}
-        <div className='sticky top-0 z-20 bg-[var(--admin-card)] p-4 rounded-xl border border-[var(--admin-card-border)] shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4'>
-          {/* Sol Taraf: Dil Seçimi */}
-          <div className='flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-hide'>
-            {LANGUAGES.map(lang => (
+        <div className="flex items-center gap-3">
+          {/* GLOBAL DİL SEÇİCİ */}
+          <div className="flex items-center gap-1 bg-admin-card border border-admin-card-border p-1 rounded-lg shadow-sm">
+            <span className="text-[10px] font-bold text-admin-muted px-2 flex items-center gap-1 uppercase tracking-wide">
+              <SlGlobe /> Dil
+            </span>
+            {LANGUAGES.map((lang) => (
               <button
-                type='button'
                 key={lang}
                 onClick={() => setActiveLang(lang)}
-                className={`px-4 py-2 rounded-lg font-bold uppercase text-sm transition-all border border-transparent whitespace-nowrap ${
-                  activeLang === lang
-                    ? 'bg-[var(--admin-accent)] text-white shadow-md'
-                    : 'bg-[var(--admin-input-bg)] text-[var(--admin-muted)] hover:text-[var(--admin-fg)] hover:border-[var(--admin-input-border)]'
-                }`}
+                className={`
+                            h-8 px-3 rounded-md font-bold uppercase text-xs transition-all border flex items-center
+                            ${
+                              activeLang === lang
+                                ? "bg-admin-accent/20 text-white border-transparent shadow-sm"
+                                : "bg-admin-input-bg text-admin-muted border-transparent hover:text-admin-fg hover:bg-admin-bg"
+                            }
+                        `}
               >
                 {lang}
               </button>
             ))}
           </div>
 
-          {/* Sağ Taraf: Aksiyon Butonları (Çevir & Kaydet) */}
-          <div className='flex items-center gap-3 w-full sm:w-auto'>
-            {/* Çeviri Butonu */}
-            <button
-              type='button'
-              onClick={handleDistributeLanguage}
-              className='btn-admin btn-admin-secondary text-xs flex-1 sm:flex-none justify-center'
-              title='Otomatik Çevir'
-            >
-              <SlRefresh />{' '}
-              <span className='hidden sm:inline'>Çevir & Dağıt</span>
-            </button>
+          {/* GLOBAL KAYDET BUTONU */}
+          <button
+            onClick={handleSaveAll}
+            disabled={saving}
+            // DÜZELTME: 'flex items-center justify-center' eklendi, 'text-center' kaldırıldı (flex varken gereksiz)
+            className="btn-admin btn-admin-primary h-10 px-6 gap-2 text-sm shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center"
+          >
+            <SlCheck size={18} />
+            {saving ? "Kaydediliyor..." : "Tümünü Kaydet"}
+          </button>
+        </div>
+      </div>
 
-            {/* Kaydet Butonu */}
-            <button
-              type='submit'
-              disabled={saving}
-              className='btn-admin btn-admin-primary text-xs gap-2 flex-1 sm:flex-none justify-center px-6'
-            >
-              <SlCheck /> {saving ? 'Kaydediliyor...' : 'Kaydet'}
-            </button>
+      {/* TABS */}
+      <div className="shrink-0 flex gap-2 border-b border-admin-card-border mb-4 overflow-x-auto scrollbar-hide">
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`
+                    flex items-center gap-2 px-6 py-2.5 text-sm font-bold border-b-2 transition-colors whitespace-nowrap
+                    ${
+                      activeTab === tab.id
+                        ? "border-admin-accent text-admin-accent bg-admin-accent/5 rounded-t-lg"
+                        : "border-transparent text-admin-muted hover:text-admin-fg hover:border-admin-input-border"
+                    }
+                `}
+          >
+            <tab.icon size={16} /> {tab.label}
+          </button>
+        ))}
+      </div>
 
-            {/* Dil Göstergesi */}
-            <div className='hidden sm:block h-6 w-px bg-[var(--admin-card-border)]'></div>
-            <span className='text-xs font-bold uppercase text-[var(--admin-muted)] hidden sm:inline-block'>
-              {activeLang}
-            </span>
-          </div>
+      {/* CONTENT (Scrollable) */}
+      <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar pb-20 relative">
+        {/* ÖNEMLİ: Tablar unmount edilmiyor, CSS ile gizleniyor.
+             Böylece state ve ref'ler korunuyor.
+          */}
+
+        {/* 1. GENEL & KATEGORİ */}
+        <div
+          className={`${
+            activeTab === "general" ? "block" : "hidden"
+          } animate-in fade-in zoom-in-95 duration-200`}
+        >
+          <GeneralSettings ref={generalRef} lang={activeLang} />
         </div>
 
-        <div className='grid grid-cols-1 xl:grid-cols-2 gap-6'>
-          {/* SOL KOLON: Site Kimliği */}
-          <div className='card-admin h-fit'>
-            <h3 className='text-lg font-bold mb-6 flex items-center gap-2 pb-2 border-b border-[var(--admin-card-border)]'>
-              <SlGlobe className='text-[var(--admin-accent)]' /> Site Kimliği
-            </h3>
-
-            <div className='space-y-5'>
-              {/* Site Adı */}
-              <div>
-                <label className='admin-label flex justify-between items-center'>
-                  <span className='flex items-center gap-2'>
-                    Site Adı (Title)
-                  </span>
-                  <span className='badge-admin badge-admin-default text-[10px] uppercase'>
-                    {activeLang}
-                  </span>
-                </label>
-                <input
-                  className='admin-input'
-                  value={formData.translations[activeLang].site_name}
-                  onChange={e => handleLocalChange('site_name', e.target.value)}
-                  placeholder='Site Başlığı'
-                />
-              </div>
-
-              {/* Logo URL */}
-              <div>
-                <label className='admin-label flex items-center gap-2'>
-                  <SlPicture className='text-[var(--admin-muted)]' /> Logo URL
-                </label>
-                <input
-                  className='admin-input'
-                  placeholder='https://...'
-                  value={formData.global.logo_url || ''}
-                  onChange={e => handleGlobalChange('logo_url', e.target.value)}
-                />
-                {formData.global.logo_url && (
-                  <div className='mt-3 p-2 border border-dashed border-[var(--admin-card-border)] rounded-lg bg-[var(--admin-input-bg)] inline-block'>
-                    <img
-                      src={formData.global.logo_url}
-                      alt='Logo Önizleme'
-                      className='h-8 w-auto object-contain'
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Footer Text */}
-              <div>
-                <label className='admin-label flex justify-between items-center'>
-                  <span className='flex items-center gap-2'>
-                    <SlNote className='text-[var(--admin-muted)]' /> Footer
-                    Hakkında Metni
-                  </span>
-                  <span className='badge-admin badge-admin-default text-[10px] uppercase'>
-                    {activeLang}
-                  </span>
-                </label>
-                <textarea
-                  className='admin-textarea min-h-[100px]'
-                  value={formData.translations[activeLang].footer_text}
-                  onChange={e =>
-                    handleLocalChange('footer_text', e.target.value)
-                  }
-                  placeholder='Kısa açıklama...'
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* SAĞ KOLON: İletişim */}
-          <div className='card-admin h-fit'>
-            <h3 className='text-lg font-bold mb-6 flex items-center gap-2 pb-2 border-b border-[var(--admin-card-border)]'>
-              <SlPhone className='text-[var(--admin-accent)]' /> İletişim
-              Bilgileri
-            </h3>
-
-            <div className='space-y-5'>
-              {/* Telefon & Email */}
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                <div>
-                  <label className='admin-label flex items-center gap-2'>
-                    <SlPhone className='text-[var(--admin-muted)]' /> Telefon
-                  </label>
-                  <input
-                    className='admin-input'
-                    value={formData.global.phone || ''}
-                    onChange={e => handleGlobalChange('phone', e.target.value)}
-                    placeholder='+90...'
-                  />
-                </div>
-                <div>
-                  <label className='admin-label flex items-center gap-2'>
-                    <SlEnvolope className='text-[var(--admin-muted)]' /> E-Posta
-                  </label>
-                  <input
-                    type='email'
-                    className='admin-input'
-                    value={formData.global.email || ''}
-                    onChange={e => handleGlobalChange('email', e.target.value)}
-                    placeholder='info@...'
-                  />
-                </div>
-              </div>
-
-              {/* Adres */}
-              <div>
-                <label className='admin-label flex justify-between items-center'>
-                  <span className='flex items-center gap-2'>
-                    <SlLocationPin className='text-[var(--admin-muted)]' /> Açık
-                    Adres
-                  </span>
-                  <span className='badge-admin badge-admin-default text-[10px] uppercase'>
-                    {activeLang}
-                  </span>
-                </label>
-                <textarea
-                  className='admin-textarea min-h-[80px]'
-                  value={formData.translations[activeLang].address}
-                  onChange={e => handleLocalChange('address', e.target.value)}
-                  placeholder='Adres bilgisi...'
-                />
-              </div>
-
-              {/* Çalışma Saatleri & Harita */}
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                <div>
-                  <label className='admin-label flex items-center gap-2'>
-                    <SlClock className='text-[var(--admin-muted)]' /> Çalışma
-                    Saatleri
-                  </label>
-                  <input
-                    className='admin-input'
-                    value={formData.global.working_hours || ''}
-                    onChange={e =>
-                      handleGlobalChange('working_hours', e.target.value)
-                    }
-                    placeholder='Pzt-Cum 09:00...'
-                  />
-                </div>
-                <div>
-                  <label className='admin-label flex items-center gap-2'>
-                    <SlMap className='text-[var(--admin-muted)]' /> Harita Linki
-                  </label>
-                  <input
-                    className='admin-input'
-                    placeholder='Google Maps URL'
-                    value={formData.global.store_location_url || ''}
-                    onChange={e =>
-                      handleGlobalChange('store_location_url', e.target.value)
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* 2. SOSYAL MEDYA */}
+        <div
+          className={`${
+            activeTab === "social" ? "block" : "hidden"
+          } max-w-4xl animate-in fade-in zoom-in-95 duration-200`}
+        >
+          <SocialSettings ref={socialRef} />
         </div>
-      </form>
-    </>
-  )
+
+        {/* 3. FOOTER */}
+        <div
+          className={`${
+            activeTab === "footer" ? "block" : "hidden"
+          } w-full animate-in fade-in zoom-in-95 duration-200`}
+        >
+          <FooterSettings ref={footerRef} lang={activeLang} />
+        </div>
+      </div>
+    </div>
+  );
 }

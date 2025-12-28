@@ -3,7 +3,7 @@ import ProductManager from './product-manager'
 
 export const dynamic = 'force-dynamic'
 
-export default async function ProductsPage () {
+export default async function ProductsPage() {
   // 1. Ürünleri Çek
   const productsQuery = adminSupabase
     .from('products')
@@ -16,10 +16,24 @@ export default async function ProductsPage () {
     .select('*')
     .order('name')
 
-  // 3. Kategorileri Çek (Dropdown için)
-  // const categoriesQuery = adminSupabase.from("categories").select("*");
+  // 3. Kategorileri Çek (Dropdown için) - ARTIK AKTİF
+  const categoriesQuery = adminSupabase
+    .from('categories')
+    .select('slug, name') // <--- BURASI DEĞİŞTİ
+    .eq('active', true)
+    .order('name') // İsme göre sıralamak daha mantıklı
 
-  const [prodRes, templRes] = await Promise.all([productsQuery, templatesQuery])
+    const materialsQuery = adminSupabase
+    .from('materials')
+    .select('*')
+    .order('weight_g')
+
+const [prodRes, templRes, catRes, matRes] = await Promise.all([
+    productsQuery,
+    templatesQuery,
+    categoriesQuery,
+    materialsQuery
+])
 
   // Veriyi Formatla (Görsel URL çıkarma)
   const products = (prodRes.data || []).map((item: any) => {
@@ -32,5 +46,18 @@ export default async function ProductsPage () {
     }
   })
 
-  return <ProductManager products={products} templates={templRes.data || []} />
+// Kategorileri obje dizisi olarak alıyoruz
+  const categories = catRes.data?.map(c => ({
+    name: c.name,
+    slug: c.slug
+  })) || []
+
+  return (
+    <ProductManager 
+      products={products} 
+      templates={templRes.data || []} 
+      categories={categories}
+      materials={matRes.data || []} // <--- EKLENDİ
+    />
+  )
 }

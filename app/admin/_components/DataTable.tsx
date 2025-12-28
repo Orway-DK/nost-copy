@@ -1,3 +1,4 @@
+// /home/orway/Projects/nost-copy/app/admin/_components/DataTable.tsx
 'use client'
 
 import { useState } from 'react'

@@ -39,7 +39,7 @@ type ProductRow = {
   product_variants: VariantRow[]
 }
 
-export default async function CollectionPage ({
+export default async function CollectionPage({
   params,
   searchParams
 }: PageProps) {
@@ -52,6 +52,11 @@ export default async function CollectionPage ({
   const maxFilter = sp.max ? parseFloat(sp.max as string) : Infinity
 
   const supabase = await createSupabaseServerClient()
+
+  const { data: settings } = await supabase.from('site_settings').select('is_category_filters_active, is_category_sorting_active').maybeSingle();
+
+  const showFilters = settings?.is_category_filters_active ?? true;
+  const showSorting = settings?.is_category_sorting_active ?? true;
 
   // 1. Kategori
   const { data: category, error: catErr } = await supabase
@@ -114,31 +119,23 @@ export default async function CollectionPage ({
   const activeProducts = productList.filter(p => p.active)
 
   // --- OTOMATİK FİLTRE OLUŞTURUCU (Sayılı) ---
-  // Hangi özelliğin kaç üründe geçtiğini sayıyoruz.
-  // Yapı: { "Kağıt": { "Mat Kuşe": 5, "Parlak": 3 }, "Renk": { "Mavi": 10 } }
   const attributeCounts: Record<string, Record<string, number>> = {}
 
   activeProducts.forEach(p => {
     if (p.attributes && typeof p.attributes === 'object') {
       Object.entries(p.attributes).forEach(([key, values]) => {
         if (!attributeCounts[key]) attributeCounts[key] = {}
-
-        // Değerleri normalize et (Array'e çevir)
         const valArray = Array.isArray(values) ? values : [values as string]
-
         valArray.forEach(v => {
-          // Sayacı artır
           attributeCounts[key][v] = (attributeCounts[key][v] || 0) + 1
         })
       })
     }
   })
 
-  // CollectionFilter'a gönderilecek format
   const dynamicFilters: Record<string, { name: string; count: number }[]> = {}
 
   Object.keys(attributeCounts).forEach(key => {
-    // Seçenekleri isim ve sayı olarak map'le ve isme göre sırala
     const options = Object.entries(attributeCounts[key])
       .map(([name, count]) => ({
         name,
@@ -199,6 +196,9 @@ export default async function CollectionPage ({
       }
     })
     .filter(item => {
+      // Filtreler kapalıysa bile logic çalışır ama UI görünmez.
+      // İstersen burayı da if(showFilters) içine alabilirsin ama URL parametresi varsa çalışması daha doğrudur.
+      
       // 1. Fiyat Kontrolü
       const price = item.price || 0
       if ((minFilter > 0 || maxFilter < Infinity) && item.price) {
@@ -264,28 +264,37 @@ export default async function CollectionPage ({
               {displayItems.length} ürün listeleniyor
             </p>
           </div>
-          <div className='flex items-center gap-2'>
-            <button className='flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors'>
-              <FaSortAmountDown className='text-muted-foreground' />
-              <span>Önerilen Sıralama</span>
-            </button>
+        <div className='flex items-center gap-2'>
+            {showSorting && (
+              <button className='flex items-center gap-2 px-4 py-2 ...'>
+                <FaSortAmountDown className='text-muted-foreground' />
+                <span>Önerilen Sıralama</span>
+              </button>
+            )}
           </div>
         </div>
 
         {/* LAYOUT */}
         <div className='grid grid-cols-1 lg:grid-cols-4 gap-8'>
-          {/* SIDEBAR */}
-          <div className='hidden lg:block lg:col-span-1'>
-            <div className='sticky top-4'>
-              <CollectionFilter dynamicFilters={dynamicFilters} />
+          
+          {/* SIDEBAR - Koşullu Render */}
+          {showFilters && (
+            <div className='hidden lg:block lg:col-span-1'>
+              <div className='sticky top-4'>
+                <CollectionFilter dynamicFilters={dynamicFilters} />
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* PRODUCTS */}
-          <div className='lg:col-span-3'>
-            <button className='lg:hidden w-full mb-4 py-3 flex items-center justify-center gap-2 bg-card border border-border rounded-lg font-bold shadow-sm'>
-              <FaFilter /> Filtrele ve Sırala
-            </button>
+          {/* PRODUCTS - Dinamik Kolon Genişliği */}
+          <div className={showFilters ? 'lg:col-span-3' : 'lg:col-span-4'}>
+            
+            {/* Mobil Filtre Butonu - Koşullu Render */}
+            {showFilters && (
+              <button className='lg:hidden w-full mb-4 py-3 flex items-center justify-center gap-2 bg-card border border-border rounded-lg font-bold shadow-sm'>
+                <FaFilter /> Filtrele ve Sırala
+              </button>
+            )}
 
             {!displayItems.length ? (
               <div className='flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-border rounded-xl bg-card/30'>
@@ -300,7 +309,8 @@ export default async function CollectionPage ({
                 </p>
               </div>
             ) : (
-              <div className='grid grid-cols-2 md:grid-cols-3 gap-4 lg:gap-6'>
+              // Eğer sidebar yoksa (col-span-4), grid 4'lü olabilir, varsa 3'lü.
+              <div className={`grid grid-cols-2 gap-4 ${showFilters ? 'md:grid-cols-3 lg:gap-6' : 'md:grid-cols-3 lg:grid-cols-4 lg:gap-6'}`}>
                 {displayItems.map(item => (
                   <ProductCard key={item.slug} {...item} />
                 ))}
@@ -313,7 +323,7 @@ export default async function CollectionPage ({
   )
 }
 
-function ErrorState ({ message, detail }: { message: string; detail: string }) {
+function ErrorState({ message, detail }: { message: string; detail: string }) {
   return (
     <div className='w-full min-h-[50vh] flex flex-col items-center justify-center p-6 text-center'>
       <div className='bg-destructive/10 text-destructive p-6 rounded-xl border border-destructive/20 max-w-md'>
@@ -327,7 +337,7 @@ function ErrorState ({ message, detail }: { message: string; detail: string }) {
   )
 }
 
-export async function generateMetadata ({
+export async function generateMetadata({
   params
 }: {
   params: Promise<{ slug: string }>

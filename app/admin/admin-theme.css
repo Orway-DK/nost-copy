@@ -1,5 +1,5 @@
 /* C:\Projeler\nost-copy\app\admin\admin-theme.css */
-@import 'tailwindcss';
+@import "tailwindcss";
 
 /* --- TAILWIND KONFİGÜRASYONU (Design Tokens) --- */
 @theme inline {
@@ -214,7 +214,7 @@ html.dark .admin-root *,
 
 /* 4. UTILS */
 .admin-label {
-  display: block;
+  display: flex;
   font-size: var(--admin-fz-sm);
   font-weight: 600;
   color: var(--admin-muted);
@@ -232,7 +232,7 @@ html.dark .admin-root *,
 }
 
 .badge-admin {
-  display: inline-flex;
+  display: flex;
   padding: 0.125rem 0.5rem;
   border-radius: 999px;
   font-size: var(--admin-fz-tiny);

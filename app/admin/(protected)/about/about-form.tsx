@@ -1,3 +1,4 @@
+// C:\Projeler\nost-copy\app\admin\(protected)\about\about-form.tsx
 'use client'
 
 import { useState } from 'react'
@@ -12,7 +13,7 @@ type Props = {
   initialData: Record<string, any>
 }
 
-// ... (FIELD_GROUPS aynı kalacak, kodun kısalığı için buraya tekrar yazmıyorum) ...
+// ... (FIELD_GROUPS sabiti aynı kalacak) ...
 const FIELD_GROUPS = [
   {
     title: 'Hero (Üst Alan)',
@@ -97,13 +98,14 @@ export default function AboutForm ({ initialData }: Props) {
       const tasks: Promise<void>[] = []
 
       for (const key of Object.keys(newFormData)) {
-        const sourceText = newFormData[key]['tr']
+        const sourceText = newFormData[key]?.['tr'] // Null check eklendi
         if (!sourceText) continue
 
         for (const targetLang of targetLangs) {
           tasks.push(
             translateTextAction(sourceText, targetLang, 'tr').then(res => {
               if (res.success) {
+                if (!newFormData[key]) newFormData[key] = {}
                 newFormData[key][targetLang] = res.text
               }
             })
@@ -135,20 +137,23 @@ export default function AboutForm ({ initialData }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className='space-y-6 pb-20'>
+    <form onSubmit={handleSubmit} className='space-y-6 pr-4'>
+      
       {/* Sticky Toolbar */}
-      <div className='sticky top-0 z-20 bg-[var(--admin-card)] p-4 rounded-xl border border-[var(--admin-card-border)] shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4'>
+      {/* top-0 sticky çalışması için üst kapsayıcının overflow-auto olması gerekir (ki bunu page.tsx'te yaptık) */}
+      <div className='sticky top-0 z-20 bg-[var(--admin-card)] p-4 rounded-xl border border-[var(--admin-card-border)] shadow-md flex flex-col sm:flex-row justify-between items-center gap-4'>
+        
         {/* Dil Seçimi */}
-        <div className='flex gap-2'>
+        <div className='flex gap-2 overflow-x-auto max-w-full pb-1 sm:pb-0'>
           {LANGS.map(l => (
             <button
               key={l}
               type='button'
               onClick={() => setActiveLang(l)}
-              className={`px-4 py-2 rounded-lg text-sm font-bold uppercase transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-bold uppercase transition-all whitespace-nowrap ${
                 activeLang === l
-                  ? 'bg-[var(--admin-primary)] text-white shadow-md'
-                  : 'bg-[var(--admin-input-bg)] text-[var(--admin-muted)] hover:bg-[var(--admin-bg)]'
+                  ? 'bg-[var(--admin-accent)] text-white shadow-md' // admin-primary yerine admin-accent (Standardizasyon)
+                  : 'bg-[var(--admin-input-bg)] text-[var(--admin-muted)] hover:bg-[var(--admin-bg)] border border-transparent hover:border-[var(--admin-card-border)]'
               }`}
             >
               {l}
@@ -183,22 +188,18 @@ export default function AboutForm ({ initialData }: Props) {
         </div>
       </div>
 
-      {/* DÜZELTME: Form Alanları Grid Yapısı
-         - varsayılan: 1 kolon
-         - md: 2 kolon
-         - xl: 3 kolon (Çok geniş ekranlarda 3'e bölünerek yayılır)
-      */}
+      {/* Form Alanları Grid */}
       <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'>
         {FIELD_GROUPS.map((group, idx) => (
           <div
             key={idx}
-            className='bg-[var(--admin-card)] rounded-xl border border-[var(--admin-card-border)] p-6 space-y-4 shadow-sm h-full'
+            className='bg-[var(--admin-card)] rounded-xl border border-[var(--admin-card-border)] p-6 space-y-4 shadow-sm h-full flex flex-col'
           >
             <h3 className='text-lg font-bold text-[var(--admin-fg)] border-b border-[var(--admin-card-border)] pb-2 mb-4'>
               {group.title}
             </h3>
 
-            <div className='space-y-4'>
+            <div className='space-y-4 flex-1'>
               {group.fields.map(field => {
                 const val = formData[field.key]?.[activeLang] || ''
 
@@ -212,18 +213,14 @@ export default function AboutForm ({ initialData }: Props) {
                         className='admin-textarea min-h-[100px] w-full'
                         value={val}
                         onChange={e => handleChange(field.key, e.target.value)}
-                        placeholder={`${
-                          field.label
-                        } (${activeLang.toUpperCase()})`}
+                        placeholder={`${field.label} (${activeLang.toUpperCase()})`}
                       />
                     ) : (
                       <input
                         className='admin-input w-full'
                         value={val}
                         onChange={e => handleChange(field.key, e.target.value)}
-                        placeholder={`${
-                          field.label
-                        } (${activeLang.toUpperCase()})`}
+                        placeholder={`${field.label} (${activeLang.toUpperCase()})`}
                       />
                     )}
                   </div>

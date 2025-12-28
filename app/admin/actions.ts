@@ -1,8 +1,6 @@
 // app/admin/actions.ts
 "use server";
 
-// ... (varsa diğer importlar ve auth check fonksiyonu) ...
-
 // --- TRANSLATE ACTION ---
 export async function translateTextAction(
   text: string,

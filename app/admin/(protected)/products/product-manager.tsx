@@ -2,26 +2,31 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { IoAdd, IoSettingsOutline, IoShirtOutline } from 'react-icons/io5'
+import { IoAdd, IoShirtOutline } from 'react-icons/io5'
 import SlideOver from '@/app/admin/_components/SlideOver'
 import ProductListClient from './product-list-client'
 import ProductForm from './[id]/product-form'
-import TemplateBuilder from '../templates/template-builder'
 import { ProductTemplate } from '@/types'
+
+interface CategoryOption {
+  name: string;
+  slug: string;
+}
 
 interface Props {
   products: any[]
   templates: ProductTemplate[]
+  categories: CategoryOption[]
+  materials: Material[]
 }
 
-type ViewMode = 'LIST' | 'NEW_PRODUCT' | 'EDIT_PRODUCT' | 'TEMPLATES'
+type ViewMode = 'LIST' | 'NEW_PRODUCT' | 'EDIT_PRODUCT'
 
-export default function ProductManager ({ products, templates }: Props) {
+export default function ProductManager({ products, templates, categories ,materials}: Props) {
   const router = useRouter()
   const [view, setView] = useState<ViewMode>('LIST')
-  const [selectedProductId, setSelectedProductId] = useState<number | null>(
-    null
-  )
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null)
+  
   const selectedProduct = products.find(p => p.id === selectedProductId)
 
   const closePanel = () => {
@@ -31,9 +36,8 @@ export default function ProductManager ({ products, templates }: Props) {
   }
 
   return (
-    // FULL HEIGHT CONTAINER: h-full flex flex-col
     <div className='h-full flex flex-col gap-4'>
-      {/* ÜST BAR (Sabit) */}
+      {/* ÜST BAR */}
       <div className='shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-admin-card p-3 rounded-admin border border-admin-card-border shadow-sm'>
         <div>
           <h1 className='text-admin-lg font-bold flex items-center gap-2'>
@@ -42,30 +46,19 @@ export default function ProductManager ({ products, templates }: Props) {
           </h1>
         </div>
 
-        <div className='flex gap-2'>
-          <button
-            onClick={() => setView('TEMPLATES')}
-            className='btn-admin btn-admin-secondary text-admin-tiny'
-          >
-            <IoSettingsOutline /> Şablonlar
-          </button>
-
-          <button
-            onClick={() => {
-              setSelectedProductId(null)
-              setView('NEW_PRODUCT')
-            }}
-            className='btn-admin btn-admin-primary text-admin-tiny'
-          >
-            <IoAdd size={16} /> Yeni Ekle
-          </button>
-        </div>
+        <button
+          onClick={() => {
+            setSelectedProductId(null)
+            setView('NEW_PRODUCT')
+          }}
+          className='btn-admin btn-admin-primary text-admin-tiny'
+        >
+          <IoAdd size={16} /> Yeni Ürün Ekle
+        </button>
       </div>
 
-      {/* LİSTE ALANI (Esnek ve Scrollable) */}
-      {/* flex-1 ve overflow-hidden diyerek bu div'in taşmasını engelliyoruz */}
+      {/* LİSTE ALANI */}
       <div className='flex-1 bg-admin-card rounded-admin border border-admin-card-border overflow-hidden flex flex-col'>
-        {/* ProductListClient artık yüksekliği dolduracak şekilde ayarlandı */}
         <ProductListClient
           initialProducts={products}
           onEdit={id => {
@@ -75,7 +68,7 @@ export default function ProductManager ({ products, templates }: Props) {
         />
       </div>
 
-      {/* SLIDE OVERS (Modallar) - Bunlar zaten fixed pozisyonda olduğu için sorun yok */}
+      {/* SLIDE OVER (FORM) */}
       <SlideOver
         isOpen={view === 'NEW_PRODUCT' || view === 'EDIT_PRODUCT'}
         onClose={closePanel}
@@ -86,28 +79,17 @@ export default function ProductManager ({ products, templates }: Props) {
         }
         width='2xl'
       >
-        {(view === 'NEW_PRODUCT' ||
-          (view === 'EDIT_PRODUCT' && selectedProduct)) && (
-          <ProductForm
+{(view === 'NEW_PRODUCT' || (view === 'EDIT_PRODUCT' && selectedProduct)) && (          
+  <ProductForm
             isNew={view === 'NEW_PRODUCT'}
-            categories={[]}
+            categories={categories}
             templates={templates}
             initialProduct={selectedProduct || null}
             initialVariants={[]}
             initialLocalizations={[]}
+            materials={materials}
           />
         )}
-      </SlideOver>
-
-      <SlideOver
-        isOpen={view === 'TEMPLATES'}
-        onClose={closePanel}
-        title='Ürün Şablonları'
-        width='2xl'
-      >
-        <div className='space-y-8'>
-          <TemplateBuilder />
-        </div>
       </SlideOver>
     </div>
   )

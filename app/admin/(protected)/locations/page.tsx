@@ -1,4 +1,3 @@
-// C:\Projeler\nost-copy\app\admin\(protected)\locations\page.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -10,23 +9,27 @@ import {
   updateLocation,
   deleteLocation
 } from './actions'
-import { Toaster, toast } from 'react-hot-toast'
+import { toast } from 'react-hot-toast'
 
-// Başlangıç değerleri
+// GÜNCELLEME: Form yapısını yeni modele göre sadeleştirdik
 const INITIAL_FORM = {
+  lang_code: 'tr', // Varsayılan bölge
   title: '',
   address: '',
   phone: '',
   email: '',
   lat: '',
   lng: '',
-  map_url: ''
+  map_url: '',
+  is_default: false
 }
 
 export default function AdminLocationsPage () {
   const [locations, setLocations] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
+  
+  // State
   const [form, setForm] = useState(INITIAL_FORM)
 
   // Sayfa açılınca verileri çek
@@ -50,11 +53,21 @@ export default function AdminLocationsPage () {
     e.preventDefault()
     setLoading(true)
 
+    // Form verisini kopyala
+    const payload = { ...form }
+
+    // Lat/Lng sayıya çevir (Boşsa null gönder)
+    const finalPayload = {
+        ...payload,
+        lat: payload.lat ? parseFloat(payload.lat) : 0,
+        lng: payload.lng ? parseFloat(payload.lng) : 0
+    }
+
     let res
     if (editingId) {
-      res = await updateLocation(editingId, form)
+      res = await updateLocation(editingId, finalPayload)
     } else {
-      res = await createLocation(form)
+      res = await createLocation(finalPayload)
     }
 
     if (res.error) {
@@ -82,19 +95,24 @@ export default function AdminLocationsPage () {
     }
   }
 
+  // GÜNCELLEME: Edit fonksiyonunu yeni yapıya uydurduk
   const handleEdit = (loc: any) => {
     setEditingId(loc.id)
     setForm({
+      lang_code: loc.lang_code || 'tr', // Veritabanından gelen dil kodu
       title: loc.title,
       address: loc.address || '',
       phone: loc.phone || '',
       email: loc.email || '',
       lat: loc.lat?.toString() || '',
       lng: loc.lng?.toString() || '',
-      map_url: loc.map_url || ''
+      map_url: loc.map_url || '',
+      is_default: loc.is_default || false
+      // ARTIK BURADA _en, _de gibi alanları set etmiyoruz!
     })
-    // Mobilde formu görebilmek için yukarı kaydır
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    
+    // Mobilde formu görebilmek için yukarı kaydır (opsiyonel)
+    // window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleCancel = () => {
@@ -110,15 +128,14 @@ export default function AdminLocationsPage () {
         <div>
           <h1 className='admin-page-title'>Lokasyon Yönetimi</h1>
           <p className='text-[var(--admin-muted)] text-sm'>
-            Haritada ve iletişim sayfasında görünecek ofisleri yönetin.
+            Farklı diller/bölgeler için ofis adreslerini buradan yönetin.
           </p>
         </div>
       </div>
 
-      <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
+      <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 items-start'>
         {/* Sol: Form (Sticky on Desktop) */}
-        <div className='lg:col-span-1'>
-          <div className='sticky top-4'>
+        <div className='lg:col-span-1 sticky top-4'>
             <LocationsForm
               form={form}
               setForm={setForm}
@@ -127,7 +144,6 @@ export default function AdminLocationsPage () {
               onSubmit={handleSubmit}
               onCancel={handleCancel}
             />
-          </div>
         </div>
 
         {/* Sağ: Liste */}

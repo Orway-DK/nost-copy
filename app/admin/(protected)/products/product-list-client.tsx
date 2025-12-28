@@ -1,3 +1,4 @@
+// /home/orway/Projects/nost-copy/app/admin/(protected)/products/product-list-client.tsx
 'use client'
 
 import { useState } from 'react'

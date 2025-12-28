@@ -11,12 +11,14 @@ interface Props {
   productId: number
   initialVariants: any[]
   template: ProductTemplate | null
+  materials: Material[]
 }
 
 export default function ProductVariantsDynamic ({
   productId,
   initialVariants,
-  template
+  template,
+  materials={materials}
 }: Props) {
   const router = useRouter()
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -168,6 +170,7 @@ export default function ProductVariantsDynamic ({
                 schema={template.schema}
                 values={attributes}
                 onChange={setAttributes}
+                materials={materials}
               />
 
               {/* FİYAT ALANI (Her varyantın olmazsa olmazı) */}

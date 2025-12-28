@@ -6,6 +6,7 @@ import AdminNavbar from './navbar'
 import AdminSidebar from './sidebar'
 import { IoMenu } from 'react-icons/io5'
 import { Toaster } from 'react-hot-toast'
+import { AdminProgressBar } from "./AdminProgressBar"
 
 const STORAGE_KEY_COLLAPSED = 'admin.sidebar.collapsed'
 
@@ -38,8 +39,12 @@ export default function AdminLayoutClient ({
   if (!mounted) return <div className='min-h-screen bg-admin-bg' />
 
   return (
-    // 1. ANA KAPSAYICI: Ekranı tamamen kapla ve taşmayı engelle (overflow-hidden)
+    // 1. ANA KAPSAYICI
     <div className='h-screen w-screen bg-admin-bg text-admin-fg font-sans flex overflow-hidden'>
+      
+      {/* LOADER BURAYA EKLENDİ - Artık rengini CSS'ten dinamik alacak */}
+      <AdminProgressBar />
+
       <Toaster
         position='top-right'
         toastOptions={{
@@ -60,16 +65,15 @@ export default function AdminLayoutClient ({
         toggleCollapse={toggleCollapse}
       />
 
-      {/* 2. İÇERİK KOLONU: Sidebar yanındaki alan */}
+      {/* 2. İÇERİK KOLONU */}
       <div
         className={`
         flex-1 flex flex-col min-w-0 h-full
-        /* BURASI ÇOK ÖNEMLİ: Margin geçişini yumuşatıyoruz */
         transition-[margin] duration-300 ease-in-out 
         ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}
       `}
       >
-        {/* NAVBAR: Sabit yükseklik */}
+        {/* NAVBAR */}
         <div className='shrink-0 z-40 flex flex-col border-b border-admin-card-border'>
           <div className='lg:hidden bg-admin-card p-4 flex items-center justify-between'>
             <div className='flex items-center gap-3'>
@@ -87,9 +91,7 @@ export default function AdminLayoutClient ({
           </div>
         </div>
 
-        {/* 3. SAYFA ALANI (MAIN): Burası flex-1 ile kalan tüm alanı kaplar */}
-        {/* ÖNEMLİ: overflow-hidden veriyoruz ki sayfa taşarsa window scroll çıkmasın. */}
-        {/* İçerik (Table vs.) kendi içinde scroll olacak. */}
+        {/* 3. SAYFA ALANI (MAIN) */}
         <main className='flex-1 overflow-hidden p-4 w-full h-full relative'>
           {children}
         </main>

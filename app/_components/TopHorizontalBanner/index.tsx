@@ -21,21 +21,48 @@ type BannerTranslation = {
 } | null
 
 /**
- * Fetcher
+ * Fetcher Fonksiyonu
  */
 const fetcher = async (lang: string) => {
   const supabase = createSupabaseBrowserClient()
 
-  // 1. İletişim Bilgilerini Çek
-  const { data: contactData, error: contactError } = await supabase
-    .from('site_contact_info')
-    .select('phone, email, location_url, location_label')
-    .eq('lang_code', lang)
+  // 1. İLETİŞİM BİLGİLERİNİ ÇEK
+  // Eski sütunları (title_en, phone_de vs.) SİLDİK. 
+  // Artık sadece temel sütunları çekiyoruz ve lang_code ile filtreliyoruz.
+  
+  let { data: locData, error: locError } = await supabase
+    .from('contact_locations')
+    .select('phone, email, map_url, title')
+    .eq('is_default', true) // O dilin varsayılanı (HQ)
+    .eq('lang_code', lang)  // Seçili dil
     .maybeSingle()
 
-  if (contactError) throw contactError
+  // Eğer seçili dilde (örn: EN) bir HQ bulunamazsa, 
+  // Sitenin çökmemesi için varsayılan olarak Türkçe (TR) HQ'sunu çekelim (Fallback).
+  if (!locData) {
+     const { data: fallbackData } = await supabase
+        .from('contact_locations')
+        .select('phone, email, map_url, title')
+        .eq('is_default', true)
+        .eq('lang_code', 'tr')
+        .maybeSingle()
+     
+     if (fallbackData) locData = fallbackData
+  }
 
-  // 2. Banner Çevirisini Çek
+  // locError varsa (ve data yoksa) fırlat, ama veri yoksa (null) hata sayma
+  if (locError && locError.code !== 'PGRST116') throw locError
+
+  const contact: ContactInfoRow = locData
+    ? {
+        phone: locData.phone,
+        email: locData.email,
+        location_url: locData.map_url,
+        location_label: locData.title // Artık direkt title, çünkü satır zaten dile özel.
+      }
+    : null
+
+  // 2. BANNER ÇEVİRİSİNİ ÇEK
   const { data: bannerJoin, error: bannerError } = await supabase
     .from('banner_translations')
     .select('promo_text,promo_cta,promo_url,banners!inner(code,active)')
@@ -56,24 +83,21 @@ const fetcher = async (lang: string) => {
       }
     : null
 
-  return {
-    contact: contactData as ContactInfoRow,
-    banner
-  }
+  return { contact, banner }
 }
 
 export default function TopHorizontalBanner () {
   const { lang } = useLanguage()
 
-  const { data } = useSWR(
-    ['top-horizontal-banner-v2', lang],
+  const { data, isLoading } = useSWR(
+    ['top-horizontal-banner-v5', lang], // Key güncellendi (Cache temizliği)
     () => fetcher(lang),
-    {
-      revalidateOnFocus: false,
-      suspense: true
-    }
+    { revalidateOnFocus: false }
   )
 
+  // Yüklenirken veya veri yokken boş dön
+  if (isLoading) return <div className='bg-primary min-h-[40px] w-full'></div>
+  
   const contact = data?.contact
   const banner = data?.banner
 
@@ -82,14 +106,15 @@ export default function TopHorizontalBanner () {
   return (
     <div className='bg-primary dark:bg-secondary border-b border-border/10 px-4 py-2 min-h-[40px] w-full flex justify-center font-sans font-medium text-primary-foreground dark:text-card-foreground relative z-[60] transition-colors duration-300'>
       <div className='flex flex-row justify-between items-center w-full max-w-7xl text-xs md:text-sm'>
-        {/* --- SOL KISIM --- */}
-        <div className='flex flex-row gap-4 md:gap-8 items-center'>
+        
+        {/* SOL: İletişim */}
+        <div className='flex flex-row gap-4 md:gap-6 items-center'>
           {contact?.phone && (
             <a
               href={`tel:${contact.phone.replace(/\s/g, '')}`}
               className='flex flex-row items-center gap-2 hover:opacity-80 transition-opacity'
             >
-              <FaPhone className='text-xs' />
+              <FaPhone className='text-[10px] md:text-xs' />
               <span className='whitespace-nowrap'>{contact.phone}</span>
             </a>
           )}
@@ -99,55 +124,46 @@ export default function TopHorizontalBanner () {
               href={`mailto:${contact.email}`}
               className='hidden sm:flex flex-row items-center gap-2 hover:opacity-80 transition-opacity'
             >
-              <FaEnvelope />
-              <span>{contact.email}</span>
+              <FaEnvelope className='text-[10px] md:text-xs' />
+              <span className='truncate max-w-[150px] md:max-w-none'>{contact.email}</span>
             </a>
           )}
         </div>
 
-        {/* --- ORTA KISIM --- */}
-        {/* Değişiklik: hidden xl:flex kullanılarak 1280px altına kadar gizlendi */}
-        <div className='hidden xl:flex flex-row gap-2 items-center'>
+        {/* ORTA: Banner */}
+        <div className='hidden xl:flex flex-row gap-2 items-center justify-center absolute left-1/2 -translate-x-1/2'>
           {banner?.promo_text && (
-            <a
-              href={banner.promo_url ?? '#'}
-              className='hover:underline text-center'
-            >
+            <a href={banner.promo_url ?? '#'} className='hover:underline text-center flex items-center gap-2'>
               {banner.promo_text}
             </a>
           )}
-          {banner?.promo_text && banner?.promo_cta && (
-            <span className='opacity-50 mx-1'>|</span>
-          )}
+          {banner?.promo_text && banner?.promo_cta && <span className='opacity-40 text-[10px]'>|</span>}
           {banner?.promo_cta && (
-            <a
-              href={banner.promo_url ?? '#'}
-              className='font-bold underline decoration-current/50 hover:decoration-current transition-all whitespace-nowrap'
-            >
+            <a href={banner.promo_url ?? '#'} className='font-bold underline decoration-current/50 hover:decoration-current transition-all whitespace-nowrap'>
               {banner.promo_cta}
             </a>
           )}
         </div>
 
-        {/* --- SAĞ KISIM --- */}
+        {/* SAĞ: Dil & Konum */}
         <div className='flex flex-row items-center gap-3 md:gap-4'>
           <Dropdown />
           {contact?.location_url && (
-            <>
-              <span className='opacity-50'>|</span>
+            <div className='hidden sm:flex items-center gap-3'>
+              <span className='opacity-30 h-4 w-px bg-current'></span>
               <a
                 href={contact.location_url}
                 target='_blank'
                 rel='noopener noreferrer'
-                className='hover:opacity-80 transition-opacity flex items-center gap-1'
+                className='hover:opacity-80 transition-opacity flex items-center gap-1.5'
                 title={contact.location_label || 'Location'}
               >
-                <FaMapMarkerAlt className='sm:hidden text-sm' />
-                <span className='hidden sm:inline whitespace-nowrap'>
-                  {contact.location_label || 'Location'}
+                <FaMapMarkerAlt className='text-xs' />
+                <span className='hidden md:inline whitespace-nowrap max-w-[100px] lg:max-w-none truncate'>
+                  {contact.location_label || 'Ofis'}
                 </span>
               </a>
-            </>
+            </div>
           )}
         </div>
       </div>
