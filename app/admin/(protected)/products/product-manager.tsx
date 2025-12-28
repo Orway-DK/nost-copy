@@ -6,7 +6,7 @@ import { IoAdd, IoShirtOutline } from 'react-icons/io5'
 import SlideOver from '@/app/admin/_components/SlideOver'
 import ProductListClient from './product-list-client'
 import ProductForm from './[id]/product-form'
-import { ProductTemplate } from '@/types'
+import { ProductTemplate, Material } from '@/types'
 
 interface CategoryOption {
   name: string;
