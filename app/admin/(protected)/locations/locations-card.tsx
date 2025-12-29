@@ -102,16 +102,6 @@ export default function LocationsCard({
                       <div className="text-xs text-[var(--admin-muted)] leading-relaxed max-w-xs line-clamp-2">
                         {loc.address}
                       </div>
-                      {loc.map_url && (
-                        <a
-                          href={loc.map_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-[10px] text-[var(--admin-info)] hover:underline mt-1"
-                        >
-                          <SlMap size={10} /> Haritada Gör
-                        </a>
-                      )}
                     </td>
 
                     {/* İletişim */}

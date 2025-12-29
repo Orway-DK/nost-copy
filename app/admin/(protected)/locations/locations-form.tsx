@@ -5,7 +5,6 @@ import {
   SlMap,
   SlPhone,
   SlEnvolope,
-  SlCompass,
   SlCheck,
   SlClose,
   SlStar,
@@ -37,7 +36,22 @@ export default function LocationsForm({
   onSubmit,
   onCancel,
 }: LocationsFormProps) {
-  // Linkten Koordinat Çeken Fonksiyon
+  // --- YENİLENMİŞ FONKSİYON ---
+  const handleMapUrlChange = (val: string) => {
+    let cleanUrl = val;
+
+    // 1. Eğer kullanıcı tüm iframe kodunu yapıştırdıysa, sadece src'yi al
+    if (val.includes("<iframe")) {
+      const srcMatch = val.match(/src="([^"]+)"/);
+      if (srcMatch && srcMatch[1]) {
+        cleanUrl = srcMatch[1];
+        toast.success("Iframe kodu temizlendi, link alındı.");
+      }
+    }
+
+    setForm({ ...form, map_url: cleanUrl });
+  };
+
   const extractCoordsFromLink = () => {
     const url = form.map_url;
     if (!url) {
@@ -48,15 +62,29 @@ export default function LocationsForm({
     let lat = null;
     let lng = null;
 
-    // YÖNTEM 1: PIN koordinatı (!3d... !4d...)
-    const pinRegex = /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/;
-    const pinMatch = url.match(pinRegex);
+    // SENARYO 1: Embed Linki (pb=!1m18...!2d28.xxxx!3d41.xxxx...)
+    // Embed linklerinde !3d = Enlem(Lat), !2d = Boylam(Lng) olur.
+    if (url.includes("embed")) {
+      const embedLatMatch = url.match(/!3d(-?\d+\.\d+)/);
+      const embedLngMatch = url.match(/!2d(-?\d+\.\d+)/);
 
-    if (pinMatch) {
-      lat = pinMatch[1];
-      lng = pinMatch[2];
-    } else {
-      // YÖNTEM 2: Kamera odak noktası (@...,...)
+      if (embedLatMatch && embedLngMatch) {
+        lat = embedLatMatch[1];
+        lng = embedLngMatch[1];
+      }
+    }
+    // SENARYO 2: Standart Link (!3d... !4d...)
+    // Standart linklerde !3d = Enlem, !4d = Boylam olabilir.
+    else if (url.includes("!3d") && url.includes("!4d")) {
+      const pinRegex = /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/;
+      const pinMatch = url.match(pinRegex);
+      if (pinMatch) {
+        lat = pinMatch[1];
+        lng = pinMatch[2];
+      }
+    }
+    // SENARYO 3: Kamera Odak (@41.xxxx,28.xxxx)
+    else {
       const viewRegex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
       const viewMatch = url.match(viewRegex);
       if (viewMatch) {
@@ -69,7 +97,9 @@ export default function LocationsForm({
       setForm({ ...form, lat: lat, lng: lng });
       toast.success(`Koordinatlar alındı: ${lat}, ${lng}`);
     } else {
-      toast.error("Link içinde geçerli koordinat bulunamadı.");
+      toast.error(
+        "Link içinden koordinat okunamadı. Embed linki olduğundan emin olun."
+      );
     }
   };
 
@@ -93,7 +123,7 @@ export default function LocationsForm({
         onSubmit={onSubmit}
         className="flex-1 overflow-y-auto flex flex-col gap-5 py-4 pr-2 custom-scrollbar"
       >
-        {/* 1. BÖLGE/DİL SEÇİMİ (YENİ) */}
+        {/* 1. BÖLGE/DİL SEÇİMİ */}
         <div>
           <label className="admin-label flex items-center gap-2">
             <SlGlobe className="text-[var(--admin-muted)]" /> Bölge / Dil Seçimi{" "}
@@ -163,14 +193,15 @@ export default function LocationsForm({
         <div className="bg-[var(--admin-bg)]/50 p-3 rounded-xl border border-[var(--admin-card-border)]">
           <div className="mb-3">
             <label className="admin-label flex items-center gap-2 mb-1">
-              <SlMap className="text-[var(--admin-muted)]" /> Google Maps Linki
+              <SlMap className="text-[var(--admin-muted)]" /> Google Maps
+              (Embed) Linki
             </label>
             <div className="flex gap-2">
               <input
-                className="admin-input text-xs flex-1"
-                placeholder="https://www.google.com/maps/place/..."
+                className="admin-input text-xs flex-1 font-mono text-[var(--admin-accent)]"
+                placeholder="https://www.google.com/maps/embed?pb=..."
                 value={form.map_url || ""}
-                onChange={(e) => setForm({ ...form, map_url: e.target.value })}
+                onChange={(e) => handleMapUrlChange(e.target.value)}
               />
               <button
                 type="button"
@@ -181,8 +212,12 @@ export default function LocationsForm({
                 <SlMagicWand /> Koordinatı Çek
               </button>
             </div>
-            <p className="text-[10px] text-[var(--admin-muted)] mt-1 ml-1">
-              * Adres çubuğundaki uzun linki yapıştırın.
+            <p className="text-[10px] text-[var(--admin-muted)] mt-1 ml-1 leading-relaxed">
+              * Google Maps {">"} Paylaş {">"} <strong>Harita Yerleştir</strong>{" "}
+              sekmesindeki linki (src) kullanın.
+              <br />
+              (iframe kodunun tamamını da yapıştırabilirsiniz, otomatik
+              temizlenir.)
             </p>
           </div>
 
@@ -218,7 +253,7 @@ export default function LocationsForm({
           </div>
         </div>
 
-        {/* 4. TEMEL BİLGİLER (TEK DİL) */}
+        {/* 4. TEMEL BİLGİLER */}
         <div className="space-y-4">
           <div>
             <label className="admin-label flex items-center gap-2">
