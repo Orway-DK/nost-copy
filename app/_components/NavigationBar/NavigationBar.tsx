@@ -38,7 +38,7 @@ const fetchCategories = async (lang: string) => {
     .from('categories')
     .select('id, parent_id, slug, category_translations(name, lang_code)')
     .eq('active', true)
-    .order('slug', { ascending: true })
+    .order('sort', { ascending: true })
   return (data ?? []) as CategoryRow[]
 }
 
@@ -154,18 +154,21 @@ export default function NavigationBar () {
       }
     })
 
+    console.log('categoryTree:', tree)
     return tree
   }, [categories, lang])
 
   // --- 2. MOBİL İÇİN DÜZ LİSTE (FLAT LIST) ---
   const categoryListMobile = useMemo(() => {
     if (!categories) return []
-    return categories.map(c => {
+    const list = categories.map(c => {
       const tr =
         c.category_translations.find(t => t.lang_code === lang) ||
         c.category_translations.find(t => t.lang_code === 'tr')
       return { label: tr?.name || c.slug, href: `/c/${c.slug}` }
     })
+    console.log('categoryListMobile:', list)
+    return list
   }, [categories, lang])
 
   // --- HİZMETLER LİSTESİ ---

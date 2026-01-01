@@ -21,7 +21,6 @@ export default async function RelatedProducts ({
         id,
         slug,
         active,
-        media_base_path,
         product_localizations ( lang_code, name, description ),
         product_media ( image_key, sort_order ),
         product_variants (

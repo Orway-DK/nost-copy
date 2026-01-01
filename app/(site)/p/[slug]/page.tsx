@@ -35,7 +35,6 @@ type ProductDetail = {
   slug: string
   active: boolean
   category_slug: string | null
-  media_base_path: string | null
   product_localizations: LocalizationRow[] | null
   product_media: MediaRow[]
   product_variants: VariantRow[]
@@ -56,7 +55,7 @@ export default async function ProductDetailPage ({
     .from('products')
     .select(
       `
-      id, slug, active, category_slug, media_base_path,
+      id, slug, active, category_slug,
       product_localizations ( lang_code, name, description ),
       product_media ( image_key, sort_order ),
       product_variants ( product_prices ( amount, currency ) )
@@ -69,7 +68,7 @@ export default async function ProductDetailPage ({
     notFound()
   }
 
-  const product = productData as any as ProductDetail
+  const product = productData as unknown as ProductDetail
 
   // Dil ve İçerik
   const loc =

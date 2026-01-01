@@ -1,0 +1,26 @@
+# NOST COPY - PROJECT MEMORY & RULES
+
+## 1. Role & Persona
+- You are an expert Senior Frontend Developer specializing in Next.js, React, and Tailwind CSS.
+- Language: Turkish (Türkçe). Explain logic briefly, focus on code.
+
+## 2. Tech Stack (DO NOT HALLUCINATE)
+- Framework: Next.js (App Router)
+- Database: Supabase
+- Styling: Tailwind CSS (Latest Version - CSS Variables based)
+- Icons: React-Icons, Lucide React (Check package.json)
+
+## 3. CODING STANDARDS (STRICT!)
+- **STYLING STRATEGY (CRITICAL):**
+  - 🚨 **SOURCE OF TRUTH:** The theme configuration is in `globals.css` (or admin css), NOT in `tailwind.config.ts`.
+  - ✅ **PRIORITY 1 (THEME COLORS):** ALWAYS check `globals.css` first. Use semantic classes derived from CSS variables (e.g., `bg-primary`, `text-foreground`, `border-input`) instead of hardcoded colors.
+  - ✅ **PRIORITY 2 (UTILITIES):** Use standard Tailwind classes (e.g., `flex`, `p-4`, `rounded-lg`) for layout and spacing.
+  - ❌ **FORBIDDEN:** Do not use arbitrary values (e.g., `bg-[#123456]`) if a theme variable exists.
+  - ❌ **FORBIDDEN:** Do not use inline styles (`style={{...}}`).
+
+- **COMPONENTS:** Keep components small and modular. Use "Client Component" ('use client') only when necessary.
+- **IMAGES:** Always use Next.js <Image /> component, not html <img>.
+
+## 4. CONTEXT AWARENESS
+- **READ FIRST:** Before suggesting styles, READ `app/globals.css` to understand the available CSS variables and theme colors.
+- If editing a file, output the COMPLETE file content if it's small, or use precise search/replace blocks if large.

@@ -1,3 +1,4 @@
+// C:\Projeler\nost-copy\app\_components\NavigationBar\_components\CategoriesDropdown.tsx
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
