@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   IoChevronDown,
   IoChevronBack,
@@ -62,7 +62,7 @@ type TranslationKey =
 type MenuItem = {
   key: string;
   labelKey: TranslationKey;
-  icon?: any;
+  icon?: React.ElementType;
   href?: string;
   match?: Match;
   children?: MenuItem[];
@@ -78,7 +78,7 @@ const DICTIONARY: Record<TranslationKey, { tr: string; en: string }> = {
   components: { tr: "Site Bileşenleri", en: "Components" },
   categories: { tr: "Kategoriler", en: "Categories" },
   all_categories: { tr: "Kategoriler", en: "Categories" },
-  /*add_category: { tr: "Kategori Ekle", en: "Add New Category" },*/
+  add_category: { tr: "Kategori Ekle", en: "Add New Category" },
   products: { tr: "Ürünler", en: "Products" },
   all_products: { tr: "Ürünler", en: "Products" },
   add_product: { tr: "Ürün Ekle", en: "Add New Product" },
@@ -115,29 +115,27 @@ export default function AdminSidebar({
   toggleCollapse,
 }: AdminSidebarProps) {
   const pathname = usePathname();
-  const [lang, setLang] = useState<Lang>("en");
-  const [mounted, setMounted] = useState(false);
-  const [expandedSubmenus, setExpandedSubmenus] = useState<
-    Record<string, boolean>
-  >({});
-
-  useEffect(() => {
-    setMounted(true);
+  const [lang, setLang] = useState<Lang>(() => {
+    if (typeof window === "undefined") return "en";
     const cookieLang = getCookie("NEXT_LOCALE");
     if (cookieLang === "tr" || cookieLang === "en") {
-      setLang(cookieLang as Lang);
-    } else if (
-      typeof window !== "undefined" &&
-      navigator.language?.startsWith("tr")
-    ) {
-      setLang("tr");
+      return cookieLang as Lang;
     }
-
+    if (navigator.language?.startsWith("tr")) {
+      return "tr";
+    }
+    return "en";
+  });
+  const [expandedSubmenus, setExpandedSubmenus] = useState<
+    Record<string, boolean>
+  >(() => {
+    if (typeof window === "undefined") return {};
     try {
       const storedExpanded = localStorage.getItem(STORAGE_KEY_EXPANDED);
-      if (storedExpanded) setExpandedSubmenus(JSON.parse(storedExpanded));
+      if (storedExpanded) return JSON.parse(storedExpanded);
     } catch {}
-  }, []);
+    return {};
+  });
 
   const t = (key: TranslationKey) => DICTIONARY[key][lang];
 
@@ -305,7 +303,6 @@ export default function AdminSidebar({
         : pathname.startsWith(href)
       : false;
 
-  if (!mounted) return null;
 
   return (
     <>

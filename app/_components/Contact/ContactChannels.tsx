@@ -30,6 +30,12 @@ type SocialLinks = {
   telegram: string | null;
 };
 
+type SocialLinkItem = {
+  code: string;
+  url: string | null;
+  active: boolean;
+};
+
 const UI_TEXT = {
   tr: {
     form_title: "Bize Ulaşın",
@@ -90,7 +96,11 @@ const UI_TEXT = {
   },
 };
 
-export default function ContactPage() {
+interface ContactChannelsProps {
+  onOpenForm?: () => void;
+}
+
+export default function ContactChannels({ onOpenForm }: ContactChannelsProps) {
   const { lang } = useLanguage();
   const t = UI_TEXT[lang as keyof typeof UI_TEXT] || UI_TEXT.tr;
 
@@ -132,10 +142,10 @@ export default function ContactPage() {
         setLocations(locRes.data);
         // Varsayılan ofis seçimi (Dil bazlı)
         let defaultLoc = locRes.data.find(
-          (l: any) => l.lang_code === lang && l.is_default
+          (l: ContactLocation) => l.lang_code === lang && l.is_default
         );
         if (!defaultLoc)
-          defaultLoc = locRes.data.find((l: any) => l.lang_code === lang);
+          defaultLoc = locRes.data.find((l: ContactLocation) => l.lang_code === lang);
         if (!defaultLoc && locRes.data.length > 0) defaultLoc = locRes.data[0];
 
         setSelectedLoc(defaultLoc || null);
@@ -144,7 +154,7 @@ export default function ContactPage() {
       // Sosyal Medya Mantığı
       if (socialRes.data) {
         const socialMap: SocialLinks = { whatsapp: null, telegram: null };
-        socialRes.data.forEach((item: any) => {
+        socialRes.data.forEach((item: SocialLinkItem) => {
           if (item.code === "whatsapp") socialMap.whatsapp = item.url;
           if (item.code === "telegram") socialMap.telegram = item.url;
         });
