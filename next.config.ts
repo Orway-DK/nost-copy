@@ -36,6 +36,20 @@ const nextConfig: NextConfig = {
         hostname: 'fdhmxyqxkezkfmcjaanz.supabase.co'
       }
     ]
+  },
+  async redirects() {
+    return [
+      {
+        source: '/c/:slug',
+        destination: '/:slug',
+        permanent: false
+      },
+      {
+        source: '/p/:slug',
+        destination: '/:slug',
+        permanent: false
+      }
+    ]
   }
 }
 

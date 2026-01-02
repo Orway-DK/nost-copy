@@ -90,7 +90,7 @@ export default function CategoriesDropdown ({
       {/* ANA DROPDOWN MENÜSÜ */}
       <div
         className={`
-          absolute top-full right-0 mt-0 pt-4 w-64
+          absolute top-full right-0 mt-0 pt-4 w-80
           transition-all duration-200 origin-top-right z-[100]
           ${
             open
@@ -119,6 +119,20 @@ export default function CategoriesDropdown ({
               </li>
             )}
 
+            {/* Tüm Kategoriler Linki */}
+            <li>
+              <Link
+                href="/c"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-between px-4 py-2.5 text-sm font-bold text-primary hover:bg-muted/50 hover:text-primary-hover transition-colors w-full text-left border-b border-border/50 mb-1"
+              >
+                <span>Tüm Kategoriler</span>
+                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </Link>
+            </li>
+
             {!loading &&
               !error &&
               items.map(item => (
@@ -144,63 +158,30 @@ function MenuItem ({
   closeMenu: () => void
 }) {
   const hasChildren = item.children && item.children.length > 0
-  const itemRef = useRef<HTMLLIElement>(null)
-
-  // Varsayılan olarak sağa açıyoruz ('right'). Eğer yer yoksa sola ('left') dönecek.
-  const [subMenuDirection, setSubMenuDirection] = useState<'right' | 'left'>(
-    'right'
-  )
-
-  const handleMouseEnter = () => {
-    if (itemRef.current && hasChildren) {
-      const rect = itemRef.current.getBoundingClientRect()
-      const windowWidth = window.innerWidth
-      const subMenuWidth = 250
-
-      if (rect.right + subMenuWidth > windowWidth) {
-        setSubMenuDirection('left')
-      } else {
-        setSubMenuDirection('right')
-      }
-    }
-  }
 
   // ORTAK LINK STİLLERİ (Tutarlılık için değişkene atandı)
   const linkClasses =
     'flex items-center justify-between px-4 py-2.5 text-sm font-medium text-foreground/80 hover:bg-muted/50 hover:text-primary transition-colors w-full text-left whitespace-nowrap'
 
   return (
-    <li
-      ref={itemRef}
-      className='group relative'
-      onMouseEnter={handleMouseEnter}
-    >
+    <li className='group relative'>
       {hasChildren ? (
         <>
           <Link href={item.href} onClick={closeMenu} className={linkClasses}>
             <span>{item.label}</span>
-            <IoChevronForward className='text-muted-foreground/70' size={14} />
+            <IoChevronForward className='text-muted-foreground/70 group-hover:rotate-90 transition-transform' size={14} />
           </Link>
 
-          {/* DİNAMİK AÇILAN ALT MENÜ */}
-          <div
-            className={`
-              absolute top-0 hidden group-hover:block w-64 z-[101]
-              ${
-                subMenuDirection === 'right'
-                  ? 'left-full pl-2'
-                  : 'right-full pr-2'
-              }
-            `}
-          >
-            <div className='bg-white dark:bg-zinc-950 rounded-xl shadow-xl border border-border py-2 animate-in fade-in duration-200'>
+          {/* ALT KATEGORİLER - AŞAĞIYA AÇILAN */}
+          <div className='absolute top-full left-0 hidden group-hover:block w-full z-[101] pt-1'>
+            <div className='bg-white dark:bg-zinc-950 rounded-lg shadow-lg border border-border py-2 animate-in fade-in duration-200'>
               <ul>
                 {item.children!.map(child => (
                   <li key={child.href}>
                     <Link
                       href={child.href}
                       onClick={closeMenu}
-                      className={linkClasses}
+                      className='flex items-center px-4 py-2 text-sm font-medium text-foreground/80 hover:bg-muted/50 hover:text-primary transition-colors w-full text-left pl-6'
                     >
                       {child.label}
                     </Link>

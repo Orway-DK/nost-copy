@@ -134,7 +134,7 @@ export default function SettingsPage() {
       </div>
 
       {/* CONTENT (Scrollable) */}
-      <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar pb-20 relative">
+      <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar relative">
         {/* ÖNEMLİ: Tablar unmount edilmiyor, CSS ile gizleniyor.
              Böylece state ve ref'ler korunuyor.
           */}

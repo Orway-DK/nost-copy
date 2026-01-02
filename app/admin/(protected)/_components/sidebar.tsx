@@ -77,8 +77,8 @@ const DICTIONARY: Record<TranslationKey, { tr: string; en: string }> = {
   top_info_bar: { tr: "Üst Bilgi Çubuğu", en: "Top Info Bar" },
   components: { tr: "Site Bileşenleri", en: "Components" },
   categories: { tr: "Kategoriler", en: "Categories" },
-  all_categories: { tr: "Tüm Kategoriler", en: "All Categories" },
-  add_category: { tr: "Kategori Ekle", en: "Add New Category" },
+  all_categories: { tr: "Kategoriler", en: "Categories" },
+  /*add_category: { tr: "Kategori Ekle", en: "Add New Category" },*/
   products: { tr: "Ürünler", en: "Products" },
   all_products: { tr: "Ürünler", en: "Products" },
   add_product: { tr: "Ürün Ekle", en: "Add New Product" },
@@ -178,11 +178,18 @@ export default function AdminSidebar({
         match: "exact",
       },
 
-      {
+      /*{
         key: "services",
         labelKey: "services",
         icon: IoBriefcaseOutline,
         href: "/admin/services",
+        match: "exact",
+      },*/
+      {
+        key: "cat_all",
+        labelKey: "all_categories",
+        icon: IoFolderOpenOutline,
+        href: "/admin/categories",
         match: "exact",
       },
       {
@@ -212,7 +219,8 @@ export default function AdminSidebar({
           },
         ],
       },
-      {
+
+      /*{
         key: "categories",
         labelKey: "categories",
         icon: IoFolderOpenOutline,
@@ -232,7 +240,7 @@ export default function AdminSidebar({
             match: "exact",
           },
         ],
-      },
+      },*/
       {
         key: "components",
         labelKey: "components",
@@ -331,7 +339,7 @@ export default function AdminSidebar({
           {!isCollapsed ? (
             <h1 className="w-full text-admin-lg font-semibold flex flex-row items-center justify-between">
               <Link
-                href={"/"}
+                href={"/home"}
                 className="hover:text-admin-accent transition-colors tracking-tight text-admin-fg"
               >
                 Nost Copy

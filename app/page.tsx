@@ -6,67 +6,68 @@ import Image from "next/image";
 export const dynamic = "force-dynamic";
 
 const heroImages: string[] = (() => {
-    try {
-        return JSON.parse(process.env.NEXT_PUBLIC_HERO_IMAGES || "[]");
-    } catch {
-        return [];
-    }
+  try {
+    return JSON.parse(process.env.NEXT_PUBLIC_HERO_IMAGES || "[]");
+  } catch {
+    return [];
+  }
 })();
 
 export default function Home() {
-    const [picked, setPicked] = useState<string | null>(null);
-    const [loaded, setLoaded] = useState(false);
+  const [picked, setPicked] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
-    useEffect(() => {
-        if (heroImages.length > 0) {
-            const idx = Math.floor(Math.random() * heroImages.length);
-            setPicked(heroImages[idx]);
-        }
-    }, []);
+  useEffect(() => {
+    if (heroImages.length > 0) {
+      const idx = Math.floor(Math.random() * heroImages.length);
+      setPicked(heroImages[idx]);
+    }
+  }, []);
 
-    return (
-        <div className="w-screen h-screen bg-black">
-            <div className="absolute flex flex-col justify-center items-center w-full h-screen text-white z-20">
-                <div className="relative">
-                <Image
-                    src="/nost.png"
-                    width={200}
-                    height={200}
-                    alt="Logo"
-                    className="spin-slow z-50 select-none"
-                    priority
-                />
-                <div className="bg-black rounded-full w-50 h-50 -z-10 absolute top-0" />
-                </div>
-                <p className="text-4xl font-poppins mt-10 text-center select-none">
-                    Sitemiz yapım aşamasındadır.
-                </p>
-                <p className="text-xl font-poppins mt-5 select-none">
-                    Kısa süre içinde yayında olacağız.
-                </p>
-            </div>
-
-            {/* Image + overlay wrapper MUST be positioned */}
-            <div className="relative w-full h-full">
-                <div className="absolute inset-0 z-10 bg-black/60" />
-                {picked && (
-                    <Image
-                        src={picked}
-                        alt="Background"
-                        fill
-                        priority
-                        placeholder="empty"
-                        className={`select-none object-cover transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"
-                            }`}
-                        sizes="100vw"
-                        onLoad={() => setLoaded(true)}
-                    />
-                )}
-            </div>
-
-            <div className="absolute bottom-0 w-full text-center text-white p-2 select-none bg-black/60 z-20">
-                © 2024 NostCopy | All rights reserved.
-            </div>
+  return (
+    <div className="w-screen h-screen bg-black">
+      <div className="absolute flex flex-col justify-center items-center w-full h-screen text-white z-20">
+        <div className="relative">
+          <Image
+            src="/nost.png"
+            width={200}
+            height={200}
+            alt="Logo"
+            className="spin-slow z-50 select-none"
+            priority
+          />
+          <div className="bg-black rounded-full w-50 h-50 -z-10 absolute top-0" />
         </div>
-    );
+        <p className="text-4xl font-poppins mt-10 text-center select-none">
+          Sitemiz yapım aşamasındadır.
+        </p>
+        <p className="text-xl font-poppins mt-5 select-none">
+          Kısa süre içinde yayında olacağız.
+        </p>
+      </div>
+
+      {/* Image + overlay wrapper MUST be positioned */}
+      <div className="relative w-full h-full">
+        <div className="absolute inset-0 z-10 bg-black/60" />
+        {picked && (
+          <Image
+            src={picked}
+            alt="Background"
+            fill
+            priority
+            placeholder="empty"
+            className={`select-none object-cover transition-opacity duration-500 ${
+              loaded ? "opacity-100" : "opacity-0"
+            }`}
+            sizes="100vw"
+            onLoad={() => setLoaded(true)}
+          />
+        )}
+      </div>
+
+      <div className="absolute bottom-0 w-full text-center text-white p-2 select-none bg-black/60 z-20">
+        © 2024 NostCopy | All rights reserved.
+      </div>
+    </div>
+  );
 }

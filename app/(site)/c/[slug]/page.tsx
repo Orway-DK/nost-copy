@@ -1,100 +1,147 @@
 // C:\Projeler\nost-copy\app\(site)\c\[slug]\page.tsx
 
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import { createSupabaseServerClient } from '@/lib/supabase/server-client'
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { createSupabaseServerClient } from "@/lib/supabase/server-client";
 import {
   FaBoxOpen,
   FaExclamationTriangle,
   FaChevronRight,
   FaFilter,
-  FaSortAmountDown
-} from 'react-icons/fa'
-import ProductCard from '@/app/_components/ProductCard'
-import CollectionFilter from '../_components/CollectionFilter'
+  FaSortAmountDown,
+} from "react-icons/fa";
+import ProductCard from "@/app/_components/ProductCard";
+import CollectionFilter from "../_components/CollectionFilter";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 interface PageProps {
-  params: Promise<{ slug: string }>
-  searchParams: Promise<Record<string, string | string[] | undefined>>
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 // ... Tip Tanımlamaları ...
 type LocalizationRow = {
-  lang_code: string
-  name: string
-  description?: string | null
-}
-type MediaRow = { image_key: string; sort_order: number }
-type PriceRow = { amount: number; currency: string }
-type VariantRow = { product_prices: PriceRow[] | null }
+  lang_code: string;
+  name: string;
+  description?: string | null;
+};
+type MediaRow = { image_key: string; sort_order: number };
+type PriceRow = { amount: number; currency: string };
+type VariantRow = { product_prices: PriceRow[] | null };
 type ProductRow = {
-  id: number
-  slug: string
-  active: boolean
-  attributes: Record<string, string[] | string> | null
-  product_localizations: LocalizationRow[] | null
-  product_media: MediaRow[]
-  product_variants: VariantRow[]
-}
+  id: number;
+  slug: string;
+  active: boolean;
+  attributes: Record<string, string[] | string> | null;
+  product_localizations: LocalizationRow[] | null;
+  product_media: MediaRow[];
+  product_variants: VariantRow[];
+};
+
+type CategoryTranslation = {
+  lang_code: string;
+  name: string;
+};
+
+type CategoryWithTranslations = {
+  id: number;
+  slug: string;
+  active: boolean;
+  name: string;
+  category_translations: CategoryTranslation[];
+};
 
 export default async function CollectionPage({
   params,
-  searchParams
+  searchParams,
 }: PageProps) {
-  const { slug } = await params
-  const sp = await searchParams
-  const langRaw = sp.lang
-  const lang = Array.isArray(langRaw) ? langRaw[0] : langRaw || 'tr'
+  const { slug } = await params;
+  const sp = await searchParams;
+  const langRaw = sp.lang;
+  const lang = Array.isArray(langRaw) ? langRaw[0] : langRaw || "tr";
 
-  const minFilter = sp.min ? parseFloat(sp.min as string) : 0
-  const maxFilter = sp.max ? parseFloat(sp.max as string) : Infinity
+  const minFilter = sp.min ? parseFloat(sp.min as string) : 0;
+  const maxFilter = sp.max ? parseFloat(sp.max as string) : Infinity;
 
-  const supabase = await createSupabaseServerClient()
+  const supabase = await createSupabaseServerClient();
 
-  const { data: settings } = await supabase.from('site_settings').select('is_category_filters_active, is_category_sorting_active').maybeSingle();
+  const { data: settings } = await supabase
+    .from("site_settings")
+    .select("is_category_filters_active, is_category_sorting_active")
+    .maybeSingle();
 
   const showFilters = settings?.is_category_filters_active ?? true;
   const showSorting = settings?.is_category_sorting_active ?? true;
 
-  // 1. Kategori
+  // 1. Kategori (çevirileriyle birlikte)
   const { data: category, error: catErr } = await supabase
-    .from('categories')
-    .select('id, slug, active, name')
-    .eq('slug', slug)
-    .single()
+    .from("categories")
+    .select(
+      `
+      id, 
+      slug, 
+      active, 
+      name,
+      category_translations(lang_code, name)
+    `
+    )
+    .eq("slug", slug)
+    .single();
 
-  if (catErr || !category || category.active === false) notFound()
+  if (catErr || !category || category.active === false) notFound();
+
+  // Kategori adını seçilen dilde bul
+  const categoryWithTranslations = category as CategoryWithTranslations;
+  const categoryTranslations =
+    categoryWithTranslations.category_translations || [];
+  const categoryName =
+    categoryTranslations.find((t: CategoryTranslation) => t.lang_code === lang)
+      ?.name ||
+    categoryTranslations.find((t: CategoryTranslation) => t.lang_code === "tr")
+      ?.name ||
+    categoryWithTranslations.name ||
+    categoryWithTranslations.slug;
+
+  // Breadcrumb metinleri
+  const breadcrumbTexts = {
+    home: lang === "tr" ? "Ana Sayfa" : lang === "de" ? "Startseite" : "Home",
+    allProducts:
+      lang === "tr"
+        ? "Tüm Ürünler"
+        : lang === "de"
+        ? "Alle Produkte"
+        : "All Products",
+  };
 
   // 2. Mapping
   const { data: mapRows, error: mapErr } = await supabase
-    .from('product_category_map')
-    .select('product_id')
-    .eq('category_slug', slug)
+    .from("product_category_map")
+    .select("product_id")
+    .eq("category_slug", slug);
 
   if (mapErr)
     return (
-      <ErrorState message='Kategori Eşleme Hatası' detail={mapErr.message} />
-    )
+      <ErrorState message="Kategori Eşleme Hatası" detail={mapErr.message} />
+    );
 
-  const mappedIds = (mapRows ?? []).map(r => r.product_id)
-  const uniqueIds = new Set<number>(mappedIds)
+  const mappedIds = (mapRows ?? []).map((r) => r.product_id);
+  const uniqueIds = new Set<number>(mappedIds);
 
   // 3. Primary Products
   const { data: primaryProducts } = await supabase
-    .from('products')
-    .select('id')
-    .eq('category_slug', slug)
+    .from("products")
+    .select("id")
+    .eq("category_slug", slug);
 
-  primaryProducts?.forEach(p => uniqueIds.add(p.id))
+  primaryProducts?.forEach((p) => uniqueIds.add(p.id));
 
   // --- ANA SORGU ---
-  let productList: ProductRow[] = []
+  let productList: ProductRow[] = [];
 
   if (uniqueIds.size > 0) {
     const { data: productsData, error: prodErr } = await supabase
-      .from('products')
+      .from("products")
       .select(
         `
         id, slug, active, attributes,
@@ -103,87 +150,87 @@ export default async function CollectionPage({
         product_variants ( product_prices ( amount, currency ) )
       `
       )
-      .in('id', Array.from(uniqueIds))
-      .order('sort_order', {
-        referencedTable: 'product_media',
-        ascending: true
-      })
+      .in("id", Array.from(uniqueIds))
+      .order("sort_order", {
+        referencedTable: "product_media",
+        ascending: true,
+      });
 
     if (prodErr)
       return (
-        <ErrorState message='Ürün Verisi Hatası' detail={prodErr.message} />
-      )
-    productList = (productsData ?? []) as any as ProductRow[]
+        <ErrorState message="Ürün Verisi Hatası" detail={prodErr.message} />
+      );
+    productList = (productsData ?? []) as ProductRow[];
   }
 
-  const activeProducts = productList.filter(p => p.active)
+  const activeProducts = productList.filter((p) => p.active);
 
   // --- OTOMATİK FİLTRE OLUŞTURUCU (Sayılı) ---
-  const attributeCounts: Record<string, Record<string, number>> = {}
+  const attributeCounts: Record<string, Record<string, number>> = {};
 
-  activeProducts.forEach(p => {
-    if (p.attributes && typeof p.attributes === 'object') {
+  activeProducts.forEach((p) => {
+    if (p.attributes && typeof p.attributes === "object") {
       Object.entries(p.attributes).forEach(([key, values]) => {
-        if (!attributeCounts[key]) attributeCounts[key] = {}
-        const valArray = Array.isArray(values) ? values : [values as string]
-        valArray.forEach(v => {
-          attributeCounts[key][v] = (attributeCounts[key][v] || 0) + 1
-        })
-      })
+        if (!attributeCounts[key]) attributeCounts[key] = {};
+        const valArray = Array.isArray(values) ? values : [values as string];
+        valArray.forEach((v) => {
+          attributeCounts[key][v] = (attributeCounts[key][v] || 0) + 1;
+        });
+      });
     }
-  })
+  });
 
-  const dynamicFilters: Record<string, { name: string; count: number }[]> = {}
+  const dynamicFilters: Record<string, { name: string; count: number }[]> = {};
 
-  Object.keys(attributeCounts).forEach(key => {
+  Object.keys(attributeCounts).forEach((key) => {
     const options = Object.entries(attributeCounts[key])
       .map(([name, count]) => ({
         name,
-        count
+        count,
       }))
-      .sort((a, b) => a.name.localeCompare(b.name))
+      .sort((a, b) => a.name.localeCompare(b.name));
 
-    dynamicFilters[key] = options
-  })
+    dynamicFilters[key] = options;
+  });
 
   // --- ÜRÜN İŞLEME VE FİLTRELEME ---
   const displayItems = activeProducts
-    .map(p => {
+    .map((p) => {
       const loc =
-        p.product_localizations?.find(l => l.lang_code === lang) ||
+        p.product_localizations?.find((l) => l.lang_code === lang) ||
         p.product_localizations?.[0] ||
-        null
+        null;
 
-      let imageUrl = null
+      let imageUrl = null;
       if (p.product_media && p.product_media.length > 0) {
         const firstMedia = p.product_media.sort(
           (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
-        )[0]
-        const imgKey = firstMedia.image_key || ''
-        if (imgKey.startsWith('http')) {
-          if (imgKey.includes('supabase.co')) imageUrl = imgKey
-        } else if (imgKey.startsWith('/')) {
-          imageUrl = imgKey
+        )[0];
+        const imgKey = firstMedia.image_key || "";
+        if (imgKey.startsWith("http")) {
+          if (imgKey.includes("supabase.co")) imageUrl = imgKey;
+        } else if (imgKey.startsWith("/")) {
+          imageUrl = imgKey;
         } else {
           const projectUrl =
             process.env.NEXT_PUBLIC_SUPABASE_URL ||
-            'fdhmxyqxkezkfmcjaanz.supabase.co'
-          imageUrl = `${projectUrl}/storage/v1/object/public/products/${imgKey}`
+            "fdhmxyqxkezkfmcjaanz.supabase.co";
+          imageUrl = `${projectUrl}/storage/v1/object/public/products/${imgKey}`;
         }
       }
 
-      let minPrice: number | null = null
+      let minPrice: number | null = null;
       if (p.product_variants && p.product_variants.length > 0) {
-        p.product_variants.forEach(variant => {
-          variant.product_prices?.forEach(price => {
+        p.product_variants.forEach((variant) => {
+          variant.product_prices?.forEach((price) => {
             if (
               price.amount &&
               (minPrice === null || price.amount < minPrice)
             ) {
-              minPrice = price.amount
+              minPrice = price.amount;
             }
-          })
-        })
+          });
+        });
       }
 
       return {
@@ -192,82 +239,83 @@ export default async function CollectionPage({
         description: loc?.description || null,
         imageUrl: imageUrl,
         price: minPrice,
-        attributes: p.attributes
-      }
+        attributes: p.attributes,
+      };
     })
-    .filter(item => {
+    .filter((item) => {
       // Filtreler kapalıysa bile logic çalışır ama UI görünmez.
       // İstersen burayı da if(showFilters) içine alabilirsin ama URL parametresi varsa çalışması daha doğrudur.
-      
+
       // 1. Fiyat Kontrolü
-      const price = item.price || 0
+      const price = item.price || 0;
       if ((minFilter > 0 || maxFilter < Infinity) && item.price) {
-        if (price < minFilter || price > maxFilter) return false
+        if (price < minFilter || price > maxFilter) return false;
       }
 
       // 2. Dinamik Özellik Kontrolü
       for (const [key, value] of Object.entries(sp)) {
-        if (['min', 'max', 'lang'].includes(key)) continue
+        if (["min", "max", "lang"].includes(key)) continue;
 
-        const selectedOptions = (value as string).split(',')
+        const selectedOptions = (value as string).split(",");
         const productAttributeValues = item.attributes
           ? item.attributes[key]
-          : null
+          : null;
 
-        if (!productAttributeValues) return false
+        if (!productAttributeValues) return false;
 
         const productValuesArray = Array.isArray(productAttributeValues)
           ? productAttributeValues
-          : [productAttributeValues as string]
+          : [productAttributeValues as string];
 
-        const hasMatch = selectedOptions.some(opt =>
+        const hasMatch = selectedOptions.some((opt) =>
           productValuesArray.includes(opt)
-        )
+        );
 
-        if (!hasMatch) return false
+        if (!hasMatch) return false;
       }
 
-      return true
-    })
+      return true;
+    });
 
   return (
-    <div className='min-h-screen w-full text-foreground transition-colors duration-300'>
+    <div className="min-h-screen w-full text-foreground transition-colors duration-300">
       {/* BREADCRUMB */}
-      <div className='border-b border-border w-full'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-3 pt-4'>
+      <div className="border-b border-border w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-3 pt-4">
           <nav
-            className='flex items-center text-xs text-muted-foreground gap-2'
-            aria-label='Breadcrumb'
+            className="flex items-center text-xs text-muted-foreground gap-2"
+            aria-label="Breadcrumb"
           >
-            <Link href='/' className='hover:text-primary transition-colors'>
-              Anasayfa
+            <Link href="/" className="hover:text-primary transition-colors">
+              {breadcrumbTexts.home}
             </Link>
             <FaChevronRight size={8} />
-            <Link
-              href={`/c/${category.slug}`}
-              className='font-semibold text-foreground capitalize hover:text-primary transition-colors'
-            >
-              {category.name || category.slug}
+            <Link href="/c" className="hover:text-primary transition-colors">
+              {breadcrumbTexts.allProducts}
             </Link>
+            <FaChevronRight size={8} />
+            <span className="font-semibold text-foreground capitalize">
+              {categoryName}
+            </span>
           </nav>
         </div>
       </div>
 
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* HEADER */}
-        <div className='flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8 border-b border-border/50 pb-6'>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8 border-b border-border/50 pb-6">
           <div>
-            <h1 className='text-3xl md:text-4xl font-black tracking-tight text-foreground uppercase'>
-              {category.name || category.slug}
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-foreground uppercase">
+              {categoryName}
             </h1>
-            <p className='text-sm text-muted-foreground mt-1'>
+            <p className="text-sm text-muted-foreground mt-1">
               {displayItems.length} ürün listeleniyor
             </p>
           </div>
-        <div className='flex items-center gap-2'>
+          <div className="flex items-center gap-2">
             {showSorting && (
-              <button className='flex items-center gap-2 px-4 py-2 ...'>
-                <FaSortAmountDown className='text-muted-foreground' />
+              <button className="flex items-center gap-2 px-4 py-2 ...">
+                <FaSortAmountDown className="text-muted-foreground" />
                 <span>Önerilen Sıralama</span>
               </button>
             )}
@@ -275,43 +323,47 @@ export default async function CollectionPage({
         </div>
 
         {/* LAYOUT */}
-        <div className='grid grid-cols-1 lg:grid-cols-4 gap-8'>
-          
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* SIDEBAR - Koşullu Render */}
           {showFilters && (
-            <div className='hidden lg:block lg:col-span-1'>
-              <div className='sticky top-4'>
+            <div className="hidden lg:block lg:col-span-1">
+              <div className="sticky top-4">
                 <CollectionFilter dynamicFilters={dynamicFilters} />
               </div>
             </div>
           )}
 
           {/* PRODUCTS - Dinamik Kolon Genişliği */}
-          <div className={showFilters ? 'lg:col-span-3' : 'lg:col-span-4'}>
-            
+          <div className={showFilters ? "lg:col-span-3" : "lg:col-span-4"}>
             {/* Mobil Filtre Butonu - Koşullu Render */}
             {showFilters && (
-              <button className='lg:hidden w-full mb-4 py-3 flex items-center justify-center gap-2 bg-card border border-border rounded-lg font-bold shadow-sm'>
+              <button className="lg:hidden w-full mb-4 py-3 flex items-center justify-center gap-2 bg-card border border-border rounded-lg font-bold shadow-sm">
                 <FaFilter /> Filtrele ve Sırala
               </button>
             )}
 
             {!displayItems.length ? (
-              <div className='flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-border rounded-xl bg-card/30'>
-                <div className='w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4 text-muted-foreground'>
-                  <FaBoxOpen className='text-3xl' />
+              <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-border rounded-xl bg-card/30">
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4 text-muted-foreground">
+                  <FaBoxOpen className="text-3xl" />
                 </div>
-                <h3 className='text-lg font-bold text-foreground'>
+                <h3 className="text-lg font-bold text-foreground">
                   Sonuç Bulunamadı
                 </h3>
-                <p className='text-sm text-muted-foreground mt-1'>
+                <p className="text-sm text-muted-foreground mt-1">
                   Seçilen kriterlere uygun ürün bulunmuyor.
                 </p>
               </div>
             ) : (
               // Eğer sidebar yoksa (col-span-4), grid 4'lü olabilir, varsa 3'lü.
-              <div className={`grid grid-cols-2 gap-4 ${showFilters ? 'md:grid-cols-3 lg:gap-6' : 'md:grid-cols-3 lg:grid-cols-4 lg:gap-6'}`}>
-                {displayItems.map(item => (
+              <div
+                className={`grid grid-cols-2 gap-4 ${
+                  showFilters
+                    ? "md:grid-cols-3 lg:gap-6"
+                    : "md:grid-cols-3 lg:grid-cols-4 lg:gap-6"
+                }`}
+              >
+                {displayItems.map((item) => (
                   <ProductCard key={item.slug} {...item} />
                 ))}
               </div>
@@ -320,31 +372,31 @@ export default async function CollectionPage({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function ErrorState({ message, detail }: { message: string; detail: string }) {
   return (
-    <div className='w-full min-h-[50vh] flex flex-col items-center justify-center p-6 text-center'>
-      <div className='bg-destructive/10 text-destructive p-6 rounded-xl border border-destructive/20 max-w-md'>
-        <FaExclamationTriangle className='text-3xl mb-3 mx-auto' />
-        <h1 className='text-lg font-bold'>{message}</h1>
-        <p className='text-xs mt-2 opacity-80 font-mono bg-black/10 p-2 rounded'>
+    <div className="w-full min-h-[50vh] flex flex-col items-center justify-center p-6 text-center">
+      <div className="bg-destructive/10 text-destructive p-6 rounded-xl border border-destructive/20 max-w-md">
+        <FaExclamationTriangle className="text-3xl mb-3 mx-auto" />
+        <h1 className="text-lg font-bold">{message}</h1>
+        <p className="text-xs mt-2 opacity-80 font-mono bg-black/10 p-2 rounded">
           {detail}
         </p>
       </div>
     </div>
-  )
+  );
 }
 
 export async function generateMetadata({
-  params
+  params,
 }: {
-  params: Promise<{ slug: string }>
+  params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params
+  const { slug } = await params;
   return {
     title: `${slug} | Nost Copy`,
-    description: `${slug} kategorisindeki ürünleri inceleyin.`
-  }
+    description: `${slug} kategorisindeki ürünleri inceleyin.`,
+  };
 }

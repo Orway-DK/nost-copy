@@ -40,6 +40,16 @@ type ProductDetail = {
   product_variants: VariantRow[]
 }
 
+type CategoryTranslation = {
+  lang_code: string
+  name: string
+}
+
+type CategoryWithTranslations = {
+  slug: string
+  category_translations: CategoryTranslation[]
+}
+
 export default async function ProductDetailPage ({
   params,
   searchParams
@@ -70,6 +80,27 @@ export default async function ProductDetailPage ({
 
   const product = productData as unknown as ProductDetail
 
+  // Kategori adını bul (eğer category_slug varsa)
+  let categoryName = product.category_slug || ''
+  if (product.category_slug) {
+    const { data: categoryData } = await supabase
+      .from('categories')
+      .select(`
+        slug,
+        category_translations(lang_code, name)
+      `)
+      .eq('slug', product.category_slug)
+      .single()
+    
+    if (categoryData) {
+      const categoryWithTranslations = categoryData as CategoryWithTranslations
+      const categoryTranslations = categoryWithTranslations.category_translations || []
+      const foundTranslation = categoryTranslations.find((t: CategoryTranslation) => t.lang_code === lang) ||
+                              categoryTranslations.find((t: CategoryTranslation) => t.lang_code === 'tr')
+      categoryName = foundTranslation?.name || product.category_slug
+    }
+  }
+
   // Dil ve İçerik
   const loc =
     product.product_localizations?.find(l => l.lang_code === lang) ||
@@ -78,6 +109,12 @@ export default async function ProductDetailPage ({
 
   const name = loc?.name || product.slug
   const description = loc?.description || ''
+
+  // Breadcrumb metinleri
+  const breadcrumbTexts = {
+    home: lang === 'tr' ? 'Ana Sayfa' : lang === 'de' ? 'Startseite' : 'Home',
+    allProducts: lang === 'tr' ? 'Tüm Ürünler' : lang === 'de' ? 'Alle Produkte' : 'All Products'
+  }
 
   // Özellik Ayrıştırma
   const descriptionLines = description
@@ -130,16 +167,27 @@ export default async function ProductDetailPage ({
       <div className='w-full border-b border-border/40 bg-background/30 backdrop-blur-sm'>
         <div className='max-w-[1280px] mx-auto px-4 py-2.5 text-[11px] md:text-xs text-muted-foreground flex items-center gap-2'>
           <Link href='/' className='hover:text-primary transition-colors'>
-            Anasayfa
+            {breadcrumbTexts.home}
           </Link>
           <FaChevronRight size={8} />
           <Link
-            href={`/collections/${product.category_slug}`}
-            className='hover:text-primary capitalize'
+            href='/c'
+            className='hover:text-primary transition-colors'
           >
-            {product.category_slug}
+            {breadcrumbTexts.allProducts}
           </Link>
           <FaChevronRight size={8} />
+          {product.category_slug && categoryName && (
+            <>
+              <Link
+                href={`/c/${product.category_slug}`}
+                className='hover:text-primary capitalize'
+              >
+                {categoryName}
+              </Link>
+              <FaChevronRight size={8} />
+            </>
+          )}
           <span className='font-medium text-foreground truncate max-w-[200px] opacity-80'>
             {name}
           </span>

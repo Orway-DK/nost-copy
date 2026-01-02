@@ -8,48 +8,47 @@ export const dynamic = "force-dynamic";
 
 // Helper: Düz listeyi ağaç yapısına çevir
 function buildTree(items: any[]) {
-    const map: Record<number, any> = {};
-    const roots: any[] = [];
+  const map: Record<number, any> = {};
+  const roots: any[] = [];
 
-    // Önce hepsini map'e at ve children array'i ekle
-    items.forEach(item => {
-        map[item.id] = { ...item, children: [] };
-    });
+  // Önce hepsini map'e at ve children array'i ekle
+  items.forEach((item) => {
+    map[item.id] = { ...item, children: [] };
+  });
 
-    // Sonra ebeveynlerine bağla
-    items.forEach(item => {
-        if (item.parent_id && map[item.parent_id]) {
-            map[item.parent_id].children.push(map[item.id]);
-        } else {
-            roots.push(map[item.id]);
-        }
-    });
+  // Sonra ebeveynlerine bağla
+  items.forEach((item) => {
+    if (item.parent_id && map[item.parent_id]) {
+      map[item.parent_id].children.push(map[item.id]);
+    } else {
+      roots.push(map[item.id]);
+    }
+  });
 
-    return roots;
+  return roots;
 }
 
 export default async function CategoriesPage() {
-    const { data } = await adminSupabase
-        .from("categories")
-        .select("*")
-        .order("sort", { ascending: true })
-        .order("id", { ascending: true });
+  const { data } = await adminSupabase
+    .from("categories")
+    .select("*")
+    .order("sort", { ascending: true })
+    .order("id", { ascending: true });
 
-    const treeData = buildTree(data || []);
+  const treeData = buildTree(data || []);
 
-    return (
-        <div className="grid gap-6">
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold" style={{ color: "var(--admin-fg)" }}>Kategoriler</h2>
-                <Link
-                    href="/admin/categories/new"
-                    className="btn-admin btn-admin-primary flex items-center gap-2"
-                >
-                    <IoAdd size={18} /> Yeni Kategori
-                </Link>
-            </div>
+  // Tüm kategorileri flat list olarak da al (form için)
+  const { data: allCategories } = await adminSupabase
+    .from("categories")
+    .select("id, name")
+    .order("name");
 
-            <CategoryList initialData={treeData} />
-        </div>
-    );
+  return (
+    <div className="grid gap-2">
+      <CategoryList
+        initialData={treeData}
+        allCategories={allCategories || []}
+      />
+    </div>
+  );
 }
