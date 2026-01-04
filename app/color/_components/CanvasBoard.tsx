@@ -339,7 +339,7 @@ const CanvasBoard = forwardRef<CanvasBoardRef, CanvasBoardProps>(
     return (
       <div
         ref={containerRef}
-        className="flex-1 overflow-hidden relative cursor-move bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] flex items-center justify-center"
+        className="flex-1 overflow-hidden relative cursor-move bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] flex items-center justify-center touch-none"
         onWheel={handleWheel}
         onMouseDown={(e) => {
           if (e.button === 0) {
@@ -353,16 +353,62 @@ const CanvasBoard = forwardRef<CanvasBoardRef, CanvasBoardProps>(
         }}
         onMouseUp={() => setIsDragging(false)}
         onMouseLeave={() => setIsDragging(false)}
+        onTouchStart={(e) => {
+          if (e.touches.length === 1) {
+            setIsDragging(true);
+            const touch = e.touches[0];
+            setDragStart({ x: touch.clientX - pan.x, y: touch.clientY - pan.y });
+          } else if (e.touches.length === 2) {
+            // Pinch zoom için
+            e.preventDefault();
+          }
+        }}
+        onTouchMove={(e) => {
+          if (e.touches.length === 1 && isDragging) {
+            const touch = e.touches[0];
+            setPan({ x: touch.clientX - dragStart.x, y: touch.clientY - dragStart.y });
+          } else if (e.touches.length === 2) {
+            // Pinch zoom implementasyonu
+            e.preventDefault();
+          }
+        }}
+        onTouchEnd={() => setIsDragging(false)}
       >
         <div
           style={{
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoomLevel})`,
             transformOrigin: "center center",
             transition: isDragging ? "none" : "transform 0.1s ease-out",
+            touchAction: "none",
           }}
-          className="shadow-2xl bg-white"
+          className="shadow-2xl bg-white max-w-full max-h-full"
         >
-          <canvas ref={canvasRef} className="block pointer-events-none" />
+          <canvas ref={canvasRef} className="block pointer-events-none max-w-full max-h-full" />
+        </div>
+        
+        {/* Mobil için zoom kontrolleri */}
+        <div className="absolute bottom-4 right-4 flex flex-col gap-2 md:hidden">
+          <button
+            onClick={() => setZoomLevel(prev => Math.min(3, prev + 0.1))}
+            className="w-10 h-10 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg"
+          >
+            <span className="text-lg font-bold">+</span>
+          </button>
+          <button
+            onClick={() => setZoomLevel(prev => Math.max(0.1, prev - 0.1))}
+            className="w-10 h-10 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg"
+          >
+            <span className="text-lg font-bold">-</span>
+          </button>
+          <button
+            onClick={() => {
+              setPan({ x: 0, y: 0 });
+              setZoomLevel(0.4);
+            }}
+            className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg"
+          >
+            <span className="text-xs">↺</span>
+          </button>
         </div>
       </div>
     );

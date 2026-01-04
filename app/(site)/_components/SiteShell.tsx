@@ -10,7 +10,7 @@ import LoadingCompleter from "@/components/LoadingCompleter";
 
 import TopHorizontalBanner from "@/app/_components/TopHorizontalBanner";
 import NavigationBar from "@/app/_components/NavigationBar/NavigationBar"; // Klasik (V1)
-import MegaNavbar from "@/app/_components/NavigationBar/MegaNavbar"; // Mega (V2)
+import MegaNavbar from "@/app/_components/NavigationBar/index"; // Mega (V2)
 import Footer from "@/app/_components/Footer";
 
 // --- NAVBAR AYARINI ÇEKEN FONKSİYON ---

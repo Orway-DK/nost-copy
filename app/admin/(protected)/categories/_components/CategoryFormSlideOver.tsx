@@ -1,9 +1,11 @@
+// app/admin/(protected)/categories/_components/CategoryFormSlideOver.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import SlideOver from "@/app/admin/_components/SlideOver";
 import { IoAdd, IoSave } from "react-icons/io5";
 import TextareaAutoResize from "@/components/TextareaAutoResize";
+import CategoryImageUpload from "./CategoryImageUpload";
 
 interface CategoryFormSlideOverProps {
   isOpen: boolean;
@@ -30,6 +32,8 @@ export default function CategoryFormSlideOver({
     parent_id: editingCategory?.parent_id || null,
     active: editingCategory?.active ?? true,
     sort: editingCategory?.sort || 0,
+    image_path: editingCategory?.image_path || null,
+    image_alt_text: editingCategory?.image_alt_text || "",
   });
 
   // Form verilerini editingCategory değiştiğinde güncelle
@@ -43,6 +47,8 @@ export default function CategoryFormSlideOver({
         parent_id: editingCategory.parent_id || null,
         active: editingCategory.active ?? true,
         sort: editingCategory.sort || 0,
+        image_path: editingCategory.image_path || null,
+        image_alt_text: editingCategory.image_alt_text || "",
       });
     } else {
       // Yeni kategori için boş form
@@ -54,6 +60,8 @@ export default function CategoryFormSlideOver({
         parent_id: null,
         active: true,
         sort: 0,
+        image_path: null,
+        image_alt_text: "",
       });
     }
   }, [editingCategory]);
@@ -64,7 +72,9 @@ export default function CategoryFormSlideOver({
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
@@ -80,7 +90,6 @@ export default function CategoryFormSlideOver({
           ? null
           : value,
     }));
-
   };
 
   return (
@@ -127,6 +136,21 @@ export default function CategoryFormSlideOver({
               onChange={handleChange}
               minRows={3}
               maxRows={10}
+            />
+          </div>
+
+          {/* Görsel Yükleme Alanı */}
+          <div className="space-y-2 mt-4">
+            <label className="admin-label">Kategori Görseli</label>
+            <CategoryImageUpload
+              currentPath={formData.image_path}
+              altText={formData.image_alt_text}
+              onImageChange={(path) =>
+                setFormData((prev) => ({ ...prev, image_path: path }))
+              }
+              onAltTextChange={(text) =>
+                setFormData((prev) => ({ ...prev, image_alt_text: text }))
+              }
             />
           </div>
 

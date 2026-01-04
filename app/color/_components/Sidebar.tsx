@@ -25,7 +25,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <aside className="w-[360px] flex flex-col bg-white border-r border-gray-300 shadow-xl z-20 shrink-0 h-full text-gray-900">
+    <aside className="w-full md:w-[360px] flex flex-col bg-white border-r border-gray-300 shadow-xl z-20 shrink-0 h-full text-gray-900">
       {/* Header */}
       <div className="px-5 py-4 border-b border-gray-200 bg-gray-50">
         <h1 className="text-lg font-bold text-gray-900">
@@ -33,13 +33,13 @@ const Sidebar: React.FC<SidebarProps> = ({
         </h1>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-5 space-y-8">
+      <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-6 md:space-y-8">
         {/* 1. ANA RENK (Merkez) */}
         <section>
           <h3 className="text-xs font-bold text-gray-900 border-b border-gray-200 pb-2 mb-3 uppercase tracking-wider">
             Merkez Renk (Ana)
           </h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2 md:gap-3">
             {(["c", "m", "y", "k"] as Channel[]).map((key) => (
               <div
                 key={key}
@@ -99,16 +99,16 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         {/* 2. VARYASYON YÖNLERİ */}
         <section>
-          <div className="flex items-center justify-between border-b border-gray-200 pb-2 mb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-200 pb-2 mb-3 gap-2">
             <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">
               Yön & İşlem
             </h3>
 
             {/* Ekle / Çıkar Butonları */}
-            <div className="flex bg-gray-200 rounded p-0.5">
+            <div className="flex bg-gray-200 rounded p-0.5 self-start">
               <button
                 onClick={() => handleInputChange("operation", "add")}
-                className={`px-3 py-1 text-[10px] font-bold rounded transition-colors
+                className={`px-2 md:px-3 py-1 text-[10px] font-bold rounded transition-colors
                       ${
                         settings.operation === "add"
                           ? "bg-green-600 text-white shadow-sm"
@@ -119,7 +119,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               </button>
               <button
                 onClick={() => handleInputChange("operation", "subtract")}
-                className={`px-3 py-1 text-[10px] font-bold rounded transition-colors
+                className={`px-2 md:px-3 py-1 text-[10px] font-bold rounded transition-colors
                       ${
                         settings.operation === "subtract"
                           ? "bg-red-600 text-white shadow-sm"
@@ -136,7 +136,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             <div className="space-y-3 bg-gray-50 p-3 rounded border border-gray-200">
               {/* YUKARI */}
               <div className="flex justify-center">
-                <div className="text-center w-28">
+                <div className="text-center w-20 md:w-28">
                   <label className="text-[9px] font-bold text-gray-500 block mb-1">
                     YUKARI (Artar)
                   </label>
@@ -157,7 +157,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
               {/* SOL - ORTA - SAĞ */}
               <div className="flex justify-between items-center px-1 gap-2">
-                <div className="w-28">
+                <div className="w-20 md:w-28">
                   <label className="text-[9px] font-bold text-gray-500 block mb-1">
                     SOL (Artar)
                   </label>
@@ -180,7 +180,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   +
                 </div>
 
-                <div className="w-28 text-right">
+                <div className="w-20 md:w-28 text-right">
                   <label className="text-[9px] font-bold text-gray-500 block mb-1">
                     SAĞ (Artar)
                   </label>
@@ -201,7 +201,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
               {/* AŞAĞI */}
               <div className="flex justify-center">
-                <div className="text-center w-28">
+                <div className="text-center w-20 md:w-28">
                   <label className="text-[9px] font-bold text-gray-500 block mb-1">
                     AŞAĞI (Artar)
                   </label>
@@ -293,7 +293,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
             <div>
               <label className="text-[10px] font-bold text-gray-600 block mb-1">
                 Kutu Boyutu (mm)
@@ -354,7 +354,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
           {/* Manuel Grid Ayarları (Sadece Auto kapalıysa) */}
           {!settings.isAutoFit && (
-            <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-2 gap-4 animate-in fade-in">
+            <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 animate-in fade-in">
               <div>
                 <label className="text-[10px] font-bold text-gray-600 block mb-1">
                   Satır Sayısı

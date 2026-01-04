@@ -1,6 +1,6 @@
 // C:\Projeler\nost-copy\types\index.ts
 
-// --- 1. ŞABLON (CLASS) TİPLERİ ---
+// --- 1. ŞABLON VE MATERYAL TİPLERİ ---
 export type FieldType =
   | "text"
   | "number"
@@ -9,17 +9,25 @@ export type FieldType =
   | "textarea"
   | "paper";
 
+// (Düzeltme: TemplateField 3 kere tanımlanmıştı, hepsini tek bir yerde birleştirdim)
 export interface TemplateField {
-  id: string;
-  key: string;
-  label: string;
-  type: FieldType;
+  id: string; // Unique ID (UUID)
+  key: string; // DB Key: "paper_type"
+  label: string; // Görünen: "Kağıt Türü"
+  type: FieldType; // Input tipi
   required: boolean;
-  options?: string[];
-  is_variant?: boolean;
+  options?: string[]; // Select ise seçenekler
+  is_variant?: boolean; // Varyant oluşturur mu?
+  suffix?: string; // Birim eki: "gr", "cm"
 }
 
-// Materyal Tipini de tanımlayalım (Frontend'de kullanmak için)
+export interface ProductTemplate {
+  id: number;
+  name: string; // "Kupa", "Kartvizit"
+  schema: TemplateField[]; // Form yapısı (JSONB)
+  created_at?: string;
+}
+
 export interface Material {
   id: number;
   name: string;
@@ -30,28 +38,34 @@ export interface Material {
   is_active: boolean;
 }
 
-// ... Diğer tipler (ProductTemplate vb.) aynı kalır
-
-export interface TemplateField {
-  key: string; // DB'de tutulacak key: "paper_type", "volume"
-  label: string; // Ekranda görünen: "Kağıt Türü", "Hacim"
-  type: FieldType; // Input tipi
-  options?: string[]; // Eğer select ise seçenekler: ["Mat", "Parlak"]
-  required: boolean;
-  suffix?: string; // Birim eki: "ml", "gr", "cm"
+// --- 2. KATEGORİ TİPLERİ (YENİ EKLENDİ) ---
+export interface CategoryTranslation {
+  lang_code: string;
+  name: string;
+  description?: string | null;
 }
 
-export interface ProductTemplate {
+export interface Category {
   id: number;
-  name: string; // "Kupa", "Kartvizit"
-  schema: TemplateField[]; // Form yapısı (JSONB)
-  created_at?: string;
+  parent_id: number | null;
+  name: string; // Varsayılan isim
+  slug: string;
+  active: boolean;
+  sort?: number;
+
+  // YENİ EKLENEN GÖRSEL ALANLARI
+  image_path?: string | null; // "kartvizit.jpg"
+  image_alt_text?: string | null; // "Siyah lüks kartvizit"
+
+  // İlişkiler
+  category_translations?: CategoryTranslation[];
+  children?: Category[]; // Ağaç yapısı için
 }
 
-// --- 2. ÜRÜN TİPLERİ ---
+// --- 3. ÜRÜN TİPLERİ ---
 export interface Product {
   id: number;
-  template_id: number | null; // Hangi şablona bağlı?
+  template_id: number | null;
   sku: string | null;
   name: string;
   slug: string;
@@ -59,25 +73,34 @@ export interface Product {
   description: string | null;
   active: boolean;
 
-  // Dinamik Özellikler (Ürünün GENEL özellikleri - Filtreleme için)
+  // Dinamik Özellikler
   attributes: Record<string, any>;
 
   // İlişkiler
   product_media?: ProductMedia[];
   product_variants?: ProductVariant[];
   product_template?: ProductTemplate;
+  product_localizations?: {
+    lang_code: string;
+    name: string;
+    description?: string | null;
+  }[];
 }
 
-// --- 3. VARYANT TİPLERİ ---
+// --- 4. VARYANT VE MEDYA TİPLERİ ---
 export interface ProductVariant {
   id: number;
   product_id: number;
-
-  // Dinamik Özellikler (Varyantın ÖZEL kombinasyonu - Fiyatı belirleyenler)
   // Örn: { "adet": 1000, "kagit": "Mat Kuşe" }
   attributes: Record<string, any>;
 
-  // Fiyat (Sanal alan, product_prices tablosundan gelecek)
+  // Fiyatlar (product_prices tablosundan join ile gelirse)
+  product_prices?: {
+    amount: number;
+    currency: string;
+  }[];
+
+  // Frontend'de hesaplanan tekil fiyat
   price?: number;
   currency?: string;
 }
@@ -87,22 +110,4 @@ export interface ProductMedia {
   product_id: number;
   image_key: string;
   sort_order: number;
-}
-
-// types.ts veya types/index.ts
-
-export interface TemplateField {
-  id: string; // <--- YENİ EKLENDİ (Unique ID)
-  key: string;
-  label: string;
-  type: FieldType;
-  required: boolean;
-  options?: string[];
-}
-
-export interface ProductTemplate {
-  id: number;
-  name: string;
-  schema: TemplateField[];
-  created_at?: string;
 }

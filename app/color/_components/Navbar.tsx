@@ -25,12 +25,12 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = (props) => {
   return (
-    <div className="h-16 bg-gray-800 flex items-center justify-between px-4 shadow-md text-white z-10 shrink-0 overflow-x-auto overflow-y-hidden">
-      <div className="flex items-center justify-between w-full min-w-[600px]">
+    <div className="h-auto md:h-16 bg-gray-800 flex flex-col md:flex-row items-stretch md:items-center justify-between px-3 md:px-4 shadow-md text-white z-10 shrink-0 overflow-x-auto overflow-y-hidden">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between w-full min-w-0">
         {/* SOL: Ayarlar */}
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-wrap items-center gap-2 md:gap-4 py-2 md:py-0">
           {/* Kağıt */}
-          <div className="flex flex-col shrink-0">
+          <div className="flex flex-col shrink-0 min-w-[120px]">
             <span className="text-[9px] text-gray-400 font-bold uppercase">
               Kağıt
             </span>
@@ -41,7 +41,7 @@ const Navbar: React.FC<NavbarProps> = (props) => {
                   PAPER_PRESETS.find((p) => p.id === e.target.value)!
                 )
               }
-              className="bg-gray-700 text-white text-xs border border-gray-600 rounded px-2 py-1 cursor-pointer"
+              className="bg-gray-700 text-white text-xs border border-gray-600 rounded px-2 py-1 cursor-pointer w-full"
             >
               {PAPER_PRESETS.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -52,7 +52,7 @@ const Navbar: React.FC<NavbarProps> = (props) => {
           </div>
 
           {/* Şablon */}
-          <div className="flex flex-col shrink-0">
+          <div className="flex flex-col shrink-0 min-w-[140px]">
             <span className="text-[9px] text-blue-400 font-bold uppercase">
               Kesim Şablonu
             </span>
@@ -63,7 +63,7 @@ const Navbar: React.FC<NavbarProps> = (props) => {
                   TEMPLATE_PRESETS.find((t) => t.id === e.target.value)!
                 )
               }
-              className="bg-gray-700 text-white text-xs border border-blue-500 rounded px-2 py-1 cursor-pointer"
+              className="bg-gray-700 text-white text-xs border border-blue-500 rounded px-2 py-1 cursor-pointer w-full"
             >
               {TEMPLATE_PRESETS.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -104,7 +104,7 @@ const Navbar: React.FC<NavbarProps> = (props) => {
         </div>
 
         {/* ORTA: Görünüm Kontrol */}
-        <div className="flex items-center space-x-3 mx-4 shrink-0">
+        <div className="flex items-center justify-between md:justify-center space-x-3 mx-0 md:mx-4 shrink-0 py-2 md:py-0 border-t md:border-t-0 border-gray-700 md:border-none">
           <label className="flex items-center space-x-2 text-xs cursor-pointer select-none">
             <input
               type="checkbox"
@@ -116,7 +116,7 @@ const Navbar: React.FC<NavbarProps> = (props) => {
               Güvenli Alan
             </span>
           </label>
-          <div className="h-6 w-px bg-gray-600"></div>
+          <div className="h-6 w-px bg-gray-600 hidden md:block"></div>
           <button
             onClick={props.onResetView}
             className="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded border border-gray-600 whitespace-nowrap"
@@ -126,10 +126,10 @@ const Navbar: React.FC<NavbarProps> = (props) => {
         </div>
 
         {/* SAĞ: Export */}
-        <div className="flex items-center space-x-2 shrink-0">
+        <div className="flex items-center justify-between md:justify-end space-x-2 shrink-0 py-2 md:py-0 border-t md:border-t-0 border-gray-700 md:border-none">
           <button
             onClick={() => props.onExportPdf("cut")}
-            className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-xs border border-gray-500 transition flex flex-col items-center leading-none min-w-[70px]"
+            className="bg-gray-700 hover:bg-gray-600 text-white px-2 md:px-3 py-1.5 rounded text-xs border border-gray-500 transition flex flex-col items-center leading-none min-w-[100px] md:min-w-[70px] flex-1 md:flex-none"
           >
             <span className="font-bold whitespace-nowrap">BIÇAK PDF</span>
             <span className="text-[9px] text-gray-400 mt-0.5">
@@ -139,7 +139,7 @@ const Navbar: React.FC<NavbarProps> = (props) => {
 
           <button
             onClick={() => props.onExportPdf("print")}
-            className="bg-red-600 hover:bg-red-500 text-white px-4 py-1.5 rounded text-xs shadow-lg transition flex flex-col items-center leading-none min-w-[80px]"
+            className="bg-red-600 hover:bg-red-500 text-white px-3 md:px-4 py-1.5 rounded text-xs shadow-lg transition flex flex-col items-center leading-none min-w-[100px] md:min-w-[80px] flex-1 md:flex-none"
           >
             <span className="font-bold whitespace-nowrap">BASKI PDF</span>
             <span className="text-[9px] text-red-200 mt-0.5">Full Çıktı</span>

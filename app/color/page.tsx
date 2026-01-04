@@ -52,7 +52,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-gray-100 font-sans select-none">
+    <div className="flex flex-col md:flex-row h-screen w-screen overflow-hidden bg-gray-100 font-sans select-none">
       <Sidebar
         baseCmyk={baseCmyk}
         setBaseCmyk={setBaseCmyk}

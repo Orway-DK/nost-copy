@@ -1,4 +1,4 @@
-// C:\Projeler\nost-copy\app\admin\(protected)\categories\[id]\category-localizations.tsx
+// app\admin\(protected)\categories\[id]\category-localizations.tsx
 "use client";
 
 import { useState } from "react";

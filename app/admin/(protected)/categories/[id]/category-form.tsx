@@ -1,4 +1,4 @@
-// C:\Projeler\nost-copy\app\admin\(protected)\categories\[id]\category-form.tsx
+// app/admin/(protected)/categories/[id]/category-form.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -7,6 +7,7 @@ import { upsertCategoryAction } from "../actions";
 import CategoryLocalizations from "./category-localizations";
 import { IoCubeOutline, IoLanguageOutline, IoSave } from "react-icons/io5";
 import TextareaAutoResize from "@/components/TextareaAutoResize";
+import CategoryImageUpload from "../_components/CategoryImageUpload";
 
 export default function CategoryForm({
   isNew,
@@ -29,6 +30,8 @@ export default function CategoryForm({
     parent_id: initialData?.parent_id || null,
     active: initialData?.active ?? true,
     sort: initialData?.sort || 0,
+    image_path: initialData?.image_path || null,
+    image_alt_text: initialData?.image_alt_text || "",
   });
 
   const handleSave = async (e?: React.FormEvent) => {
@@ -125,10 +128,27 @@ export default function CategoryForm({
             <label className="admin-label">Açıklama</label>
             <TextareaAutoResize
               value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
               minRows={3}
               maxRows={10}
             />
+          </div>
+
+          {/* Görsel Yükleme Alanı */}
+          <div className="space-y-2">
+            <label className="admin-label">Kategori Görseli</label>
+            <div className="max-w-md">
+              <CategoryImageUpload
+                currentPath={form.image_path}
+                altText={form.image_alt_text}
+                onImageChange={(path) => setForm({ ...form, image_path: path })}
+                onAltTextChange={(text) =>
+                  setForm({ ...form, image_alt_text: text })
+                }
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

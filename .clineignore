@@ -1,0 +1,16 @@
+# .clineignore
+node_modules
+.next
+.git
+out
+build
+dist
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+bun.lockb
+*.svg
+*.png
+*.jpg
+*.ico
+.clinerules (bunu okumasına gerek yok, zaten sistemine gömülü)

@@ -1,7 +1,8 @@
+// app/admin/(protected)/categories/category-list.tsx
 "use client";
 
 import { useState, Fragment } from "react";
-import Link from "next/link";
+import Image from "next/image";
 import {
   IoPencil,
   IoTrash,
@@ -140,65 +141,88 @@ export default function CategoryList({
     }
   };
 
-  const renderRow = (cat: any, level = 0) => (
-    <Fragment key={cat.id}>
-      <tr className="transition-colors hover:bg-[var(--admin-input-bg)] group">
-        <td className="py-3 px-4">
-          <div
-            className="flex items-center gap-2"
-            style={{ paddingLeft: `${level * 24}px` }}
-          >
-            {level > 0 && <span className="opacity-30">└─</span>}
-            <IoFolderOpen className="text-yellow-500 flex-shrink-0" />
-            <div className="flex flex-col">
-              <span className="font-medium text-[var(--admin-fg)] whitespace-nowrap">
-                {cat.name}
-              </span>
-              {cat.product_count > 0 && (
-                <span className="text-xs text-[var(--admin-muted)] mt-0.5">
-                  {cat.product_count} ürün
+  const renderRow = (cat: any, level = 0) => {
+    // Görsel URL'ini oluştur
+    const imageUrl = cat.image_path
+      ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/categories/${cat.image_path}`
+      : null;
+
+    return (
+      <Fragment key={cat.id}>
+        <tr className="transition-colors hover:bg-[var(--admin-input-bg)] group">
+          <td className="py-3 px-4 w-16 text-center">
+            {imageUrl ? (
+              <div className="relative w-10 h-10 rounded border border-[var(--admin-input-border)] overflow-hidden mx-auto">
+                <Image
+                  src={imageUrl}
+                  alt={cat.name}
+                  fill
+                  className="object-cover"
+                  sizes="40px"
+                />
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded bg-[var(--admin-input-bg)] border border-[var(--admin-input-border)] flex items-center justify-center mx-auto">
+                <IoFolderOpen className="text-[var(--admin-muted)] opacity-50" />
+              </div>
+            )}
+          </td>
+          <td className="py-3 px-4">
+            <div
+              className="flex items-center gap-2"
+              style={{ paddingLeft: `${level * 24}px` }}
+            >
+              {level > 0 && <span className="opacity-30">└─</span>}
+              <div className="flex flex-col">
+                <span className="font-medium text-[var(--admin-fg)] whitespace-nowrap">
+                  {cat.name}
                 </span>
-              )}
+                {cat.product_count > 0 && (
+                  <span className="text-xs text-[var(--admin-muted)] mt-0.5">
+                    {cat.product_count} ürün
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-        </td>
-        <td className="py-3 px-4 text-xs opacity-60 font-mono">{cat.slug}</td>
-        <td className="py-3 px-4 text-sm text-center">{cat.sort}</td>
-        <td className="py-3 px-4 text-center">
-          {cat.active ? (
-            <span className="badge-admin badge-admin-success">Aktif</span>
-          ) : (
-            <span className="badge-admin badge-admin-default opacity-60">
-              Pasif
-            </span>
-          )}
-        </td>
-        <td className="py-3 px-4 text-right">
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={() => handleEditCategory(cat)}
-              className="btn-admin btn-admin-secondary p-2 leading-none"
-            >
-              <IoPencil size={16} />
-            </button>
-            <button
-              onClick={() => handleDeleteClick(cat.id, cat.name)}
-              disabled={busyId === cat.id || modalLoading}
-              className="btn-admin btn-admin-danger p-2 leading-none flex items-center justify-center min-w-[32px]"
-            >
-              {busyId === cat.id ? (
-                <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
-              ) : (
-                <IoTrash size={16} />
-              )}
-            </button>
-          </div>
-        </td>
-      </tr>
-      {/* Recursive Render */}
-      {cat.children?.map((child: any) => renderRow(child, level + 1))}
-    </Fragment>
-  );
+          </td>
+          <td className="py-3 px-4 text-xs opacity-60 font-mono">{cat.slug}</td>
+          <td className="py-3 px-4 text-sm text-center">{cat.sort}</td>
+          <td className="py-3 px-4 text-center">
+            {cat.active ? (
+              <span className="badge-admin badge-admin-success">Aktif</span>
+            ) : (
+              <span className="badge-admin badge-admin-default opacity-60">
+                Pasif
+              </span>
+            )}
+          </td>
+          <td className="py-3 px-4 text-right">
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => handleEditCategory(cat)}
+                className="btn-admin btn-admin-secondary p-2 leading-none"
+              >
+                <IoPencil size={16} />
+              </button>
+              <button
+                onClick={() => handleDeleteClick(cat.id, cat.name)}
+                disabled={busyId === cat.id || modalLoading}
+                className="btn-admin btn-admin-danger p-2 leading-none flex items-center justify-center min-w-[32px]"
+              >
+                {busyId === cat.id ? (
+                  <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                ) : (
+                  <IoTrash size={16} />
+                )}
+              </button>
+            </div>
+          </td>
+        </tr>
+        {/* Recursive Render */}
+        {cat.children?.map((child: any) => renderRow(child, level + 1))}
+      </Fragment>
+    );
+  };
 
   return (
     <>
@@ -222,6 +246,9 @@ export default function CategoryList({
           <table className="w-full text-left border-collapse min-w-[600px]">
             <thead>
               <tr className="bg-[var(--admin-input-bg)] border-b border-[var(--admin-card-border)] text-[var(--admin-muted)] text-sm uppercase tracking-wider">
+                <th className="py-3 px-4 font-semibold w-16 text-center">
+                  Görsel
+                </th>
                 <th className="py-3 px-4 font-semibold">Kategori Adı</th>
                 <th className="py-3 px-4 font-semibold">Slug</th>
                 <th className="py-3 px-4 font-semibold w-24 text-center">
@@ -239,7 +266,7 @@ export default function CategoryList({
               {initialData.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="p-8 text-center text-[var(--admin-muted)]"
                   >
                     Kayıt bulunamadı.

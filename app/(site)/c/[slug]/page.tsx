@@ -74,7 +74,7 @@ export default async function CollectionPage({
   const showFilters = settings?.is_category_filters_active ?? true;
   const showSorting = settings?.is_category_sorting_active ?? true;
 
-  // 1. Kategori (çevirileriyle birlikte)
+  // 1. Kategori Kontrolü (Sayfa var mı?)
   const { data: category, error: catErr } = await supabase
     .from("categories")
     .select(
@@ -90,6 +90,25 @@ export default async function CollectionPage({
     .single();
 
   if (catErr || !category || category.active === false) notFound();
+
+  // --- YENİ EKLENEN KISIM: RECURSIVE SLUG LİSTESİ ---
+  // Sadece 'etiket-sticker' değil, altındaki 'seffaf-etiket', 'rulo-etiket' vb. hepsini alıyoruz.
+  const { data: relatedSlugs, error: rpcError } = await supabase.rpc(
+    "get_category_tree_slugs",
+    { base_slug: slug }
+  );
+
+  let targetSlugs: string[] = [slug]; // Varsayılan: Sadece kendisi
+
+  if (!rpcError && relatedSlugs) {
+    // RPC 'setof text' döndüğü için array içinde obje veya string gelebilir, onu düzeltiyoruz:
+    targetSlugs = relatedSlugs.map((item: any) =>
+      typeof item === "string"
+        ? item
+        : item.get_category_tree_slugs || item.slug || slug
+    );
+  }
+  // --------------------------------------------------
 
   // Kategori adını seçilen dilde bul
   const categoryWithTranslations = category as CategoryWithTranslations;
@@ -114,11 +133,12 @@ export default async function CollectionPage({
         : "All Products",
   };
 
-  // 2. Mapping
+  // 2. Mapping (DEĞİŞTİ: .eq yerine .in kullanıldı)
+  // Ürün Map tablosundan targetSlugs listesindeki herhangi bir kategoriye ait olanları çek
   const { data: mapRows, error: mapErr } = await supabase
     .from("product_category_map")
     .select("product_id")
-    .eq("category_slug", slug);
+    .in("category_slug", targetSlugs); // <--- BURASI DEĞİŞTİ
 
   if (mapErr)
     return (
@@ -128,11 +148,12 @@ export default async function CollectionPage({
   const mappedIds = (mapRows ?? []).map((r) => r.product_id);
   const uniqueIds = new Set<number>(mappedIds);
 
-  // 3. Primary Products
+  // 3. Primary Products (DEĞİŞTİ: .eq yerine .in kullanıldı)
+  // Ürünler tablosundan ana kategorisi bu listede olanları çek
   const { data: primaryProducts } = await supabase
     .from("products")
     .select("id")
-    .eq("category_slug", slug);
+    .in("category_slug", targetSlugs); // <--- BURASI DEĞİŞTİ
 
   primaryProducts?.forEach((p) => uniqueIds.add(p.id));
 
@@ -243,9 +264,6 @@ export default async function CollectionPage({
       };
     })
     .filter((item) => {
-      // Filtreler kapalıysa bile logic çalışır ama UI görünmez.
-      // İstersen burayı da if(showFilters) içine alabilirsin ama URL parametresi varsa çalışması daha doğrudur.
-
       // 1. Fiyat Kontrolü
       const price = item.price || 0;
       if ((minFilter > 0 || maxFilter < Infinity) && item.price) {
@@ -314,7 +332,7 @@ export default async function CollectionPage({
           </div>
           <div className="flex items-center gap-2">
             {showSorting && (
-              <button className="flex items-center gap-2 px-4 py-2 ...">
+              <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-muted transition-colors">
                 <FaSortAmountDown className="text-muted-foreground" />
                 <span>Önerilen Sıralama</span>
               </button>
@@ -351,11 +369,11 @@ export default async function CollectionPage({
                   Sonuç Bulunamadı
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Seçilen kriterlere uygun ürün bulunmuyor.
+                  Seçilen kriterlere uygun ürün bulunmuyor veya bu kategoride
+                  henüz ürün yok.
                 </p>
               </div>
             ) : (
-              // Eğer sidebar yoksa (col-span-4), grid 4'lü olabilir, varsa 3'lü.
               <div
                 className={`grid grid-cols-2 gap-4 ${
                   showFilters
