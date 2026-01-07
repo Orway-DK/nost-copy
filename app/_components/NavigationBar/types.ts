@@ -1,27 +1,28 @@
 // app/_components/NavigationBar/types.ts
 
-export type ProductPreview = {
-  id: number;
-  slug: string;
-  name: string;
-  image_url: string | null;
-  price?: number;
-};
+export interface NavItem {
+  id: number
+  parent_id: number | null
+  label: string
+  href: string
+  image_path?: string | null
+  children?: NavItem[]
+  previewProducts?: ProductPreview[]
+  allPreviewProducts?: ProductPreview[] // Aggregated products
+}
 
-export type NavItem = {
-  id: number;
-  label: string;
-  href: string;
-  image_path?: string | null;
-  children?: NavItem[];
-  previewProducts?: ProductPreview[];
-  allPreviewProducts?: ProductPreview[];
-};
+export interface ProductPreview {
+  id: number
+  slug: string
+  name: string
+  image_url: string | null
+  price: number
+}
 
-export type TranslationDictionary = {
-  searchPlaceholder: string;
-  login: string;
-  cart: string;
-  allProducts: string;
-  popular?: string;
-};
+export interface TranslationDictionary {
+  langCode: string // <-- Yeni eklenen alan
+  searchPlaceholder: string
+  login: string
+  cart: string
+  allProducts: string
+}
