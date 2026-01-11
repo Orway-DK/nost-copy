@@ -1,70 +1,71 @@
-"use client";
+'use client'
 
-import { useState, Suspense, useEffect, useCallback } from "react";
-import { usePathname } from "next/navigation";
-import useSWR from "swr"; // Veri çekmek için
-import { createSupabaseBrowserClient } from "@/lib/supabase/client"; // Supabase client
+import { useState, Suspense, useEffect, useCallback } from 'react'
+import { usePathname } from 'next/navigation'
+import useSWR from 'swr' // Veri çekmek için
+import { createSupabaseBrowserClient } from '@/lib/supabase/client' // Supabase client
 
-import LoadingOverlay from "@/components/LoadingOverlay";
-import LoadingCompleter from "@/components/LoadingCompleter";
+import LoadingOverlay from '@/components/LoadingOverlay'
+import LoadingCompleter from '@/components/LoadingCompleter'
 
-import TopHorizontalBanner from "@/app/_components/TopHorizontalBanner";
-import NavigationBar from "@/app/_components/NavigationBar/NavigationBar"; // Klasik (V1)
-import MegaNavbar from "@/app/_components/NavigationBar/index"; // Mega (V2)
-import Footer from "@/app/_components/Footer";
+import TopHorizontalBanner from '@/app/_components/TopHorizontalBanner'
+import Footer from '@/app/_components/Footer'
+
+import NavigationBar from '@/app/_components/NavigationBar/classic' // Klasik (V1)
+import MegaNavbar from '@/app/_components/NavigationBar/mega' // Mega (V2)
 
 // --- NAVBAR AYARINI ÇEKEN FONKSİYON ---
 const fetchNavbarStyle = async () => {
-  const supabase = createSupabaseBrowserClient();
+  const supabase = createSupabaseBrowserClient()
   const { data } = await supabase
-    .from("site_settings")
-    .select("navbar_style")
+    .from('site_settings')
+    .select('navbar_style')
     .limit(1)
-    .maybeSingle();
+    .maybeSingle()
 
   // Eğer veri yoksa veya null ise varsayılan olarak 'v1' döndür
-  return data?.navbar_style || "v1";
-};
+  return data?.navbar_style || 'v1'
+}
 
-export default function SiteShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+export default function SiteShell ({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
 
-  const [overlayVisible, setOverlayVisible] = useState(true);
-  const [isFading, setIsFading] = useState(false);
+  const [overlayVisible, setOverlayVisible] = useState(true)
+  const [isFading, setIsFading] = useState(false)
 
   // Navbar Stilini Çek (v1 veya v2)
   const { data: navbarStyle } = useSWR(
-    "navbar_style_setting",
+    'navbar_style_setting',
     fetchNavbarStyle,
     {
       revalidateOnFocus: false,
-      dedupingInterval: 60000, // 1 dakika cache
+      dedupingInterval: 60000 // 1 dakika cache
     }
-  );
+  )
 
   // --- HATA DÜZELTME KISMI ---
   useEffect(() => {
     // State güncellemesini setTimeout içine alarak "Synchronous render" hatasını engelliyoruz.
     // Bu işlem, güncellemeyi bir sonraki 'tick'e atar.
     const timer = setTimeout(() => {
-      setOverlayVisible(true);
-      setIsFading(false);
-    }, 0);
+      setOverlayVisible(true)
+      setIsFading(false)
+    }, 0)
 
-    return () => clearTimeout(timer);
-  }, [pathname]);
+    return () => clearTimeout(timer)
+  }, [pathname])
 
   const handleLoadingComplete = useCallback(() => {
     const timer = setTimeout(() => {
-      setIsFading(true);
+      setIsFading(true)
 
       setTimeout(() => {
-        setOverlayVisible(false);
-      }, 700);
-    }, 1500);
+        setOverlayVisible(false)
+      }, 700)
+    }, 1500)
 
-    return () => clearTimeout(timer);
-  }, []);
+    return () => clearTimeout(timer)
+  }, [])
 
   return (
     <>
@@ -74,14 +75,14 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
       <Suspense fallback={null}>
         <div
           key={pathname}
-          className="min-h-screen flex flex-col w-full max-w-full overflow-x-hidden"
+          className='min-h-screen flex flex-col w-full max-w-full overflow-x-hidden'
         >
           <TopHorizontalBanner />
 
           {/* --- NAVBAR SEÇİM MANTIĞI --- */}
-          {navbarStyle === "v2" ? <MegaNavbar /> : <NavigationBar />}
+          {navbarStyle === 'v2' ? <MegaNavbar /> : <NavigationBar />}
 
-          <main className="flex-1 w-full flex flex-col items-center">
+          <main className='flex-1 w-full flex flex-col items-center'>
             {children}
           </main>
 
@@ -91,5 +92,5 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
         </div>
       </Suspense>
     </>
-  );
+  )
 }

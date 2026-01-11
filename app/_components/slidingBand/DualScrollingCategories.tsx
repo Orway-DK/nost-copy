@@ -76,7 +76,7 @@ export default function DualScrollingCategories () {
               slug: c.slug,
               sort: c.sort ?? idx,
               label: tr?.name ?? c.slug,
-              href: `/collections/${c.slug}`
+              href: `/${c.slug}`
             } as CategoryItem
           })
           if (mounted) {

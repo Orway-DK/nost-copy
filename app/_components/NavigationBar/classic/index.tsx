@@ -7,8 +7,8 @@ import useSWR from 'swr'
 import { SlMenu, SlClose } from 'react-icons/sl'
 import { useLanguage } from '@/components/LanguageProvider'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import Dropdown from './_components/Dropdown'
-import CategoriesDropdown from './_components/CategoriesDropdown'
+import Dropdown from './Dropdown'
+import CategoriesDropdown from './CategoriesDropdown'
 
 // --- TİP TANIMLARI ---
 type CategoryRow = {
@@ -39,7 +39,9 @@ const fetchCategories = async (lang: string) => {
   const supabase = createSupabaseBrowserClient()
   const { data } = await supabase
     .from('categories')
-    .select('id, parent_id, slug, sort, active, category_translations(name, lang_code)')
+    .select(
+      'id, parent_id, slug, sort, active, category_translations(name, lang_code)'
+    )
     .eq('active', true)
     .order('sort', { ascending: true })
   return (data ?? []) as CategoryRow[]
@@ -167,19 +169,19 @@ export default function NavigationBar () {
     // Özel düzenleme: Max 6 ana kategori göster
     // Öncelik sırası: Kartvizit (22), Etiket & Sticker (36), Broşür & İlan (72) ilk sıralarda
     const priorityOrder = [22, 36, 72] // Kartvizit, Etiket & Sticker, Broşür & İlan
-    
+
     // Ana kategorileri sırala
     const sortedTree = tree.sort((a, b) => {
       const aPriority = priorityOrder.indexOf(a.id)
       const bPriority = priorityOrder.indexOf(b.id)
-      
+
       // Öncelikli kategoriler önce gelsin
       if (aPriority !== -1 && bPriority !== -1) {
         return aPriority - bPriority
       }
       if (aPriority !== -1) return -1
       if (bPriority !== -1) return 1
-      
+
       // Diğerleri sort değerine göre sırala
       const catA = categories?.find(c => c.id === a.id)
       const catB = categories?.find(c => c.id === b.id)
@@ -196,39 +198,41 @@ export default function NavigationBar () {
   // --- 2. MOBİL İÇİN DÜZ LİSTE (FLAT LIST) ---
   const categoryListMobile = useMemo(() => {
     if (!categories) return []
-    
+
     // Ana kategorileri filtrele (parent_id: null) ve aktif olanları al
-    const mainCategories = categories.filter(c => c.parent_id === null && c.active !== false)
-    
+    const mainCategories = categories.filter(
+      c => c.parent_id === null && c.active !== false
+    )
+
     // Öncelik sırası: Kartvizit (22), Etiket & Sticker (36), Broşür & İlan (72) ilk sıralarda
     const priorityOrder = [22, 36, 72]
-    
+
     // Ana kategorileri sırala
     const sortedCategories = mainCategories.sort((a, b) => {
       const aPriority = priorityOrder.indexOf(a.id)
       const bPriority = priorityOrder.indexOf(b.id)
-      
+
       // Öncelikli kategoriler önce gelsin
       if (aPriority !== -1 && bPriority !== -1) {
         return aPriority - bPriority
       }
       if (aPriority !== -1) return -1
       if (bPriority !== -1) return 1
-      
+
       // Diğerleri sort değerine göre sırala
       return (a.sort || 0) - (b.sort || 0)
     })
-    
+
     // Max 6 kategori
     const limitedCategories = sortedCategories.slice(0, 6)
-    
+
     const list = limitedCategories.map(c => {
       const tr =
         c.category_translations.find(t => t.lang_code === lang) ||
         c.category_translations.find(t => t.lang_code === 'tr')
       return { label: tr?.name || c.slug, href: `/${c.slug}` }
     })
-    
+
     console.log('categoryListMobile (limited to 6):', list)
     return list
   }, [categories, lang])
@@ -351,7 +355,7 @@ export default function NavigationBar () {
           </div>
           {/* Tüm Kategoriler Linki */}
           <Link
-            href="/c"
+            href='/c'
             onClick={closeMobileMenu}
             className='text-lg font-bold text-primary pl-3 border-l-2 border-primary py-2 hover:border-primary-hover'
           >

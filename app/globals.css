@@ -16,7 +16,7 @@
     --card-hover: #f1f5f9;
 
     --primary: #2563eb;
-    --primary-foreground: #ffffff;
+    --primary-foreground: #050101;
     --primary-hover: #1d4ed8;
 
     --secondary: #dbeafe;
@@ -193,4 +193,51 @@ body {
   opacity: 1;
   width: 24px;
   border-radius: 5px;
+}
+
+/* Dosya Yolu: wwwroot/css/site.css (veya custom.css) */
+
+/* Navbar'ı tam genişliğe yayan özel sınıf */
+.navbar-nav-full {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  margin: 0;
+  padding: 0;
+}
+
+/* Her bir menü öğesi */
+.navbar-nav-full .nav-item {
+  flex: 1 1 auto; /* Mevcut alanı eşit şekilde doldur */
+  text-align: center; /* Yazıyı ortala */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-right: 1px solid rgba(0, 0, 0, 0.05); /* İsteğe bağlı: Hafif ayraç çizgisi */
+}
+
+.navbar-nav-full .nav-item:last-child {
+  border-right: none; /* Son elemanda çizgi olmasın */
+}
+
+/* Link yapısı */
+.navbar-nav-full .nav-link {
+  width: 100%; /* Tıklama alanı kutuyu doldursun */
+  white-space: nowrap; /* Yazı alt satıra düşmesin */
+  padding-top: 15px;
+  padding-bottom: 15px;
+  font-weight: 500;
+}
+
+/* Mobil Görünüm (Responsive Düzeltme) */
+@media (max-width: 991px) {
+  .navbar-nav-full {
+    flex-direction: column; /* Mobilde alt alta dizilsin */
+  }
+  .navbar-nav-full .nav-item {
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    text-align: left; /* Mobilde sola yaslı daha iyi durur */
+    justify-content: flex-start;
+  }
 }

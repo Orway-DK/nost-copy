@@ -56,10 +56,9 @@ function SearchContent () {
       ) : results.length > 0 ? (
         <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-6'>
           {results.map(product => (
-            /* LİNK GÜNCELLENDİ: /p/[slug] */
             <Link
               key={product.id}
-              href={`/p/${product.slug}`}
+              href={`/${product.slug}`}
               className='group flex flex-col bg-white dark:bg-zinc-900 border border-border/40 rounded-xl overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300'
             >
               <div className='aspect-square relative bg-gray-100 dark:bg-zinc-800 overflow-hidden'>

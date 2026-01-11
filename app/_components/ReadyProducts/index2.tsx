@@ -6,27 +6,28 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import ProductCarousel, { CarouselProduct } from './ProductCarousel'
 import ReadyProductsTitle from './ready-products-title'
 
+// Yardımcı fonksiyon: Resim URL'si oluşturma
 const getImageUrl = (path: string | null) => {
   if (!path) return '/nost.png'
   if (path.startsWith('http') || path.startsWith('/')) return path
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/products/${path}`
 }
 
+// Fetcher Fonksiyonu
 const fetchReadyProducts = async () => {
   const supabase = createSupabaseBrowserClient()
 
-  // Fiyat bilgisini çekmeye gerek kalmadı, sadece görsel ve link lazım
   const { data, error } = await supabase
     .from('homepage_ready_products')
     .select(
       `
-        custom_url,
-        products (
-            id, name, slug,
-            product_media (image_key, sort_order),
-            product_localizations (lang_code, name)
-        )
-      `
+            price_try, price_usd, price_eur, custom_url,
+            products (
+                id, name, slug,
+                product_media (image_key, sort_order),
+                product_localizations (lang_code, name)
+            )
+        `
     )
     .eq('active', true)
     .order('sort_order', { ascending: true })
@@ -58,7 +59,11 @@ const fetchReadyProducts = async () => {
       id: prod.slug,
       names: names,
       image: getImageUrl(imageKey),
-      // Price alanı kaldırıldı
+      price: {
+        try: item.price_try,
+        usd: item.price_usd,
+        eur: item.price_eur
+      },
       url: item.custom_url || `/product/${prod.slug}`
     }
   }) as CarouselProduct[]
@@ -71,6 +76,7 @@ export default function ReadyProducts () {
     { revalidateOnFocus: false }
   )
 
+  // Loading Skeleton (Tasarımı diğer slider'a benzettim)
   if (isLoading) {
     return (
       <div className='py-12 md:py-20 w-full flex justify-end overflow-hidden'>
@@ -78,7 +84,7 @@ export default function ReadyProducts () {
           {[1, 2, 3, 4].map(i => (
             <div
               key={i}
-              className='w-[280px] h-[280px] bg-muted/20 animate-pulse rounded-xl flex-shrink-0'
+              className='w-[280px] h-[350px] bg-muted/20 animate-pulse rounded-xl flex-shrink-0'
             ></div>
           ))}
         </div>
@@ -90,9 +96,12 @@ export default function ReadyProducts () {
 
   return (
     <section className='py-12 md:py-20 bg-background transition-colors w-full overflow-hidden'>
-      {/* SAĞA YASLI YAPI KORUNDU: md:pr-[10vw] */}
+      {/* DEĞİŞİKLİK BURADA: 
+         - md:pr-[10vw] ile sağdan boşluk bıraktık (diğer slider soldan bırakmıştı).
+         - md:pl-0 ile solu sıfırladık.
+      */}
       <div className='w-full px-0 md:pr-[10vw] min-w-0'>
-        {/* Başlık - Sağa Yaslı */}
+        {/* Başlık Bileşeni - Sağa Yaslı */}
         <div className='px-4 md:px-0 flex flex-col items-center md:items-end text-center md:text-right mb-8 md:mb-10'>
           <ReadyProductsTitle />
         </div>

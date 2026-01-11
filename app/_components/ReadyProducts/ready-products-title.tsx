@@ -3,12 +3,23 @@
 
 import { useEffect, useState } from 'react'
 import { useLanguage } from '@/components/LanguageProvider'
-import SectionHeading from './SectionHeading'
 
-const TITLES = {
-  tr: { text: 'Muhteşem Ürünler Sizin İçin Hazır', highlight: 'Ürünler' },
-  en: { text: 'Amazing Products Are Ready For You', highlight: 'Products' },
-  de: { text: 'Tolle Produkte Sind Für Sie Bereit', highlight: 'Produkte' }
+const UI_TEXTS = {
+  tr: {
+    subtitle: 'VİTRİN ÜRÜNLERİ',
+    titleStart: 'Keşfetmeye Hazır',
+    titleHighlight: 'Popüler Ürünler'
+  },
+  en: {
+    subtitle: 'SHOWCASE',
+    titleStart: 'Ready to Explore',
+    titleHighlight: 'Popular Items'
+  },
+  de: {
+    subtitle: 'SCHAUFENSTER',
+    titleStart: 'Bereit zum Entdecken',
+    titleHighlight: 'Beliebte Produkte'
+  }
 }
 
 export default function ReadyProductsTitle () {
@@ -19,18 +30,26 @@ export default function ReadyProductsTitle () {
     setMounted(true)
   }, [])
 
-  // Hydration mismatch önleme
-  if (!mounted) return <div className='h-16 w-full'></div>
+  if (!mounted) return <div className='h-24 w-full'></div>
 
-  const currentLang = lang && TITLES[lang as keyof typeof TITLES] ? lang : 'en'
-  const content = TITLES[currentLang as keyof typeof TITLES]
+  const ui = UI_TEXTS[lang as keyof typeof UI_TEXTS] || UI_TEXTS.en
 
   return (
-    <SectionHeading
-      text={content.text}
-      highlight={content.highlight}
-      // Global CSS değişkenini kullanıyoruz, böylece tema değişirse bu da değişir
-      highlightColor='var(--primary)'
-    />
+    <div className='w-full'>
+      {/* Subtitle */}
+      <div className='text-xs md:text-sm font-bold tracking-[0.2em] text-muted-foreground uppercase mb-3'>
+        {ui.subtitle}
+      </div>
+
+      {/* Main Title */}
+      <h2 className='text-3xl md:text-4xl font-black text-foreground leading-tight'>
+        {ui.titleStart}{' '}
+        <span className='text-primary relative inline-block'>
+          {ui.titleHighlight}
+          {/* Dekoratif çizgi (Sağa yaslı olduğu için right-0) */}
+          <span className='absolute bottom-1 right-0 w-full h-[30%] bg-primary/10 -z-10'></span>
+        </span>
+      </h2>
+    </div>
   )
 }

@@ -113,9 +113,8 @@ export default function WebsiteSearchInput ({
                 <ul className='flex flex-col'>
                   {results.map(product => (
                     <li key={product.id}>
-                      {/* LİNK GÜNCELLENDİ: /p/[slug] */}
                       <Link
-                        href={`/p/${product.slug}`}
+                        href={`/${product.slug}`}
                         onClick={() => setIsOpen(false)}
                         className='flex items-center gap-4 px-4 py-3 hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors group border-b border-border/30 last:border-0'
                       >
@@ -158,10 +157,9 @@ export default function WebsiteSearchInput ({
                   </h3>
                   <div className='grid grid-cols-3 gap-3'>
                     {results.map(product => (
-                      /* LİNK GÜNCELLENDİ: /p/[slug] */
                       <Link
                         key={product.id}
-                        href={`/p/${product.slug}`}
+                        href={`/${product.slug}`}
                         onClick={() => setIsOpen(false)}
                         className='flex flex-col gap-2 p-2 rounded-lg border border-border/40 hover:border-primary/50 hover:bg-gray-50 dark:hover:bg-zinc-900 transition-all group relative'
                       >

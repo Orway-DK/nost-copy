@@ -1,3 +1,4 @@
+// app\_components\NavigationBar\index.tsx
 'use client'
 
 import { useMemo, useState, useEffect } from 'react'
@@ -5,8 +6,8 @@ import { usePathname } from 'next/navigation'
 import useSWR from 'swr'
 import { useLanguage } from '@/components/LanguageProvider'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { NavItem, ProductPreview } from './types'
 
+import { NavItem, ProductPreview } from './types'
 import NavbarHeader from './NavbarHeader'
 import MegaMenuItem from './MegaMenuItem'
 import MobileMenu from './MobileMenu'
@@ -89,7 +90,7 @@ export default function MegaNavbar () {
 
     // DEBUG İÇİN: Konsola gelen veriyi yazdırıyoruz
     // F12 tuşuna basıp Console sekmesinden kontrol edebilirsin.
-    console.log('📢 [MegaNavbar] Gelen Ham Veri:', categories)
+    //console.log('📢 [MegaNavbar] Gelen Ham Veri:', categories)
 
     const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 
@@ -136,7 +137,6 @@ export default function MegaNavbar () {
         c.category_translations.find((t: any) => t.lang_code === lang) ||
         c.category_translations.find((t: any) => t.lang_code === 'tr')
 
-      // Ürünleri dönüştür
       const products = (c.products || [])
         .map(transformProduct)
         .filter((p: any): p is ProductPreview => p !== null)
@@ -145,7 +145,10 @@ export default function MegaNavbar () {
         id: c.id,
         parent_id: c.parent_id,
         label: tr?.name || c.slug,
-        href: `/c/${c.slug}`,
+
+        // [DÜZELTME BURADA]: /c/ kaldırıldı
+        href: `/${c.slug}`,
+
         image_path: c.image_path,
         children: [] as NavItem[],
         previewProducts: products,

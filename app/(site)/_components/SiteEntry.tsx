@@ -1,9 +1,10 @@
-// C:\Projeler\nost-copy\app\(site)\_components\SiteEntry.tsx
 'use client'
 
 import dynamic from 'next/dynamic'
-import LoadingOverlay from '@/components/LoadingOverlay'
 import { ReactNode } from 'react'
+import LoadingOverlay from '@/components/LoadingOverlay'
+
+import { FavoritesProvider } from '@/app/_components/Favorites'
 
 const SiteShell = dynamic(() => import('./SiteShell'), {
   ssr: false,
@@ -11,5 +12,9 @@ const SiteShell = dynamic(() => import('./SiteShell'), {
 })
 
 export default function SiteEntry ({ children }: { children: ReactNode }) {
-  return <SiteShell>{children}</SiteShell>
+  return (
+    <FavoritesProvider>
+      <SiteShell>{children}</SiteShell>
+    </FavoritesProvider>
+  )
 }

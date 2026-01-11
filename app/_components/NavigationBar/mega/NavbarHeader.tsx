@@ -2,9 +2,12 @@
 
 import Link from 'next/link'
 import { SlMenu } from 'react-icons/sl'
-import { FaUser, FaShoppingCart } from 'react-icons/fa'
+// Giriş ve Sepet iconlarını sildik, yerine Kalp ekledik
+import { FaHeart } from 'react-icons/fa'
 import { TranslationDictionary } from './types'
-import WebsiteSearchInput from '../WebsiteSeachInput'
+import WebsiteSearchInput from '../../WebsiteSeachInput'
+// Context hook'umuzu ekledik
+import { useFavorites } from '@/app/_components/Favorites'
 
 interface NavbarHeaderProps {
   siteName: string
@@ -17,6 +20,9 @@ export default function NavbarHeader ({
   t,
   onMobileMenuOpen
 }: NavbarHeaderProps) {
+  // Favori verisini çekiyoruz
+  const { favoriteIds } = useFavorites()
+
   return (
     <div className='border-b border-border/40 bg-white dark:bg-zinc-950 relative z-50'>
       <div className='container mx-auto px-4 h-20 flex items-center justify-between gap-6'>
@@ -28,7 +34,7 @@ export default function NavbarHeader ({
           {siteName}
         </Link>
 
-        {/* Search Input - Liste modu aktif */}
+        {/* Search Input */}
         <WebsiteSearchInput
           placeholder={t.searchPlaceholder}
           mode='list'
@@ -40,25 +46,27 @@ export default function NavbarHeader ({
           <button className='lg:hidden text-2xl p-2' onClick={onMobileMenuOpen}>
             <SlMenu />
           </button>
+
           <div className='hidden lg:flex items-center gap-6'>
+            {/* FAVORİLER BUTONU - Giriş ve Sepet yerine sadece bu kaldı */}
             <Link
-              href='/login'
-              className='flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors'
-            >
-              <FaUser size={18} />
-              <span className='text-[10px] font-bold uppercase'>{t.login}</span>
-            </Link>
-            <Link
-              href='/cart'
-              className='flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors relative'
+              href='/favorites' // İleride yapacağın favori sayfası
+              className='flex flex-col items-center gap-1 text-muted-foreground hover:text-danger transition-colors relative group'
             >
               <div className='relative'>
-                <FaShoppingCart size={18} />
-                <span className='absolute -top-1.5 -right-1.5 bg-primary text-white text-[9px] w-3.5 h-3.5 flex items-center justify-center rounded-full'>
-                  0
-                </span>
+                <FaHeart
+                  size={20}
+                  className='group-hover:text-red-500 transition-colors'
+                />
+
+                {/* Badge Sayacı */}
+                {favoriteIds.length > 0 && (
+                  <span className='absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full shadow-sm'>
+                    {favoriteIds.length}
+                  </span>
+                )}
               </div>
-              <span className='text-[10px] font-bold uppercase'>{t.cart}</span>
+              <span className='text-[10px] font-bold uppercase'>Favoriler</span>
             </Link>
           </div>
         </div>

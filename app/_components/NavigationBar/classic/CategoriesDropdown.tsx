@@ -4,7 +4,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { IoChevronForward } from 'react-icons/io5'
-import { NavItem } from '../NavigationBar'
+import { NavItem } from './index'
 
 interface CategoriesDropdownProps {
   label: string
@@ -122,13 +122,21 @@ export default function CategoriesDropdown ({
             {/* Tüm Kategoriler Linki */}
             <li>
               <Link
-                href="/c"
+                href='/c'
                 onClick={() => setOpen(false)}
-                className="flex items-center justify-between px-4 py-2.5 text-sm font-bold text-primary hover:bg-muted/50 hover:text-primary-hover transition-colors w-full text-left border-b border-border/50 mb-1"
+                className='flex items-center justify-between px-4 py-2.5 text-sm font-bold text-primary hover:bg-muted/50 hover:text-primary-hover transition-colors w-full text-left border-b border-border/50 mb-1'
               >
                 <span>Tüm Kategoriler</span>
-                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                <svg
+                  className='w-4 h-4'
+                  viewBox='0 0 20 20'
+                  fill='currentColor'
+                >
+                  <path
+                    fillRule='evenodd'
+                    d='M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z'
+                    clipRule='evenodd'
+                  />
                 </svg>
               </Link>
             </li>
@@ -169,7 +177,10 @@ function MenuItem ({
         <>
           <Link href={item.href} onClick={closeMenu} className={linkClasses}>
             <span>{item.label}</span>
-            <IoChevronForward className='text-muted-foreground/70 group-hover:rotate-90 transition-transform' size={14} />
+            <IoChevronForward
+              className='text-muted-foreground/70 group-hover:rotate-90 transition-transform'
+              size={14}
+            />
           </Link>
 
           {/* ALT KATEGORİLER - AŞAĞIYA AÇILAN */}

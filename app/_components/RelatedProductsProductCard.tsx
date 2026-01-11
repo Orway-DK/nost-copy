@@ -20,7 +20,7 @@ export default function RelatedProductsProductCard ({
   currency = 'TL'
 }: RelatedProductsProductCardProps) {
   return (
-    <Link href={`/p/${slug}`} className='group block h-full'>
+    <Link href={`/${slug}`} className='group block h-full'>
       <div className='relative h-full bg-card border border-border/40 rounded-xl transition-all duration-300 hover:shadow-xl hover:border-primary/30 flex flex-col'>
         <div className='p-2'>
           <div className='relative aspect-[4/5] w-full bg-muted/50 overflow-hidden rounded-lg border border-border/50 transition-colors duration-300 group-hover:border-primary/40'>

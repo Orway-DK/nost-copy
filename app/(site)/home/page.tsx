@@ -16,7 +16,7 @@ const LandingSlider = dynamic(
   { ssr: false, loading: () => <LandingPlaceholder /> }
 )
 const ServicesSlider = dynamic(
-  () => import('@/app/_components/ServicesSlider'),
+  () => import('@/app/_components/FeaturedCategories'),
   { ssr: false, loading: () => <LandingPlaceholder /> }
 )
 const WhyUs = dynamic(
@@ -49,13 +49,24 @@ export const dynamicMode = 'force-dynamic'
 export default function HomeWorking () {
   return (
     <div className='flex flex-col w-full items-center relative'>
+      {/* 1. GİRİŞ: Büyük Banner */}
       <HeroBackground />
       <LandingSlider />
+      {/* 2. KEŞİF: Recycle ettiğimiz "Öne Çıkan Kategoriler" */}
+      {/* Kullanıcı hemen ne sattığını görsün ve görsel olarak tatmin olsun */}
       <ServicesSlider />
-      <DualScrollingCategories />
-      <WhyUs />
-      <MakeItEasier />
+      {/* Adını FeaturedCategories olarak değiştirebilirsin */}
+      {/* 3. AKSİYON: Hazır Ürünler / Vitrin */}
+      {/* İnsanlar kategoriye girmeden "aa bu güzelmiş" deyip tıklasın. Yukarı taşıdık. */}
       <ReadyProducts />
+      {/* 4. GÜVEN & BİLGİ: Neden Biz? */}
+      {/* Ürünleri gördü, peki neden senden alsın? */}
+      <MakeItEasier /> {/* Süreci anlatan kısım */}
+      <WhyUs /> {/* Kalite vurgusu */}
+      {/* 5. GEÇİŞ: Kayan Bant */}
+      {/* Sayfanın ortasında görsel bir nefes alma alanı */}
+      <DualScrollingCategories />
+      {/* 6. SOSYAL KANIT & SEO */}
       <TestimonialsCarousel />
       <HomeBlogArea />
       <ScrollToTop />

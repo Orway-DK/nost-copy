@@ -12,7 +12,7 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Link
-      href={`/p/${product.slug}`}
+      href={`/${product.slug}`}
       className="
         group/card flex items-center gap-3 p-2 bg-white dark:bg-zinc-900 
         border border-gray-200 dark:border-zinc-800 rounded-lg 

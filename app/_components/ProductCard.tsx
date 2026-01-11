@@ -24,7 +24,7 @@ export default function ProductCard ({
   currency = 'TL'
 }: ProductCardProps) {
   return (
-    <Link href={`/p/${slug}`} className='group block h-full'>
+    <Link href={`/${slug}`} className='group block h-full'>
       {/* Kartın Ana Çerçevesi 
           - overflow-hidden kaldırıldı, çünkü içteki köşelerin kendi yuvarlaklığı olacak.
           - rounded-xl yapıldı, biraz daha modern durması için.
