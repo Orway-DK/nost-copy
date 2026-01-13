@@ -89,7 +89,7 @@ export default function ReadyProducts () {
   if (!products || products.length === 0) return null
 
   return (
-    <section className='py-12 md:py-20 bg-background transition-colors w-full overflow-hidden'>
+    <section className='py-12 md:py-20 transition-colors w-full overflow-hidden'>
       {/* SAĞA YASLI YAPI KORUNDU: md:pr-[10vw] */}
       <div className='w-full px-0 md:pr-[10vw] min-w-0'>
         {/* Başlık - Sağa Yaslı */}

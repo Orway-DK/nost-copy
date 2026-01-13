@@ -34,10 +34,23 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         // Hata mesajında belirtilen Supabase proje host adınız:
         hostname: 'fdhmxyqxkezkfmcjaanz.supabase.co'
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**'
+      },
+      // 2. Supabase İzni (Mevcut resimlerin bozulmaması için gerekli)
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co', // Proje ID'si ne olursa olsun kapsar
+        port: '',
+        pathname: '/**'
       }
     ]
   },
-  async redirects() {
+  async redirects () {
     return [
       {
         source: '/c/:slug',

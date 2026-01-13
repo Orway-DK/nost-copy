@@ -1,4 +1,4 @@
-// C:\Projeler\nost-copy\app\_components\NavigationBar\NavigationBar.tsx
+// app/_components/NavigationBar/classic/index.tsx
 'use client'
 
 import { useMemo, useState, useEffect } from 'react'
@@ -7,34 +7,34 @@ import useSWR from 'swr'
 import { SlMenu, SlClose } from 'react-icons/sl'
 import { useLanguage } from '@/components/LanguageProvider'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import Dropdown from './Dropdown'
-import CategoriesDropdown from './CategoriesDropdown'
+import NavDropdown, { DropdownItem } from './NavDropdown'
 
 // --- TİP TANIMLARI ---
-type CategoryRow = {
+type NavigationItemDB = {
   id: number
   parent_id: number | null
-  slug: string
-  sort: number
-  active: boolean
-  category_translations: { name: string; lang_code: string }[]
+  type: 'link' | 'dropdown' | 'dynamic_categories' | 'dynamic_services'
+  label: Record<string, string>
+  url: string | null
+  sort_order: number
 }
 
-type ServiceRow = {
-  id: number
-  slug: string
-  service_translations: { title: string; lang_code: string }[]
-}
-
-// Navigasyon ağacı için tip (Diğer bileşenlerde kullanmak üzere export edilebilir)
-export type NavItem = {
-  id: number
-  label: string
-  href: string
-  children?: NavItem[]
+// Render için kullanılacak Ağaç Yapısı
+type NavTreeNode = NavigationItemDB & {
+  children: NavTreeNode[]
 }
 
 // --- DATA FETCHING ---
+const fetchNavigationStructure = async () => {
+  const supabase = createSupabaseBrowserClient()
+  const { data } = await supabase
+    .from('classic_navigation_items')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+  return (data ?? []) as NavigationItemDB[]
+}
+
 const fetchCategories = async (lang: string) => {
   const supabase = createSupabaseBrowserClient()
   const { data } = await supabase
@@ -44,7 +44,7 @@ const fetchCategories = async (lang: string) => {
     )
     .eq('active', true)
     .order('sort', { ascending: true })
-  return (data ?? []) as CategoryRow[]
+  return data || []
 }
 
 const fetchServices = async () => {
@@ -54,7 +54,7 @@ const fetchServices = async () => {
     .select('id, slug, service_translations(title, lang_code)')
     .eq('active', true)
     .order('id', { ascending: true })
-  return (data ?? []) as ServiceRow[]
+  return data || []
 }
 
 const fetchSiteName = async () => {
@@ -62,7 +62,6 @@ const fetchSiteName = async () => {
   const { data } = await supabase
     .from('site_settings')
     .select('site_name')
-    .limit(1)
     .maybeSingle()
   return data?.site_name || 'Nost Copy'
 }
@@ -71,230 +70,196 @@ export default function NavigationBar () {
   const { lang } = useLanguage()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Dil verileri
-  const menuData = useMemo(() => {
-    const t = (tr: string, en: string, de: string) =>
-      lang === 'tr' ? tr : lang === 'de' ? de : en
-
-    return {
-      home: { label: t('Anasayfa', 'Home', 'Startseite'), href: '/home' },
-      about: { label: t('Hakkımızda', 'About Us', 'Über uns'), href: '/about' },
-      contact: { label: t('İletişim', 'Contact', 'Kontakt'), href: '/contact' },
-      labels: {
-        categories: t('Kategoriler', 'Categories', 'Kategorien'),
-        services: t('Hizmetler', 'Services', 'Dienstleistungen'),
-        empty: t('Veri Yok', 'No Data', 'Keine Daten'),
-        error: t('Hata', 'Error', 'Fehler')
-      }
-    }
-  }, [lang])
-
-  // Mobil menü açıldığında scroll kilitleme
   useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
+    document.body.style.overflow = mobileMenuOpen ? 'hidden' : 'unset'
     return () => {
       document.body.style.overflow = 'unset'
     }
   }, [mobileMenuOpen])
 
-  // Veri Çekme
-  const {
-    data: categories,
-    isLoading: catLoading,
-    error: catError
-  } = useSWR(['categories-nav', lang], () => fetchCategories(lang), {
+  const { data: rawNavItems } = useSWR(
+    'nav_structure_v2',
+    fetchNavigationStructure,
+    { revalidateOnFocus: false }
+  )
+  const { data: categories, isLoading: catLoading } = useSWR(
+    ['categories-nav', lang],
+    () => fetchCategories(lang),
+    { revalidateOnFocus: false }
+  )
+  const { data: services } = useSWR('services-nav', fetchServices, {
     revalidateOnFocus: false
   })
+  const { data: siteName = 'Nost Copy' } = useSWR('site_name', fetchSiteName)
 
-  const { data: services } = useSWR('services-nav', fetchServices, {
-    revalidateOnFocus: false,
-    suspense: true
-  })
-
-  const { data: siteName = 'Nost Copy' } = useSWR('site_name', fetchSiteName, {
-    revalidateOnFocus: false,
-    suspense: true
-  })
-
-  const closeMobileMenu = () => setMobileMenuOpen(false)
-
-  // --- 1. MASAÜSTÜ İÇİN AĞAÇ YAPISI (HIERARCHY) ---
-  const categoryTree = useMemo(() => {
+  // --- DİNAMİK VERİ HAZIRLAMA ---
+  const dynamicCategoryItems: DropdownItem[] = useMemo(() => {
     if (!categories) return []
+    return categories
+      .filter(c => c.parent_id === null)
+      .sort((a, b) => (a.sort || 0) - (b.sort || 0))
+      .slice(0, 8)
+      .map(c => ({
+        label:
+          (
+            c.category_translations.find((t: any) => t.lang_code === lang) ||
+            c.category_translations[0]
+          )?.name || c.slug,
+        href: `/${c.slug}`
+      }))
+  }, [categories, lang])
 
-    // Önce tüm kategorileri NavItem formatına çevir
-    const mappedCategories = categories.map(c => {
-      const tr =
-        c.category_translations.find(t => t.lang_code === lang) ||
-        c.category_translations.find(t => t.lang_code === 'tr')
+  const dynamicServiceItems: DropdownItem[] = useMemo(() => {
+    if (!services) return []
+    return services.map((s: any) => ({
+      label:
+        (
+          s.service_translations.find((t: any) => t.lang_code === lang) ||
+          s.service_translations[0]
+        )?.title || s.slug,
+      href: `/services/${s.slug}`
+    }))
+  }, [services, lang])
 
-      return {
-        id: c.id,
-        parent_id: c.parent_id,
-        label: tr?.name || c.slug,
-        href: `/${c.slug}`,
-        children: [] as NavItem[]
-      }
+  // --- AĞAÇ YAPISINI OLUŞTURMA (Tree Builder) ---
+  const navTree = useMemo(() => {
+    if (!rawNavItems) return []
+
+    const itemMap = new Map<number, NavTreeNode>()
+    const roots: NavTreeNode[] = []
+
+    // 1. Tüm öğeleri Map'e at ve children array'i başlat
+    rawNavItems.forEach(item => {
+      itemMap.set(item.id, { ...item, children: [] })
     })
 
-    // Parent-Child ilişkisini kur
-    const tree: NavItem[] = []
-    const lookup = new Map(mappedCategories.map(c => [c.id, c]))
-
-    // Özel düzenleme: Açık Hava (Display) (id:43) Kurumsal Ürünler (id:33) altına taşı
-    const openAirItem = lookup.get(43)
-    const corporateItem = lookup.get(33)
-    if (openAirItem && corporateItem) {
-      openAirItem.parent_id = 33
-    }
-
-    mappedCategories.forEach(cat => {
-      if (cat.parent_id === null) {
-        tree.push(cat)
+    // 2. İlişkileri kur
+    rawNavItems.forEach(item => {
+      const node = itemMap.get(item.id)!
+      if (item.parent_id === null) {
+        roots.push(node)
       } else {
-        const parent = lookup.get(cat.parent_id)
+        const parent = itemMap.get(item.parent_id)
         if (parent) {
-          parent.children!.push(cat)
+          parent.children.push(node)
         } else {
-          // Babası yoksa root'a ekle (güvenlik için)
-          tree.push(cat)
+          // Babası yoksa (silinmişse) root gibi davranmasın
         }
       }
     })
 
-    // Özel düzenleme: Max 6 ana kategori göster
-    // Öncelik sırası: Kartvizit (22), Etiket & Sticker (36), Broşür & İlan (72) ilk sıralarda
-    const priorityOrder = [22, 36, 72] // Kartvizit, Etiket & Sticker, Broşür & İlan
+    // 3. Sıralama (Sort Order)
+    const sortNodes = (nodes: NavTreeNode[]) => {
+      nodes.sort((a, b) => a.sort_order - b.sort_order)
+      nodes.forEach(node => sortNodes(node.children))
+    }
+    sortNodes(roots)
 
-    // Ana kategorileri sırala
-    const sortedTree = tree.sort((a, b) => {
-      const aPriority = priorityOrder.indexOf(a.id)
-      const bPriority = priorityOrder.indexOf(b.id)
+    return roots
+  }, [rawNavItems])
 
-      // Öncelikli kategoriler önce gelsin
-      if (aPriority !== -1 && bPriority !== -1) {
-        return aPriority - bPriority
+  // --- MENU RENDER MANTIĞI ---
+  const renderMenuItem = (item: NavTreeNode, isMobile = false) => {
+    const label =
+      item.label[lang] || item.label['en'] || item.label['tr'] || 'Menu'
+
+    // 1. LINK TİPİ
+    if (item.type === 'link') {
+      const href = item.url || '#'
+      if (isMobile) {
+        return (
+          <Link
+            key={item.id}
+            href={href}
+            onClick={() => setMobileMenuOpen(false)}
+            className='text-xl font-bold text-foreground border-b border-border/30 pb-3 hover:text-primary block'
+          >
+            {label}
+          </Link>
+        )
       }
-      if (aPriority !== -1) return -1
-      if (bPriority !== -1) return 1
 
-      // Diğerleri sort değerine göre sırala
-      const catA = categories?.find(c => c.id === a.id)
-      const catB = categories?.find(c => c.id === b.id)
-      return (catA?.sort || 0) - (catB?.sort || 0)
-    })
+      // --- GÜNCELLENEN KISIM BURASI (MASAÜSTÜ) ---
+      // NavDropdown'daki stilin aynısını buraya uyguladık.
+      return (
+        <li key={item.id} className='h-full flex items-center'>
+          <Link
+            href={href}
+            className={`
+              flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-bold font-sans transition-all duration-200
+              text-foreground/80 hover:text-primary hover:bg-muted/30
+            `}
+          >
+            {label}
+          </Link>
+        </li>
+      )
+    }
 
-    // Max 6 kategori
-    const limitedTree = sortedTree.slice(0, 6)
+    // 2. DROPDOWN TİPLERİ (Manuel, Kategori, Servis)
+    let dropdownItems: DropdownItem[] = []
+    let isLoading = false
 
-    console.log('categoryTree (limited to 6):', limitedTree)
-    return limitedTree
-  }, [categories, lang])
+    if (item.type === 'dynamic_categories') {
+      dropdownItems = [
+        ...dynamicCategoryItems,
+        { label: 'Tümünü Gör →', href: '/c' }
+      ]
+      isLoading = catLoading
+    } else if (item.type === 'dynamic_services') {
+      dropdownItems = dynamicServiceItems
+    } else if (item.type === 'dropdown') {
+      // Manuel Dropdown'ın çocuklarını formatla
+      dropdownItems = item.children.map(child => ({
+        label: child.label[lang] || child.label['tr'],
+        href: child.url || '#'
+      }))
+    }
 
-  // --- 2. MOBİL İÇİN DÜZ LİSTE (FLAT LIST) ---
-  const categoryListMobile = useMemo(() => {
-    if (!categories) return []
+    if (isMobile) {
+      return (
+        <div key={item.id} className='flex flex-col gap-2'>
+          <div className='text-xs font-bold text-muted-foreground uppercase tracking-widest mt-2 mb-1'>
+            {label}
+          </div>
+          {dropdownItems.map((sub, i) => (
+            <Link
+              key={i}
+              href={sub.href}
+              onClick={() => setMobileMenuOpen(false)}
+              className='text-lg text-foreground/90 pl-3 border-l-2 border-border/40 hover:border-primary py-1 block'
+            >
+              {sub.label}
+            </Link>
+          ))}
+        </div>
+      )
+    }
 
-    // Ana kategorileri filtrele (parent_id: null) ve aktif olanları al
-    const mainCategories = categories.filter(
-      c => c.parent_id === null && c.active !== false
+    return (
+      <li key={item.id} className='h-full flex items-center'>
+        <NavDropdown
+          label={label}
+          items={dropdownItems}
+          isLoading={isLoading}
+        />
+      </li>
     )
-
-    // Öncelik sırası: Kartvizit (22), Etiket & Sticker (36), Broşür & İlan (72) ilk sıralarda
-    const priorityOrder = [22, 36, 72]
-
-    // Ana kategorileri sırala
-    const sortedCategories = mainCategories.sort((a, b) => {
-      const aPriority = priorityOrder.indexOf(a.id)
-      const bPriority = priorityOrder.indexOf(b.id)
-
-      // Öncelikli kategoriler önce gelsin
-      if (aPriority !== -1 && bPriority !== -1) {
-        return aPriority - bPriority
-      }
-      if (aPriority !== -1) return -1
-      if (bPriority !== -1) return 1
-
-      // Diğerleri sort değerine göre sırala
-      return (a.sort || 0) - (b.sort || 0)
-    })
-
-    // Max 6 kategori
-    const limitedCategories = sortedCategories.slice(0, 6)
-
-    const list = limitedCategories.map(c => {
-      const tr =
-        c.category_translations.find(t => t.lang_code === lang) ||
-        c.category_translations.find(t => t.lang_code === 'tr')
-      return { label: tr?.name || c.slug, href: `/${c.slug}` }
-    })
-
-    console.log('categoryListMobile (limited to 6):', list)
-    return list
-  }, [categories, lang])
-
-  // --- HİZMETLER LİSTESİ ---
-  const serviceItems = useMemo(() => {
-    if (!services) return []
-    return services.map(s => {
-      const translation =
-        s.service_translations.find(t => t.lang_code === lang) ||
-        s.service_translations.find(t => t.lang_code === 'en') ||
-        s.service_translations[0]
-      return {
-        label: translation?.title || s.slug,
-        href: `/services/${s.slug}`
-      }
-    })
-  }, [services, lang])
+  }
 
   return (
     <>
-      <div className='w-full flex justify-center backdrop-blur-md border-b border-border/40 sticky top-0 z-50 transition-all duration-300 shadow-primary/20 shadow-md'>
-        <nav className='relative w-full max-w-7xl h-20 md:h-24 flex items-center justify-between px-4 lg:px-6 xl:px-0 font-sans font-medium'>
-          <div className='text-2xl md:text-3xl font-bold tracking-tight text-primary z-50'>
-            <Link href='/home' onClick={closeMobileMenu}>
+      <div className='w-full flex justify-center backdrop-blur-md border-b border-border/40 sticky top-0 z-50 transition-all duration-300 shadow-sm bg-background/80'>
+        <nav className='relative w-full max-w-7xl h-20 md:h-24 flex items-center justify-between px-4 lg:px-6 xl:px-0'>
+          <div className='text-2xl md:text-3xl font-black tracking-tighter text-foreground z-50'>
+            <Link href='/home' onClick={() => setMobileMenuOpen(false)}>
               {siteName}
             </Link>
           </div>
 
-          {/* MASAÜSTÜ MENÜ */}
-          <ul className='hidden lg:flex space-x-6 xl:space-x-8 items-center text-sm font-bold'>
-            <li className='text-foreground/80 hover:text-primary transition-colors'>
-              <Link href={menuData.home.href}>{menuData.home.label}</Link>
-            </li>
-            <li className='text-foreground/80 hover:text-primary transition-colors'>
-              <Link href={menuData.about.href}>{menuData.about.label}</Link>
-            </li>
-
-            {/* Hizmetler Dropdown */}
-            <li>
-              <Dropdown
-                label={menuData.labels.services}
-                items={serviceItems}
-                emptyLabel={menuData.labels.empty}
-                errorLabel={menuData.labels.error}
-              />
-            </li>
-
-            {/* Kategoriler Dropdown (AĞAÇ YAPISI) */}
-            <li>
-              <CategoriesDropdown
-                label={menuData.labels.categories}
-                items={categoryTree}
-                loading={catLoading}
-                error={!!catError}
-                emptyLabel={menuData.labels.empty}
-              />
-            </li>
-
-            <li className='text-foreground/80 hover:text-primary transition-colors'>
-              <Link href={menuData.contact.href}>{menuData.contact.label}</Link>
-            </li>
+          {/* Masaüstü Menü */}
+          <ul className='hidden lg:flex space-x-2 xl:space-x-3 items-center text-sm font-bold h-full'>
+            {navTree.map(item => renderMenuItem(item, false))}
           </ul>
 
           <button
@@ -306,82 +271,14 @@ export default function NavigationBar () {
         </nav>
       </div>
 
-      {/* MOBİL MENÜ */}
       <div
-        className={`fixed inset-0 z-40 bg-background/95 backdrop-blur-xl flex flex-col pt-32 px-6 gap-8 overflow-y-auto transition-all duration-300 ease-in-out lg:hidden ${
+        className={`fixed inset-0 z-40 bg-background/98 backdrop-blur-xl flex flex-col pt-32 px-6 gap-6 overflow-y-auto transition-all duration-300 ease-in-out lg:hidden ${
           mobileMenuOpen
             ? 'opacity-100 visible translate-y-0'
             : 'opacity-0 invisible -translate-y-5 pointer-events-none'
         }`}
       >
-        <div className='flex flex-col gap-4'>
-          <Link
-            href={menuData.home.href}
-            onClick={closeMobileMenu}
-            className='text-2xl font-bold text-foreground border-b border-border/30 pb-3 hover:text-primary'
-          >
-            {menuData.home.label}
-          </Link>
-          <Link
-            href={menuData.about.href}
-            onClick={closeMobileMenu}
-            className='text-2xl font-bold text-foreground border-b border-border/30 pb-3 hover:text-primary'
-          >
-            {menuData.about.label}
-          </Link>
-        </div>
-
-        {/* Mobil Hizmetler */}
-        <div className='flex flex-col gap-3'>
-          <div className='text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1'>
-            {menuData.labels.services}
-          </div>
-          {serviceItems.map((item, i) => (
-            <Link
-              key={i}
-              href={item.href}
-              onClick={closeMobileMenu}
-              className='text-lg text-foreground/90 pl-3 border-l-2 border-border/40 hover:border-primary py-1'
-            >
-              {item.label}
-            </Link>
-          ))}
-        </div>
-
-        {/* Mobil Kategoriler (DÜZ LİSTE - Okunabilirlik için) */}
-        <div className='flex flex-col gap-3'>
-          <div className='text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1'>
-            {menuData.labels.categories}
-          </div>
-          {/* Tüm Kategoriler Linki */}
-          <Link
-            href='/c'
-            onClick={closeMobileMenu}
-            className='text-lg font-bold text-primary pl-3 border-l-2 border-primary py-2 hover:border-primary-hover'
-          >
-            Tüm Kategoriler
-          </Link>
-          {categoryListMobile.map((item, i) => (
-            <Link
-              key={i}
-              href={item.href}
-              onClick={closeMobileMenu}
-              className='text-lg text-foreground/90 pl-3 border-l-2 border-border/40 hover:border-primary py-1'
-            >
-              {item.label}
-            </Link>
-          ))}
-        </div>
-
-        <div className='flex flex-col gap-4 pb-10'>
-          <Link
-            href={menuData.contact.href}
-            onClick={closeMobileMenu}
-            className='text-2xl font-bold text-foreground border-b border-border/30 pb-3 hover:text-primary'
-          >
-            {menuData.contact.label}
-          </Link>
-        </div>
+        {navTree.map(item => renderMenuItem(item, true))}
       </div>
     </>
   )

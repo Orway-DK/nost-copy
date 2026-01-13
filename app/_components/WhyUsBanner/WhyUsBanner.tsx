@@ -173,7 +173,7 @@ export default function WhyUs () {
 
           {/* Badge (Deneyim Kartı) */}
           <div
-            className='absolute -bottom-4 md:bottom-10 left-1/2 -translate-x-1/2 lg:translate-x-0 lg:left-8 z-30 p-5 rounded-2xl flex flex-col items-center transition-all duration-700 delay-500 bg-background dark:bg-secondary shadow-2xl border border-border min-w-[150px]'
+            className='absolute -bottom-4 md:bottom-10 left-1/2 -translate-x-1/2 lg:translate-x-0 lg:left-8 z-30 p-5 rounded-2xl flex flex-col items-center transition-all duration-700 delay-500 shadow-2xl border border-border min-w-[150px]'
             style={{
               opacity: visible ? 1 : 0,
               transform: visible ? 'scale(1)' : 'scale(0.8)'

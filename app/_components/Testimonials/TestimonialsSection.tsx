@@ -12,6 +12,7 @@ import styles from './Testimonials.module.css'
 import 'swiper/css'
 import 'swiper/css/pagination'
 
+// --- TİP TANIMLARI ---
 type Testimonial = {
   id: number
   stars: number
@@ -86,14 +87,13 @@ export default function TestimonialsSection () {
     }
   }, [lang])
 
-  // Marquee Metni (Masaüstü için)
+  // Marquee Metni
   const marqueeText = useMemo(() => {
-    if (lang === 'tr') return 'YORUMLAR • REFERANSLAR •'
-    if (lang === 'de') return 'KUNDENBEWERTUNGEN • REFERENZEN •'
-    return 'TESTIMONIALS • REVIEWS •'
+    if (lang === 'tr') return 'YORUMLAR • REFERANSLAR • '
+    if (lang === 'de') return 'KUNDENBEWERTUNGEN • REFERENZEN • '
+    return 'TESTIMONIALS • REVIEWS • '
   }, [lang])
 
-  // Mobil Başlık Metinleri
   const mobileTitle = useMemo(() => {
     if (lang === 'tr') return 'Müşteri Yorumları'
     if (lang === 'de') return 'Kundenbewertungen'
@@ -106,23 +106,31 @@ export default function TestimonialsSection () {
     return 'What Clients Say'
   }, [lang])
 
-  const repeatedText = Array(10).fill(marqueeText)
+  const repeatedText = Array(8).fill(marqueeText)
 
   if (!mounted) return null
 
   return (
-    <section className={styles.sectionWrapper}>
+    <section className='relative w-full py-20 md:py-32 overflow-hidden bg-transparent'>
       {/* --- MASAÜSTÜ: KAYAN BAŞLIK --- */}
-      {/* CSS'te mobilde display: none yapıldı */}
-      <div className={styles.marqueeContainer}>
+      <div
+        className={`${styles.marqueeContainer} hidden md:flex mb-16 md:mb-24 pointer-events-none select-none`}
+      >
         <div className={styles.marqueeTrack}>
           {repeatedText.map((text, i) => (
-            <span key={`t1-${i}`} className={styles.marqueeText}>
+            // DÜZELTME: Light mode için text-black/5, Dark mode için text-white/10
+            <span
+              key={`t1-${i}`}
+              className='text-[6rem] lg:text-[8rem] font-black text-black/5 dark:text-white/10 whitespace-nowrap px-4 tracking-tighter transition-colors duration-300'
+            >
               {text}
             </span>
           ))}
           {repeatedText.map((text, i) => (
-            <span key={`t2-${i}`} className={styles.marqueeText}>
+            <span
+              key={`t2-${i}`}
+              className='text-[6rem] lg:text-[8rem] font-black text-black/5 dark:text-white/10 whitespace-nowrap px-4 tracking-tighter transition-colors duration-300'
+            >
               {text}
             </span>
           ))}
@@ -130,24 +138,28 @@ export default function TestimonialsSection () {
       </div>
 
       {/* --- MOBİL: STATİK BAŞLIK --- */}
-      {/* CSS'te masaüstünde display: none yapıldı */}
-      <div className={styles.mobileHeader}>
-        <span className={styles.mobileSubtitle}>{mobileSubtitle}</span>
-        <h2 className={styles.mobileTitle}>{mobileTitle}</h2>
+      <div className='md:hidden text-center mb-12 px-6'>
+        <span className='text-primary text-sm font-bold tracking-widest uppercase block mb-2'>
+          {mobileSubtitle}
+        </span>
+        {/* DÜZELTME: Mobilde başlık rengi dinamikleştirildi */}
+        <h2 className='text-3xl font-black text-foreground'>{mobileTitle}</h2>
       </div>
 
       {/* --- SLIDER --- */}
       <div className='container mx-auto px-0 md:px-4 relative z-10'>
-        <div className={styles.sliderContainer}>
+        <div className='w-full'>
           {loading ? (
-            <div className={styles.loadingState}>...</div>
+            <div className='flex justify-center text-muted-foreground animate-pulse'>
+              Yükleniyor...
+            </div>
           ) : items.length === 0 ? (
-            <div className={styles.loadingState}>...</div>
+            <div className='text-center text-muted-foreground'>
+              Henüz yorum yok.
+            </div>
           ) : (
             <Swiper
               modules={[Autoplay, Pagination]}
-              // MOBİL VARSAYILAN:
-              // 1.2 kart göster (Ortala + yanlardan kesik göster)
               slidesPerView={1.2}
               centeredSlides={true}
               spaceBetween={20}
@@ -158,57 +170,85 @@ export default function TestimonialsSection () {
                 disableOnInteraction: false,
                 pauseOnMouseEnter: true
               }}
+              pagination={{
+                clickable: true,
+                dynamicBullets: true
+              }}
               breakpoints={{
-                // Tablet
                 640: {
                   slidesPerView: 2,
                   spaceBetween: 30,
                   centeredSlides: true
                 },
-                // Masaüstü
                 1024: {
                   slidesPerView: 3,
                   spaceBetween: 40,
                   centeredSlides: true
                 },
-                // Geniş Ekran
                 1280: {
-                  slidesPerView: 3.8, // Kenarlardan taşma efekti için küsuratlı
+                  slidesPerView: 3.5,
                   spaceBetween: 50,
                   centeredSlides: true
                 }
               }}
+              className='testimonials-swiper !pb-14'
             >
               {items.map(item => (
-                <SwiperSlide key={item.id} className='h-auto py-10'>
-                  <div className={styles.card}>
-                    {/* Yıldızlar */}
-                    <div className={styles.stars}>{'★'.repeat(item.stars)}</div>
+                <SwiperSlide key={item.id} className='h-auto'>
+                  {/* DÜZELTME: KART TASARIMI 
+                      Light: bg-white/60, Koyu Kenarlık
+                      Dark: bg-[#212529]/40, Açık Kenarlık
+                  */}
+                  <div
+                    className='
+                    h-full flex flex-col justify-between
+                    bg-white/60 dark:bg-[#212529]/40 
+                    backdrop-blur-md 
+                    border border-black/5 dark:border-white/5 
+                    rounded-2xl p-8 
+                    hover:border-primary/30 dark:hover:border-white/20 
+                    hover:bg-white/80 dark:hover:bg-[#212529]/60 
+                    transition-all duration-300 group
+                    shadow-sm dark:shadow-none
+                  '
+                  >
+                    <div>
+                      {/* Yıldızlar */}
+                      <div className='flex gap-1 text-yellow-500 mb-6 text-sm'>
+                        {'★'.repeat(item.stars)}
+                      </div>
 
-                    {/* İçerik */}
-                    <p className={styles.content}>“{item.content}”</p>
+                      {/* İçerik */}
+                      {/* Light: text-gray-600, Dark: text-[#d1d7e6] */}
+                      <p className='text-gray-600 dark:text-[#d1d7e6] text-lg leading-relaxed italic mb-8 font-light'>
+                        “{item.content}”
+                      </p>
+                    </div>
 
                     {/* Yazar Bilgisi */}
-                    <div className={styles.author}>
+                    <div className='flex items-center gap-4 pt-6 border-t border-black/5 dark:border-white/5'>
                       {item.image_url ? (
-                        <Image
-                          src={item.image_url}
-                          alt={item.image_alt || 'User'}
-                          width={56}
-                          height={56}
-                          className={styles.avatar}
-                        />
+                        <div className='relative w-12 h-12 rounded-full overflow-hidden border border-black/5 dark:border-white/10 shrink-0'>
+                          <Image
+                            src={item.image_url}
+                            alt={item.image_alt || 'User'}
+                            fill
+                            className='object-cover'
+                          />
+                        </div>
                       ) : (
-                        <div className={styles.avatarPlaceholder}>
+                        <div className='w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center text-primary font-bold text-lg shrink-0'>
                           {item.author_name.charAt(0)}
                         </div>
                       )}
-                      <div className={styles.authorInfo}>
-                        <span className={styles.authorName}>
+
+                      <div className='flex flex-col'>
+                        {/* Light: text-gray-900, Dark: text-white */}
+                        <span className='text-gray-900 dark:text-white font-bold text-base tracking-wide group-hover:text-primary transition-colors'>
                           {item.author_name}
                         </span>
                         {item.author_job && (
-                          <span className={styles.authorJob}>
+                          <span className='text-gray-500 dark:text-white/40 text-xs font-medium uppercase tracking-wider mt-0.5'>
                             {item.author_job}
                           </span>
                         )}

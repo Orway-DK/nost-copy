@@ -1,9 +1,10 @@
+// app/_components/Header/LanguageDropdown.tsx
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
 import { useLanguage } from '@/components/LanguageProvider'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { useLoading } from '@/components/LoadingContext' // YENİ IMPORT
+import { useLoading } from '@/components/LoadingContext'
 
 type Language = { code: string; name: string; is_default: boolean }
 
@@ -40,38 +41,25 @@ function writeCache (data: Language[]) {
 
 export default function LanguageDropdown () {
   const { lang, setLang } = useLanguage()
-
-  // State
   const [isOpen, setIsOpen] = useState(false)
   const [languages, setLanguages] = useState<Language[]>(FALLBACK_LANGUAGES)
-
-  // Refs
   const btnRef = useRef<HTMLButtonElement | null>(null)
   const popRef = useRef<HTMLDivElement | null>(null)
-
-  // Loading System
   const { register, unregister } = useLoading()
   const COMPONENT_ID = 'LanguageDropdown'
 
   // --- 1. VERİ ÇEKME & LOADING ---
   useEffect(() => {
     let mounted = true
-
     const initLanguages = async () => {
-      // Başlar başlamaz sisteme kaydol
       register(COMPONENT_ID)
-
       try {
-        // A. Önce Cache Kontrolü
         const cached = readCache()
         if (cached && mounted) {
           setLanguages(cached)
-          // Cache varsa işimiz bitti, loading'i kapat
           unregister(COMPONENT_ID)
-          return // Supabase'e gitme
+          return
         }
-
-        // B. Cache yoksa Supabase'den çek
         const supabase = createSupabaseBrowserClient()
         const { data, error } = await supabase
           .from('languages')
@@ -87,27 +75,20 @@ export default function LanguageDropdown () {
         }
       } catch (err) {
         console.error('Language fetch error:', err)
-        // Hata olsa bile Fallback diller zaten state'de var, devam et.
       } finally {
-        // Her durumda (Hata, Başarı) loading kaydını sil
         if (mounted) unregister(COMPONENT_ID)
       }
     }
-
     initLanguages()
-
     return () => {
       mounted = false
-      // Component unmount olursa loading'i temizle
       unregister(COMPONENT_ID)
     }
   }, [register, unregister])
 
-  // --- 2. DİL DOĞRULAMA (Validation) ---
-  // Eğer URL'den gelen dil (lang) listemizde yoksa varsayılana dön
+  // --- 2. DİL DOĞRULAMA ---
   useEffect(() => {
     if (languages.length === 0) return
-
     const currentExists = languages.some(l => l.code === lang)
     if (!lang || !currentExists) {
       const def = languages.find(l => l.is_default) || languages[0]
@@ -117,7 +98,7 @@ export default function LanguageDropdown () {
     }
   }, [lang, languages, setLang])
 
-  // --- 3. DIŞARI TIKLAMA (Click Outside) ---
+  // --- 3. DIŞARI TIKLAMA ---
   useEffect(() => {
     if (!isOpen) return
     const onMouseDown = (e: MouseEvent) => {
@@ -149,14 +130,13 @@ export default function LanguageDropdown () {
         ref={btnRef}
         type='button'
         onClick={() => setIsOpen(s => !s)}
-        className='inline-flex items-center gap-2 text-background/90 dark:text-foreground hover:text-background transition-colors'
+        // DEĞİŞİKLİK 2: Buton Renkleri (Banner ile uyumlu)
+        className='inline-flex items-center gap-2 text-white/90 hover:text-white dark:text-gray-300 dark:hover:text-white transition-colors'
         aria-haspopup='listbox'
         aria-expanded={isOpen}
         aria-label='Change language'
       >
-        <span className='font-semibold tracking-wide'>
-          {lang.toUpperCase()}
-        </span>
+        <span className='font-semibold tracking-wide uppercase'>{lang}</span>
         <svg
           className={`w-2.5 h-2.5 transition-transform ${
             isOpen ? 'rotate-180' : ''
@@ -178,7 +158,8 @@ export default function LanguageDropdown () {
       {isOpen && (
         <div
           ref={popRef}
-          className='absolute right-0 mt-2 w-44 rounded-lg shadow-xl bg-secondary border border-muted-light/20 z-50 overflow-hidden'
+          // DEĞİŞİKLİK 3: Açılır Menü Renkleri (Modern Light/Dark)
+          className='absolute right-0 mt-2 w-44 rounded-lg shadow-xl bg-white dark:bg-[#222] border border-gray-200 dark:border-white/10 z-50 overflow-hidden'
           role='listbox'
           aria-label='Languages'
         >
@@ -189,11 +170,12 @@ export default function LanguageDropdown () {
                   onClick={() => onSelect(l.code)}
                   role='option'
                   aria-selected={lang === l.code}
+                  // DEĞİŞİKLİK 4: Liste Elemanı Renkleri
                   className={`block w-full text-left px-4 py-2.5 text-sm transition-colors
                     ${
                       lang === l.code
-                        ? 'font-bold text-white bg-foreground/20'
-                        : 'text-foreground/80 hover:bg-muted/10 hover:text-foreground'
+                        ? 'font-bold text-primary bg-primary/10 dark:text-white dark:bg-white/10'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
                     }`}
                 >
                   {l.name}

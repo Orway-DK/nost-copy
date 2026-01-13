@@ -1,4 +1,4 @@
-// C:\Projeler\nost-copy\app\_components\MakeItEasier\makeItEasier.tsx
+// app\_components\MakeItEasier\makeItEasier.tsx
 'use client'
 
 import Image from 'next/image'
@@ -11,9 +11,9 @@ import { useState, useCallback } from 'react'
 import { Icon } from '@iconify/react'
 import MakeItEasierSliderPart from './makeItEasierSliderPart'
 
-// Framer Motion v11+: motion() deprecated -> motion.create()
 const MotionImage = motion.create(Image)
 
+// --- TYPE VE FETCHER (Değişmedi, yer kaplamaması için kısaltıyorum) ---
 type Tip = { icon?: string; title: string; text: string }
 type ApiRow = {
   id: number
@@ -35,14 +35,7 @@ type ApiRow = {
   }[]
 }
 
-const fetcher = async (
-  lang: string
-): Promise<{
-  title: string
-  titletext: string
-  image_link: string
-  tips: Tip[]
-}> => {
+const fetcher = async (lang: string) => {
   const supabase = createSupabaseBrowserClient()
   const { data, error } = await supabase
     .from('make_it_easier_sections')
@@ -113,7 +106,6 @@ const fetcher = async (
       text: tr.tip3_text || ''
     }
   ]
-
   return {
     title: tr.title,
     titletext: tr.titletext,
@@ -138,7 +130,7 @@ export default function MakeItEasier () {
 
   if (isLoading)
     return (
-      <div className='py-8 flex justify-center animate-pulse text-[#47597b]'>
+      <div className='py-8 flex justify-center animate-pulse text-muted-foreground'>
         Yükleniyor…
       </div>
     )
@@ -149,7 +141,11 @@ export default function MakeItEasier () {
       </div>
     )
   if (!details)
-    return <div className='py-8 text-center'>İçerik bulunamadı.</div>
+    return (
+      <div className='py-8 text-center text-muted-foreground'>
+        İçerik bulunamadı.
+      </div>
+    )
 
   const imageUrl = details.image_link || ''
 
@@ -165,7 +161,6 @@ export default function MakeItEasier () {
           transition: { duration: 1.4, ease: [0.25, 0.1, 0.25, 1] }
         }
   }
-
   const imageVariants: Variants = {
     hidden: prefersReduced ? { x: '0%', opacity: 1 } : { x: '40%', opacity: 0 },
     visible: prefersReduced
@@ -176,7 +171,6 @@ export default function MakeItEasier () {
           transition: { duration: 1.0, ease: [0.25, 0.1, 0.25, 1], delay: 0.05 }
         }
   }
-
   const tipVariants: Variants = {
     hidden: prefersReduced ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 },
     visible: (i: number) =>
@@ -195,52 +189,53 @@ export default function MakeItEasier () {
 
   return (
     <div className='w-full overflow-hidden'>
-      {/* Üst kıvrım */}
-      <div className='block border-none rotate-180 w-full overflow-hidden'>
+      {/* 1. ÜST KIVRIM (SVG)
+         Light: fill-gray-100/90
+         Dark: fill-[#212529]/60
+      */}
+      <div className='block border-none w-full overflow-hidden leading-none'>
         <svg
-          className='bg-[#212529] h-[50px] md:h-[90px] w-[calc(100%+2px)]'
+          className='bg-transparent h-[50px] md:h-[90px] w-full'
           xmlns='http://www.w3.org/2000/svg'
-          viewBox='0 0 1000 100'
+          viewBox='0 0 1200 120'
           preserveAspectRatio='none'
         >
           <path
-            className='fill-background'
-            d='M500,97C126.7,96.3,0.8,19.8,0,0v100l1000,0V1C1000,19.4,873.3,97.8,500,97z'
+            className='fill-gray-100/90 dark:fill-[#212529]/60 transition-colors duration-300'
+            d='M0,60 C200,10 400,0 600,0 C800,0 1000,10 1200,60 V120 H0 Z'
           ></path>
         </svg>
       </div>
 
-      {/* İçerik Alanı */}
-      <div className='bg-[#212529] w-full flex flex-wrap justify-center items-center gap-8 py-10 lg:py-0'>
+      {/* 2. ORTA İÇERİK ALANI
+         Light: bg-gray-100/90
+         Dark: bg-[#212529]/60
+      */}
+      <div className='bg-gray-100/90 dark:bg-[#212529]/60 backdrop-blur-sm w-full flex flex-wrap justify-center items-center gap-8 py-10 lg:py-0 transition-colors duration-300'>
         {/* Sol metin */}
-        {/* MOBİL: h-auto, text-center, py-8 / MASAÜSTÜ: h-[50vh], text-left */}
-        <div className='w-full max-w-xl h-auto lg:h-[50vh] flex flex-col justify-center text-[#ecf2ff] px-6 text-center lg:text-left order-1'>
-          <h2 className='text-3xl sm:text-4xl lg:text-5xl font-semibold leading-tight'>
+        <div className='w-full max-w-xl h-auto lg:h-[50vh] flex flex-col justify-center text-center lg:text-left order-1'>
+          <h2 className='text-3xl sm:text-4xl lg:text-5xl font-semibold leading-tight drop-shadow-sm text-gray-900 dark:text-[#ecf2ff]'>
             {details.title}
           </h2>
-          <p className='text-base sm:text-lg lg:text-xl mt-4 sm:mt-6 max-w-prose mx-auto lg:mx-0 text-gray-300'>
+          <p className='text-base sm:text-lg lg:text-xl mt-4 sm:mt-6 max-w-prose mx-auto lg:mx-0 text-gray-600 dark:text-gray-300'>
             {details.titletext}
           </p>
         </div>
 
-        {/* Görsel ve dekor alanı */}
-        {/* MOBİL: h-auto, min-h-[350px] / MASAÜSTÜ: h-[50vh] */}
+        {/* Görsel Alanı */}
         <div className='relative w-full lg:w-auto h-auto min-h-[350px] lg:h-[50vh] flex items-center justify-center px-6 order-2'>
-          {/* Daire Dekor */}
-          {/* MOBİL: Küçültüldü ve ortalandı */}
           <motion.div
-            className='absolute bg-[#47597b] rounded-full w-64 h-64 md:w-[25rem] md:h-[25rem] lg:w-[30rem] lg:h-[30rem] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 lg:top-60 lg:-right-70 lg:translate-x-0 lg:-translate-y-1/2 z-0 overflow-hidden'
+            // Circle: Light'ta primary/10, Dark'ta özel mavi
+            className='absolute bg-primary/10 dark:bg-[#47597b] rounded-full w-64 h-64 md:w-[25rem] md:h-[25rem] lg:w-[30rem] lg:h-[30rem] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 lg:top-60 lg:-right-70 lg:translate-x-0 lg:-translate-y-1/2 z-0 overflow-hidden transition-colors duration-300'
             variants={circleVariants}
             initial='hidden'
             whileInView='visible'
             viewport={{ once: true, amount: 0.2 }}
             style={{ willChange: 'transform, opacity' }}
           />
-
-          {/* Resim */}
           <MotionImage
             src={imageUrl}
-            alt={details.title || '/h1-banner3.png'}
+            alt={details.title || 'Make it easier'}
             width={1000}
             height={1000}
             className='w-full max-w-[280px] sm:max-w-[400px] lg:max-w-[750px] h-auto object-contain z-10 select-none drop-shadow-2xl'
@@ -252,22 +247,19 @@ export default function MakeItEasier () {
             viewport={{ once: true, amount: 0.2 }}
             style={{ willChange: 'transform, opacity' }}
           />
-
-          {!imageUrl && (
-            <div className='absolute inset-0 flex items-center justify-center text-sm text-red-400'>
-              Görsel linki boş
-            </div>
-          )}
           {imageUrl && !imgLoaded && (
-            <div className='absolute bottom-2 right-2 text-xs text-[#ecf2ff] opacity-70'>
+            <div className='absolute bottom-2 right-2 text-xs text-muted-foreground opacity-70'>
               Yükleniyor...
             </div>
           )}
         </div>
       </div>
 
-      {/* Alt içerik (Tips) */}
-      <div className='w-full bg-[#212529]'>
+      {/* 3. ALT İÇERİK (TIPS) VE SLIDER
+         Light: bg-gray-100/90
+         Dark: bg-[#212529]/60
+      */}
+      <div className='w-full bg-gray-100/90 dark:bg-[#212529]/60 backdrop-blur-sm transition-colors duration-300'>
         <div className='max-w-7xl mx-auto pb-20 px-6 py-12 lg:py-24 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-start'>
           {(details.tips || []).slice(0, 3).map((tip, idx) => (
             <motion.div
@@ -279,7 +271,8 @@ export default function MakeItEasier () {
               whileInView='visible'
               viewport={{ once: true, amount: 0.15 }}
             >
-              <span className='flex-shrink-0 bg-[#ecf2ff] text-[#212529] rounded-full w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center shadow-lg'>
+              {/* İkon Kutusu: Light'ta primary, Dark'ta açık mavi */}
+              <span className='flex-shrink-0 bg-primary text-white dark:bg-[#ecf2ff] dark:text-[#212529] rounded-full w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center shadow-lg transition-colors duration-300'>
                 {tip.icon ? (
                   <Icon
                     icon={tip.icon}
@@ -292,31 +285,35 @@ export default function MakeItEasier () {
                 )}
               </span>
               <div>
-                <h3 className='text-white text-lg font-semibold mb-2'>
+                <h3 className='text-gray-900 dark:text-white text-lg font-semibold mb-2'>
                   {tip.title}
                 </h3>
-                <p className='font-normal text-sm text-[#d1d7e6] leading-relaxed'>
+                <p className='font-normal text-sm text-gray-600 dark:text-[#d1d7e6] leading-relaxed'>
                   {tip.text}
                 </p>
               </div>
             </motion.div>
           ))}
         </div>
+        <div className='w-full'>
+          <MakeItEasierSliderPart />
+        </div>
       </div>
-      <div className='w-full'>
-        <MakeItEasierSliderPart />
-      </div>
-      {/* Alt kıvrım */}
-      <div className='block border-none w-full overflow-hidden'>
+
+      {/* 4. ALT KIVRIM (SVG) 
+         Light: fill-gray-100/90
+         Dark: fill-[#212529]/60
+      */}
+      <div className='block border-none w-full overflow-hidden leading-none rotate-180'>
         <svg
-          className='bg-[#212529] h-[50px] md:h-[90px] w-[calc(100%+2px)]'
+          className='bg-transparent h-[50px] md:h-[90px] w-full'
           xmlns='http://www.w3.org/2000/svg'
-          viewBox='0 0 1000 100'
+          viewBox='0 0 1200 120'
           preserveAspectRatio='none'
         >
           <path
-            className='fill-background'
-            d='M500,97C126.7,96.3,0.8,19.8,0,0v100l1000,0V1C1000,19.4,873.3,97.8,500,97z'
+            className='fill-gray-100/90 dark:fill-[#212529]/60 transition-colors duration-300'
+            d='M0,60 C200,10 400,0 600,0 C800,0 1000,10 1200,60 V120 H0 Z'
           ></path>
         </svg>
       </div>

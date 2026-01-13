@@ -97,10 +97,10 @@ export default function FeaturedCategories () {
   )
 
   if (!mounted)
-    return <div className='py-24 w-full bg-background min-h-[500px]'></div>
+    return <div className='py-24 w-full min-h-[500px]'></div>
 
   return (
-    <section className='py-12 md:py-20 w-full max-w-full overflow-x-hidden bg-background'>
+    <section className='py-12 md:py-20 w-full max-w-full overflow-x-hidden'>
       <div className='w-full px-0 md:pl-[10vw] min-w-0'>
         {' '}
         {/* Padding ayarı biraz daha merkeze alındı */}

@@ -95,10 +95,10 @@ export default function ServicesSlider () {
   )
 
   if (!mounted)
-    return <div className='py-24 w-full bg-background min-h-[500px]'></div>
+    return <div className='py-24 w-full min-h-[500px]'></div>
 
   return (
-    <section className='py-12 md:py-24 w-full max-w-full overflow-x-hidden bg-background'>
+    <section className='py-12 md:py-24 w-full max-w-full overflow-x-hidden'>
       <div className='w-full px-0 md:pl-[16vw] min-w-0'>
         {/* Başlık Alanı */}
         <div className='mb-8 md:mb-12 px-4 md:px-0 text-center md:text-left'>

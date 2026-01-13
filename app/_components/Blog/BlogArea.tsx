@@ -88,10 +88,11 @@ export default function HomeBlogArea () {
   }, [lang])
 
   return (
-    <section className='py-12 md:py-24 bg-background transition-colors duration-300'>
+    // DÜZENLEME 1: Arkaplan şeffaf yapıldı (bg-transparent)
+    <section className='py-12 md:py-24 bg-transparent transition-colors duration-300'>
       <div className='max-w-[1400px] mx-auto px-4'>
         <div className='grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20'>
-          {/* SOL KOLON */}
+          {/* SOL KOLON: Başlık Alanı */}
           <header className='lg:col-span-4 relative'>
             <div className='sticky top-24 text-center lg:text-left'>
               <span className='text-xs md:text-sm font-black tracking-[0.2em] text-primary uppercase mb-4 block'>
@@ -101,7 +102,6 @@ export default function HomeBlogArea () {
                 {t.title_1} <br className='hidden lg:block' />
                 <span className='text-primary'>{t.title_2}</span>
               </h2>
-              {/* DÜZELTME: text-foreground/80 ve leading-relaxed ile okunabilirlik artırıldı */}
               <p className='text-lg text-foreground/80 dark:text-muted-foreground mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0'>
                 {t.desc}
               </p>
@@ -117,22 +117,35 @@ export default function HomeBlogArea () {
             </div>
           </header>
 
-          {/* SAĞ KOLON */}
+          {/* SAĞ KOLON: Blog Yazıları */}
           <div className='lg:col-span-8 flex flex-col gap-8 md:gap-12'>
             {loading ? (
               <div className='space-y-8 animate-pulse'>
                 {[1, 2].map(i => (
-                  <div key={i} className='h-64 bg-card rounded-3xl' />
+                  // Loading durumunda da glass effect korundu
+                  <div
+                    key={i}
+                    className='h-64 bg-white/40 dark:bg-white/5 rounded-3xl backdrop-blur-sm'
+                  />
                 ))}
               </div>
             ) : (
               posts.map(post => (
                 <article
                   key={post.id}
-                  className='group flex flex-col md:flex-row gap-8 items-stretch bg-card border border-border/40 p-5 md:p-6 rounded-[2rem] hover:shadow-2xl hover:border-primary/20 transition-all duration-500'
+                  // DÜZENLEME 2: Kart Tasarımı (Glassmorphism)
+                  // Light: bg-white/60, Dark: bg-[#212529]/40
+                  className='
+                    group flex flex-col md:flex-row gap-8 items-stretch 
+                    bg-white/60 dark:bg-[#212529]/40 backdrop-blur-md
+                    border border-black/5 dark:border-white/5
+                    p-5 md:p-6 rounded-[2rem] 
+                    hover:shadow-xl hover:border-primary/30 dark:hover:border-white/20 hover:bg-white/80 dark:hover:bg-[#212529]/60
+                    transition-all duration-500
+                  '
                 >
                   {/* Görsel */}
-                  <div className='relative w-full md:w-[320px] aspect-video md:aspect-[4/5] shrink-0 rounded-2xl overflow-hidden shadow-lg'>
+                  <div className='relative w-full md:w-[320px] aspect-video md:aspect-[4/5] shrink-0 rounded-2xl overflow-hidden shadow-sm border border-black/5 dark:border-white/5'>
                     <Image
                       src={post.image_url || '/nost.png'}
                       alt={post.title}
@@ -155,12 +168,10 @@ export default function HomeBlogArea () {
                       </span>
                     </div>
 
-                    {/* SEO & OKUNURLUK: Başlık daha belirgin */}
                     <h3 className='text-2xl md:text-3xl font-bold text-foreground mb-4 group-hover:text-primary transition-colors leading-tight'>
                       <Link href={`/blog/${post.slug}`}>{post.title}</Link>
                     </h3>
 
-                    {/* OKUNURLUK: text-foreground/70 dark:text-muted-foreground kullanıldı */}
                     <p className='text-base md:text-lg text-foreground/70 dark:text-muted-foreground leading-relaxed line-clamp-3 mb-6'>
                       {post.excerpt}
                     </p>

@@ -196,7 +196,7 @@ export default async function BlogStandardPage ({
   }
 
   return (
-    <main className='w-full min-h-screen bg-background text-foreground pb-20 pt-32 transition-colors duration-300'>
+    <main className='w-full min-h-screen text-foreground pb-20 pt-32 transition-colors duration-300'>
       <div className='max-w-[1400px] mx-auto px-4'>
         <div className='grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16'>
           {/* --- MAIN CONTENT --- */}

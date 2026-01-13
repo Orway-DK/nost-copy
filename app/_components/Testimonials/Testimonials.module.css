@@ -1,64 +1,27 @@
-/* C:\Projeler\nost-copy\app\_components\Testimonials\Testimonials.module.css */
+/* app/_components/Testimonials/Testimonials.module.css */
 
-/* --- GENEL CONTAINER --- */
-.sectionWrapper {
-  position: relative;
+.marqueeContainer {
   width: 100%;
   overflow: hidden;
-  padding: 4rem 0 0rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  /* Arkaplan global'den gelir ama garanti olsun diye ekleyebilirsiniz */
-  background-color: var(--background);
-}
-
-/* --- MARQUEE (KAYAN BAŞLIK) --- */
-.marqueeContainer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 0;
-  user-select: none;
-  pointer-events: none;
-  /* Maskeleme aynı kalabilir */
+  white-space: nowrap;
+  position: relative;
+  /* Kayan yazının sayfadan taşmasını engeller */
   mask-image: linear-gradient(
     to right,
     transparent,
-    black 5%,
-    black 95%,
-    transparent
-  );
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent,
-    black 5%,
-    black 95%,
+    black 20%,
+    black 80%,
     transparent
   );
 }
 
 .marqueeTrack {
   display: flex;
-  align-items: center;
-  white-space: nowrap;
-  will-change: transform;
-  animation: marqueeScroll 40s linear infinite;
+  width: max-content;
+  animation: scrollText 120s linear infinite;
 }
 
-.marqueeText {
-  font-family: 'Poppins', sans-serif;
-  font-weight: 700;
-  font-size: 10vw;
-  line-height: 1;
-  /* Statik renk yerine Primary rengin %6 opak hali */
-  color: color-mix(in srgb, var(--primary), transparent 90%);
-  text-transform: uppercase;
-  margin-right: 2rem;
-}
-
-@keyframes marqueeScroll {
+@keyframes scrollText {
   0% {
     transform: translateX(0);
   }
@@ -67,194 +30,15 @@
   }
 }
 
-/* --- MOBİL BAŞLIK --- */
-.mobileHeader {
-  display: none;
-  text-align: center;
-  margin-bottom: 2rem;
-  padding: 0 1.5rem;
-  z-index: 10;
+/* Swiper Pagination Özelleştirmesi (Opsiyonel) */
+:global(.testimonials-swiper .swiper-pagination-bullet) {
+  background-color: rgba(255, 255, 255, 0.3);
+  opacity: 1;
 }
 
-.mobileTitle {
-  font-family: 'Poppins', sans-serif;
-  font-weight: 700;
-  font-size: 2rem;
-  line-height: 1.2;
-  /* Koyu renk -> Foreground */
-  color: var(--foreground);
-  text-transform: uppercase;
-  letter-spacing: -0.5px;
-}
-
-.mobileSubtitle {
-  display: block;
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-  /* Gri renk -> Muted Foreground */
-  color: var(--muted-foreground);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-}
-
-/* --- SLIDER ALANI --- */
-.sliderContainer {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  margin-top: 5vw;
-}
-
-.sliderContainer :global(.swiper) {
-  width: 100%;
-  padding-bottom: 4rem !important;
-  overflow: visible !important;
-}
-
-.sliderContainer :global(.swiper-wrapper) {
-  align-items: center;
-}
-
-/* --- KART TASARIMI --- */
-.card {
-  /* Statik beyaz yerine Card değişkeni */
-  background: var(--card);
-  border-radius: 24px;
-  padding: 2.5rem;
-  /* Gölgeyi tema rengiyle hafifçe harmanlayalım */
-  box-shadow: 0 10px 30px -5px color-mix(in srgb, var(--foreground), transparent
-        94%);
-  height: auto;
-  min-height: 400px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  /* Border -> Border değişkeni */
-  border: 1px solid var(--border);
-  transition: transform 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
-}
-
-.sliderContainer :global(.swiper-slide-active) .card {
-  transform: scale(1.1);
-  /* Aktif kart gölgesi -> Primary rengin %20 opak hali */
-  box-shadow: 0 25px 50px -12px color-mix(in srgb, var(--primary), transparent
-        80%);
-  /* Aktif kart kenarlığı -> Primary */
-  border-color: var(--primary);
-  z-index: 20;
-}
-
-.stars {
-  /* Sarı yıldız yerine Primary (Marka rengi) kullanıldı */
-  color: var(--primary);
-  font-size: 1.5rem;
-  letter-spacing: 4px;
-  margin-bottom: 1.5rem;
-}
-
-.content {
-  font-size: 1.1rem;
-  line-height: 1.6;
-  /* Yazı rengi -> Card Foreground */
-  color: var(--card-foreground);
-  font-style: italic;
-  font-weight: 500;
-  flex-grow: 1;
-}
-
-.author {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  /* Çizgi rengi -> Border */
-  border-top: 1px solid var(--border);
-}
-
-.avatar,
-.avatarPlaceholder {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  /* Avatar çerçevesi -> Card rengi (Arkaplanla kaynaşması için) */
-  border: 2px solid var(--card);
-  box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--foreground), transparent
-        90%);
-}
-
-.avatar {
-  object-fit: cover;
-  /* Resim yüklenmezse zemin -> Muted */
-  background: var(--muted);
-}
-
-.avatarPlaceholder {
-  /* Placeholder gradient yerine tema renkleri */
-  background: var(--muted);
-  color: var(--primary);
-  font-weight: 700;
-  font-size: 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.authorInfo {
-  display: flex;
-  flex-direction: column;
-}
-
-.authorName {
-  font-weight: 700;
-  /* İsim -> Foreground */
-  color: var(--foreground);
-  font-size: 1.05rem;
-}
-
-.authorJob {
-  font-size: 0.8rem;
-  /* Meslek -> Muted Foreground */
-  color: var(--muted-foreground);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.loadingState {
-  text-align: center;
-  font-size: 1.2rem;
-  /* Loading yazısı -> Muted Foreground */
-  color: var(--muted-foreground);
-  padding: 4rem;
-}
-
-/* --- RESPONSIVE (MOBİL) --- */
-@media (max-width: 768px) {
-  .sectionWrapper {
-    padding: 2rem 0 3rem;
-  }
-
-  .marqueeContainer {
-    display: none;
-  }
-
-  .mobileHeader {
-    display: block;
-  }
-
-  .sliderContainer {
-    margin-top: 1rem;
-  }
-
-  .card {
-    padding: 1.5rem;
-    min-height: 320px;
-    border-radius: 20px;
-  }
-
-  .sliderContainer :global(.swiper-slide-active) .card {
-    transform: scale(1.05);
-  }
+:global(.testimonials-swiper .swiper-pagination-bullet-active) {
+  background-color: var(--primary-color, #3b82f6); /* Primary rengin */
+  width: 20px;
+  border-radius: 4px;
+  transition: width 0.3s ease;
 }
