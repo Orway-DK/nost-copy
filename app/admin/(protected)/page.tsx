@@ -1,3 +1,4 @@
+// app\admin\(protected)\page.tsx
 import { adminSupabase } from "@/lib/supabase/admin";
 import {
   IoCubeOutline,

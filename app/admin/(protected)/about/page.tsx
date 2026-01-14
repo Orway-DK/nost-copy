@@ -1,4 +1,4 @@
-// C:\Projeler\nost-copy\app\admin\(protected)\about\page.tsx
+// app\admin\(protected)\about\page.tsx
 
 import { getAboutContentAction } from "./actions";
 import AboutForm from "./about-form";

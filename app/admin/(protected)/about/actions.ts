@@ -1,3 +1,4 @@
+// app\admin\(protected)\about\actions.ts
 'use server'
 
 import { createSupabaseServerClient } from '@/lib/supabase/server-client'

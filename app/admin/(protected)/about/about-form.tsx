@@ -1,4 +1,4 @@
-// C:\Projeler\nost-copy\app\admin\(protected)\about\about-form.tsx
+// app\admin\(protected)\about\about-form.tsx
 "use client";
 
 import { useState } from "react";
