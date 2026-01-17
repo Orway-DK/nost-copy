@@ -42,13 +42,13 @@ const getImageUrl = (path: string | null) => {
 const fetchServices = async (lang: string): Promise<ServiceItem[]> => {
   const supabase = createSupabaseBrowserClient()
 
-  // Servisleri ve seçili dildeki çevirilerini çek
+  // Servisleri ve seçili dildeki çevirilerini çek - Yeni tablo
   const { data, error } = await supabase
-    .from('services')
+    .from('nost-service-pages')
     .select(
       `
             id, slug, image_url, created_at,
-            service_translations (lang_code, title)
+            nost_service_page_translations (lang_code, title)
         `
     )
     .eq('active', true)
@@ -61,7 +61,7 @@ const fetchServices = async (lang: string): Promise<ServiceItem[]> => {
 
   return (data || []).map((item: any, index: number) => {
     // Çeviriyi bul (Seçili dil -> İngilizce -> İlk bulduğu)
-    const translations = item.service_translations || []
+    const translations = item.nost_service_page_translations || []
     const tr =
       translations.find((t: any) => t.lang_code === lang) ||
       translations.find((t: any) => t.lang_code === 'en') ||

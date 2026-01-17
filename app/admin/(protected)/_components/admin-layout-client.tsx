@@ -6,14 +6,17 @@ import AdminNavbar from './navbar'
 import AdminSidebar from './sidebar'
 import { IoMenu } from 'react-icons/io5'
 import { Toaster } from 'react-hot-toast'
-import { AdminProgressBar } from "./AdminProgressBar"
+import { AdminProgressBar } from './AdminProgressBar'
 
 const STORAGE_KEY_COLLAPSED = 'admin.sidebar.collapsed'
 
+// YENİ: mainMenus prop tipi eklendi
 export default function AdminLayoutClient ({
-  children
+  children,
+  mainMenus = []
 }: {
   children: React.ReactNode
+  mainMenus?: any[]
 }) {
   const [isSidebarOpen, setSidebarOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -41,8 +44,7 @@ export default function AdminLayoutClient ({
   return (
     // 1. ANA KAPSAYICI
     <div className='h-screen w-screen bg-admin-bg text-admin-fg font-sans flex overflow-hidden'>
-      
-      {/* LOADER BURAYA EKLENDİ - Artık rengini CSS'ten dinamik alacak */}
+      {/* LOADER */}
       <AdminProgressBar />
 
       <Toaster
@@ -63,6 +65,7 @@ export default function AdminLayoutClient ({
         onClose={() => setSidebarOpen(false)}
         isCollapsed={isCollapsed}
         toggleCollapse={toggleCollapse}
+        mainMenus={mainMenus} // YENİ: Veriyi Sidebar'a iletiyoruz
       />
 
       {/* 2. İÇERİK KOLONU */}

@@ -103,10 +103,50 @@ export default function WhyUsForm ({ initialBase, initialTranslations }: Props) 
 
   return (
     <div className='space-y-6'>
+      {/* TOOLBAR */}
+      <div
+        className='flex flex-col sm:flex-row justify-between items-center bg-[var(--admin-card)] p-4 rounded-xl border gap-4 sm:gap-0 shadow-sm'
+        style={{ borderColor: 'var(--admin-card-border)' }}
+      >
+        <div className='text-sm font-medium text-[var(--admin-muted)] flex items-center gap-2'>
+          <span className='text-[var(--admin-fg)] font-bold'>Neden Biz</span> bölümü yönetimi
+        </div>
+
+        <div className='flex items-center gap-4'>
+          {/* Dil Seçenekleri */}
+          <div className='flex bg-[var(--admin-input-bg)] p-1 rounded-lg border border-[var(--admin-card-border)]'>
+            {LANGS.map(lang => (
+              <button
+                key={lang}
+                onClick={() => setSelectedLang(lang)}
+                className={`px-3 py-1 rounded-md text-xs font-bold uppercase transition-all ${
+                  selectedLang === lang
+                    ? 'bg-[var(--admin-accent)] text-white'
+                    : 'text-[var(--admin-muted)] hover:text-[var(--admin-fg)]'
+                }`}
+              >
+                {lang}
+              </button>
+            ))}
+          </div>
+
+          <div className='flex gap-2'>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className='btn-admin btn-admin-primary px-6 flex items-center gap-2'
+            >
+              <IoSave />
+              {saving ? 'Kaydediliyor...' : 'Kaydet'}
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
         {/* --- SOL KOLON: Görseller --- */}
-        <div className='lg:col-span-1 space-y-6'>
-          <div className='card-admin space-y-5 h-full'>
+        <div className='lg:col-span-1'>
+          <div className='card-admin space-y-5 h-full max-h-[calc(100vh-250px)] overflow-y-auto'>
             <h3
               className='text-lg font-bold flex items-center gap-2 border-b pb-3'
               style={{
@@ -200,7 +240,7 @@ export default function WhyUsForm ({ initialBase, initialTranslations }: Props) 
 
         {/* --- SAĞ KOLON: Çeviriler --- */}
         <div className='lg:col-span-2'>
-          <div className='card-admin h-full'>
+          <div className='card-admin h-full max-h-[calc(100vh-250px)] overflow-y-auto'>
             <div
               className='flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 border-b pb-4 gap-4'
               style={{ borderColor: 'var(--admin-card-border)' }}
@@ -335,18 +375,6 @@ export default function WhyUsForm ({ initialBase, initialTranslations }: Props) 
             </div>
           </div>
         </div>
-      </div>
-
-      {/* ACTION BAR */}
-      <div className='fixed bottom-0 right-0 left-0 lg:left-64 p-4 bg-[var(--admin-card)] border-t border-[var(--admin-card-border)] flex justify-end z-30 shadow-lg'>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className='btn-admin btn-admin-primary px-8 py-2.5 flex items-center gap-2'
-        >
-          <IoSave />
-          {saving ? 'Kaydediliyor...' : 'Kaydet'}
-        </button>
       </div>
     </div>
   )

@@ -1,305 +1,338 @@
-//C:\Projeler\nost-copy\app\admin\(protected)\services\service-form.tsx
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
-import { IoSave, IoImageOutline, IoSparkles } from 'react-icons/io5'
+import {
+  IoSave,
+  IoSparkles,
+  IoImageOutline,
+  IoGlobeOutline
+} from 'react-icons/io5'
 import { toast } from 'react-hot-toast'
-import MediaPickerModal from '@/app/admin/(protected)/_components/MediaPickerModal'
-import { upsertServiceAction } from './actions'
-import { translateTextAction } from '@/app/admin/actions' // Global çeviri action'ı
+import { translateTextAction } from '@/app/actions/translate'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import ImageUploadModal from '../_components/image-upload-modal'
+import Image from 'next/image'
 
-const LANGS = ['tr', 'en', 'de']
-
-type Props = {
-  initialData?: any
-  onClose: () => void
-  onSuccess: () => void
+// Slug oluşturucu yardımcı fonksiyon
+const slugify = (text: string) => {
+  return text
+    .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '')
+    .replace(/--+/g, '-')
 }
 
 export default function ServiceForm ({
   initialData,
-  onClose,
-  onSuccess
-}: Props) {
-  const [saving, setSaving] = useState(false)
-  const [translating, setTranslating] = useState(false)
+  onSuccess,
+  onCancel,
+  filter
+}: {
+  initialData: any
+  onSuccess: () => void
+  onCancel: () => void
+  filter?: string
+}) {
   const [activeLang, setActiveLang] = useState('tr')
-  const [isMediaOpen, setIsMediaOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [translating, setTranslating] = useState(false)
+  const [isUploadOpen, setIsUploadOpen] = useState(false)
 
-  // Form State
-  const [form, setForm] = useState(() => {
-    const translations = LANGS.map(l => {
-      const found = initialData?.service_translations?.find(
-        (t: any) => t.lang_code === l
-      )
-      return {
-        lang_code: l,
-        id: found?.id,
-        title: found?.title || '',
-        description: found?.description || '',
-        content: found?.content || ''
+  // State yapısına slug eklendi
+  const [formData, setFormData] = useState({
+    image_url: initialData?.image_url || '',
+    active: initialData?.active ?? true,
+    translations: initialData?.service_translations?.reduce(
+      (acc: any, t: any) => {
+        acc[t.lang_code] = {
+          title: t.title || '',
+          content: t.content || '',
+          slug: t.slug || ''
+        }
+        return acc
+      },
+      {
+        tr: { title: '', content: '', slug: '' },
+        en: { title: '', content: '', slug: '' },
+        de: { title: '', content: '', slug: '' }
       }
-    })
-
-    return {
-      id: initialData?.id,
-      slug: initialData?.slug || '',
-      image_url: initialData?.image_url || '',
-      active: initialData?.active ?? true,
-      translations
+    ) || {
+      tr: { title: '', content: '', slug: '' },
+      en: { title: '', content: '', slug: '' },
+      de: { title: '', content: '', slug: '' }
     }
   })
 
-  const currentTrans = form.translations.find(t => t.lang_code === activeLang)!
-
-  // Helpers
-  const updateMain = (key: string, val: any) =>
-    setForm(prev => ({ ...prev, [key]: val }))
-
-  const updateTrans = (key: string, val: string) => {
-    setForm(prev => ({
+  const updateTrans = (field: 'title' | 'content' | 'slug', value: string) => {
+    setFormData(prev => ({
       ...prev,
-      translations: prev.translations.map(t =>
-        t.lang_code === activeLang ? { ...t, [key]: val } : t
-      )
+      translations: {
+        ...prev.translations,
+        [activeLang]: { ...prev.translations[activeLang], [field]: value }
+      }
     }))
   }
 
-  // Auto Translate
   const handleAutoTranslate = async () => {
-    if (!currentTrans.title) {
-      toast.error(`Lütfen önce ${activeLang.toUpperCase()} başlığını girin.`)
-      return
-    }
-    if (!confirm('Diğer diller otomatik doldurulacak. Onaylıyor musunuz?'))
-      return
+    const source = formData.translations[activeLang]
+    if (!source.title) return toast.error('Önce kaynak dilde bir başlık yazın.')
 
     setTranslating(true)
-    const loadingToast = toast.loading('Çeviriliyor...')
+    const newTrans = { ...formData.translations }
+    const targetLangs = (['tr', 'en', 'de'] as const).filter(
+      l => l !== activeLang
+    )
 
     try {
-      const newTrans = [...form.translations]
-      const fields = ['title', 'description', 'content']
+      for (const lang of targetLangs) {
+        // Başlığı çevir
+        const tTitle = await translateTextAction(source.title, lang)
+        newTrans[lang].title = tTitle
 
-      const tasks = newTrans.map(async (target, idx) => {
-        if (target.lang_code === activeLang) return
+        // Slug'ı çevrilen başlığa göre otomatik oluştur
+        newTrans[lang].slug = slugify(tTitle)
 
-        for (const field of fields) {
-          // @ts-ignore
-          const txt = currentTrans[field]
-          if (txt) {
-            const res = await translateTextAction(
-              txt,
-              target.lang_code,
-              activeLang
-            )
-            if (res.success) {
-              // @ts-ignore
-              newTrans[idx][field] = res.text
-            }
-          }
+        // İçeriği çevir
+        if (source.content) {
+          newTrans[lang].content = await translateTextAction(
+            source.content,
+            lang
+          )
         }
-      })
-
-      await Promise.all(tasks)
-      setForm(prev => ({ ...prev, translations: newTrans }))
-      toast.success('Tamamlandı!', { id: loadingToast })
-    } catch (e) {
-      toast.error('Hata oluştu', { id: loadingToast })
+      }
+      setFormData(prev => ({ ...prev, translations: newTrans }))
+      toast.success("Tüm diller ve URL'ler çevrildi! ✨")
+    } catch (err) {
+      toast.error('Çeviri sırasında bir hata oluştu.')
     } finally {
       setTranslating(false)
     }
   }
 
-  // Save
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSaving(true)
-    const res = await upsertServiceAction(form)
-    setSaving(false)
+    setLoading(true)
+    const supabase = createSupabaseBrowserClient()
 
-    if (res.success) {
-      toast.success(res.message)
+    // Yeni tablo adlarını belirle
+    const tableName = filter === 'products' ? 'nost-product-pages' : 'nost-service-pages'
+    const translationsTable = filter === 'products' ? 'nost_product_page_translations' : 'nost_service_page_translations'
+
+    try {
+      // 1. Ana Sayfa Kaydı
+      const { data: sData, error: sErr } = await supabase
+        .from(tableName)
+        .upsert({
+          id: initialData?.id,
+          image_url: formData.image_url,
+          active: formData.active,
+          // Ana tabloda slug (TR slug'ı kullan)
+          slug: formData.translations.tr.slug
+        })
+        .select()
+        .single()
+
+      if (sErr) throw sErr
+
+      // 2. Çevirileri Kaydet (Slug dahil)
+      await supabase
+        .from(translationsTable)
+        .delete()
+        .eq('page_id', sData.id)
+
+      const transPayload = Object.entries(formData.translations).map(
+        ([lang, val]: any) => ({
+          page_id: sData.id,
+          lang_code: lang,
+          title: val.title,
+          content: val.content,
+          slug: val.slug // Dile özel slug kaydediliyor
+        })
+      )
+
+      const { error: tErr } = await supabase
+        .from(translationsTable)
+        .insert(transPayload)
+      if (tErr) throw tErr
+
+      toast.success('Hizmet başarıyla kaydedildi.')
       onSuccess()
-    } else {
-      toast.error(res.message)
+    } catch (err: any) {
+      toast.error('Hata: ' + err.message)
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
-    <>
-      <form
-        onSubmit={handleSubmit}
-        className='flex flex-col h-full bg-[var(--admin-card)]'
-      >
-        {/* Modal Body - Scrollable */}
-        <div className='flex-1 overflow-y-auto p-6 space-y-6'>
-          {/* 1. Genel Bilgiler */}
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-            <div className='space-y-4'>
-              <div>
-                <label className='admin-label'>Slug (URL)</label>
-                <input
-                  className='admin-input'
-                  value={form.slug}
-                  onChange={e => updateMain('slug', e.target.value)}
-                  placeholder='hizmet-adi-url (Boş bırakırsan otomatik dolar)'
-                />
-              </div>
-              <div className='flex items-center gap-2 pt-4'>
-                <input
-                  type='checkbox'
-                  className='w-5 h-5 accent-[var(--admin-success)]'
-                  checked={form.active}
-                  onChange={e => updateMain('active', e.target.checked)}
-                />
-                <span className='text-sm font-medium text-[var(--admin-fg)]'>
-                  Yayında (Aktif)
-                </span>
-              </div>
-            </div>
+    <div className='space-y-8'>
+      {/* Dil Seçici */}
+      <div className='flex gap-1 bg-[var(--admin-input-bg)] p-1 rounded-xl w-fit border border-[var(--admin-card-border)]'>
+        {['tr', 'en', 'de'].map(l => (
+          <button
+            key={l}
+            type='button'
+            onClick={() => setActiveLang(l)}
+            className={`px-6 py-2 rounded-lg text-xs font-bold uppercase transition-all ${
+              activeLang === l
+                ? 'bg-[var(--admin-card)] shadow-lg text-[var(--primary)]'
+                : 'opacity-50 hover:opacity-100'
+            }`}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
 
-            {/* Resim Seçimi */}
-            <div>
-              <label className='admin-label'>Hizmet Görseli</label>
-              <div className='flex gap-2 mb-2'>
-                <input
-                  className='admin-input flex-1 text-xs'
-                  value={form.image_url}
-                  readOnly
-                  placeholder='Görsel seç...'
-                />
-                <button
-                  type='button'
-                  onClick={() => setIsMediaOpen(true)}
-                  className='btn-admin btn-admin-secondary'
-                >
-                  Seç
-                </button>
-              </div>
-              <div
-                className='relative w-full h-32 rounded-lg border bg-[var(--admin-input-bg)] flex items-center justify-center overflow-hidden'
-                style={{ borderColor: 'var(--admin-input-border)' }}
-              >
-                {form.image_url ? (
+      <form onSubmit={handleSubmit} className='space-y-6'>
+        {/* Başlık ve Çeviri Butonu */}
+        <div>
+          <div className='flex justify-between items-end mb-2'>
+            <label className='text-xs font-bold uppercase opacity-60'>
+              Sayfa Başlığı ({activeLang})
+            </label>
+            <button
+              type='button'
+              onClick={handleAutoTranslate}
+              disabled={translating}
+              className='text-xs font-bold text-blue-500 flex items-center gap-1 hover:text-blue-600 transition-colors'
+            >
+              <IoSparkles />{' '}
+              {translating ? 'Çevriliyor...' : "Dillere ve URL'lere Çevir"}
+            </button>
+          </div>
+          <input
+            className='admin-input w-full text-lg font-bold'
+            value={formData.translations[activeLang].title}
+            onChange={e => {
+              updateTrans('title', e.target.value)
+              // Başlık yazılırken slug'ı da (eğer boşsa veya manuel düzenlenmiyorsa) güncelle
+              if (activeLang === 'tr')
+                updateTrans('slug', slugify(e.target.value))
+            }}
+            placeholder='Başlık girin...'
+            required
+          />
+        </div>
+
+        {/* Görsel ve URL (Slug) Alanı */}
+        <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+          <div className='md:col-span-1'>
+            <label className='text-xs font-bold uppercase opacity-60 mb-2 block'>
+              Kapak Görseli
+            </label>
+            <div
+              onClick={() => setIsUploadOpen(true)}
+              className='relative aspect-video rounded-xl border-2 border-dashed border-[var(--admin-card-border)] bg-[var(--admin-input-bg)] overflow-hidden cursor-pointer group hover:border-[var(--primary)] transition-all'
+            >
+              {formData.image_url ? (
+                <>
                   <Image
-                    src={form.image_url}
-                    alt='preview'
+                    src={formData.image_url}
+                    alt='Kapak'
                     fill
                     className='object-cover'
-                    unoptimized
+                    sizes='300px'
                   />
-                ) : (
-                  <div className='flex flex-col items-center opacity-30'>
-                    <IoImageOutline size={32} />
-                    <span className='text-xs'>Görsel Yok</span>
+                  <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity'>
+                    Görseli Değiştir
                   </div>
-                )}
-              </div>
+                </>
+              ) : (
+                <div className='h-full flex flex-col items-center justify-center text-[var(--admin-muted)] gap-2'>
+                  <IoImageOutline size={30} />
+                  <span className='text-[10px]'>Görsel Yükle</span>
+                </div>
+              )}
             </div>
           </div>
 
-          <hr className='border-[var(--admin-card-border)]' />
-
-          {/* 2. Çeviri Alanı */}
-          <div className='space-y-4'>
-            <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3'>
-              <div className='flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1'>
-                {LANGS.map(l => (
-                  <button
-                    key={l}
-                    type='button'
-                    onClick={() => setActiveLang(l)}
-                    className={`px-3 py-1.5 rounded text-sm font-bold uppercase transition-colors border ${
-                      activeLang === l
-                        ? 'bg-[var(--admin-accent)] text-white border-transparent'
-                        : 'bg-[var(--admin-input-bg)] text-[var(--admin-muted)] border-[var(--admin-card-border)]'
-                    }`}
-                  >
-                    {l}
-                  </button>
-                ))}
-              </div>
-              <button
-                type='button'
-                onClick={handleAutoTranslate}
-                disabled={translating}
-                className='btn-admin btn-admin-secondary text-xs py-1.5 px-3 flex items-center gap-2 whitespace-nowrap w-full sm:w-auto justify-center'
-              >
-                <IoSparkles
-                  className={
-                    translating
-                      ? 'animate-spin text-yellow-500'
-                      : 'text-yellow-500'
-                  }
-                />
-                {translating ? 'Çevriliyor...' : 'Diğerlerine Dağıt'}
-              </button>
-            </div>
-
-            <div className='space-y-4 animate-in fade-in'>
-              <div>
-                <label className='admin-label'>
-                  Hizmet Başlığı ({activeLang.toUpperCase()})
-                </label>
+          <div className='md:col-span-2 space-y-4'>
+            <div>
+              <label className='text-xs font-bold uppercase opacity-60 mb-1 block underline'>
+                Dile Özel URL (Slug)
+              </label>
+              <div className='relative'>
+                <span className='absolute left-3 top-1/2 -translate-y-1/2 text-[10px] opacity-40 font-mono'>
+                  /{activeLang}/
+                </span>
                 <input
-                  className='admin-input font-semibold'
-                  value={currentTrans.title}
-                  onChange={e => updateTrans('title', e.target.value)}
-                  required={activeLang === 'tr'}
+                  className='admin-input w-full font-mono text-sm pl-12'
+                  value={formData.translations[activeLang].slug}
+                  onChange={e => updateTrans('slug', slugify(e.target.value))}
+                  placeholder='kutu-harf'
+                  required
                 />
               </div>
-              <div>
-                <label className='admin-label'>
-                  Kısa Açıklama (Kartta görünür)
-                </label>
-                <textarea
-                  className='admin-textarea h-20'
-                  value={currentTrans.description}
-                  onChange={e => updateTrans('description', e.target.value)}
-                />
-              </div>
-              <div>
-                <label className='admin-label'>
-                  Detaylı İçerik (HTML destekler)
-                </label>
-                <textarea
-                  className='admin-textarea h-40 font-mono text-sm'
-                  value={currentTrans.content}
-                  onChange={e => updateTrans('content', e.target.value)}
-                  placeholder='<p>Paragraf...</p>'
-                />
-              </div>
+              <p className='text-[9px] mt-1 text-[var(--admin-muted)]'>
+                Her dil için farklı bir URL tanımlayabilirsiniz.
+              </p>
+            </div>
+            <div className='flex items-center gap-3 p-4 bg-[var(--admin-input-bg)] rounded-xl border border-[var(--admin-card-border)]'>
+              <input
+                type='checkbox'
+                className='w-5 h-5 rounded'
+                checked={formData.active}
+                onChange={e =>
+                  setFormData({ ...formData, active: e.target.checked })
+                }
+                id='active-check'
+              />
+              <label
+                htmlFor='active-check'
+                className='text-sm font-bold cursor-pointer'
+              >
+                Sitede Yayında
+              </label>
             </div>
           </div>
         </div>
 
-        {/* Footer Buttons */}
-        <div className='p-5 border-t border-[var(--admin-card-border)] bg-[var(--admin-input-bg)] flex justify-end gap-3'>
+        {/* İçerik Area */}
+        <div>
+          <label className='text-xs font-bold uppercase opacity-60 mb-2 block'>
+            İçerik Metni ({activeLang})
+          </label>
+          <textarea
+            className='admin-input w-full min-h-[300px] text-sm leading-relaxed p-4 scrollbar-thin'
+            value={formData.translations[activeLang].content}
+            onChange={e => updateTrans('content', e.target.value)}
+            placeholder='HTML etiketleri kullanabilirsiniz...'
+          />
+        </div>
+
+        {/* Footer Butonlar */}
+        <div className='flex justify-end gap-3 sticky bottom-0 bg-[var(--admin-card)] py-4 border-t border-[var(--admin-card-border)] z-10'>
           <button
             type='button'
-            onClick={onClose}
-            className='btn-admin btn-admin-secondary px-6'
+            onClick={onCancel}
+            className='px-6 py-2 text-sm font-bold opacity-50 hover:opacity-100 transition-opacity'
           >
-            İptal
+            Vazgeç
           </button>
           <button
             type='submit'
-            disabled={saving}
-            className='btn-admin btn-admin-primary px-6 gap-2'
+            disabled={loading}
+            className='btn-admin btn-admin-primary px-10 py-3 shadow-lg'
           >
-            <IoSave /> {saving ? 'Kaydediliyor...' : 'Kaydet'}
+            <IoSave className='mr-2' size={18} />{' '}
+            {loading ? 'Kaydediliyor...' : 'Tüm Dilleri Kaydet'}
           </button>
         </div>
       </form>
 
-      <MediaPickerModal
-        isOpen={isMediaOpen}
-        onClose={() => setIsMediaOpen(false)}
-        onSelect={url => updateMain('image_url', url)}
-        bucketName='services'
-      />
-    </>
+      {/* MODAL */}
+      {isUploadOpen && (
+        <ImageUploadModal
+          bucket={filter === 'products' ? 'products' : 'services'}
+          onClose={() => setIsUploadOpen(false)}
+          onSelect={url => setFormData({ ...formData, image_url: url })}
+        />
+      )}
+    </div>
   )
 }

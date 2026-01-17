@@ -1,5 +1,3 @@
-// app\admin\(protected)\layout.tsx
-
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { redirect } from 'next/navigation'
@@ -41,5 +39,19 @@ export default async function ProtectedAdminLayout ({
     redirect('/admin/login')
   }
 
-  return <AdminLayoutClient>{children}</AdminLayoutClient>
+  // --- YENİ EKLENEN KISIM: Ana Menüleri Çek ---
+  // layout.tsx içinde sorguyu şu şekilde güncelle:
+  const { data: mainMenus } = await supabase
+    .from('classic_navigation_items')
+    .select('*')
+    .is('parent_id', null)
+    .eq('is_active', true)
+    .order('sort_order')
+  
+  // mainMenus verisini Client Component'e prop olarak geçiyoruz
+  return (
+    <AdminLayoutClient mainMenus={mainMenus || []}>
+      {children}
+    </AdminLayoutClient>
+  )
 }

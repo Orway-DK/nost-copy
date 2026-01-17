@@ -377,7 +377,7 @@ export default function AdminTestimonials () {
             </div>
 
             {/* 2. MASAÜSTÜ TABLO GÖRÜNÜMÜ (hidden md:block) */}
-            <div className='hidden md:block bg-[var(--admin-card)] rounded-xl border border-[var(--admin-card-border)] overflow-hidden'>
+            <div className='hidden md:block bg-[var(--admin-card)] rounded-xl border border-[var(--admin-card-border)] overflow-hidden max-h-[calc(100vh-400px)] overflow-y-auto'>
               <table className='w-full text-left border-collapse'>
                 <thead
                   style={{

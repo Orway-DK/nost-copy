@@ -145,26 +145,47 @@ export default function ReadyProductsList ({
           ürün.
         </div>
 
-        <div className='flex gap-2 w-full sm:w-auto'>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className='btn-admin btn-admin-secondary flex-1 sm:flex-none justify-center gap-2'
-          >
-            <IoAdd size={18} /> Ürün Seç
-          </button>
+        <div className='flex items-center gap-4'>
+          {/* Dil Seçenekleri */}
+          <div className='flex bg-[var(--admin-input-bg)] p-1 rounded-lg border border-[var(--admin-card-border)]'>
+            {['tr', 'en', 'de'].map(lang => (
+              <button
+                key={lang}
+                className={`px-3 py-1 rounded-md text-xs font-bold uppercase transition-all ${
+                  lang === 'tr'
+                    ? 'bg-[var(--admin-accent)] text-white'
+                    : 'text-[var(--admin-muted)] hover:text-[var(--admin-fg)]'
+                }`}
+                onClick={() => {
+                  // Dil değiştirme işlevi burada (şimdilik sadece görsel)
+                }}
+              >
+                {lang}
+              </button>
+            ))}
+          </div>
 
-          <button
-            onClick={handleBulkSave}
-            disabled={saving || !isDirty}
-            className={`btn-admin flex items-center gap-2 px-6 flex-1 sm:flex-none justify-center transition-all ${
-              isDirty
-                ? 'btn-admin-primary shadow-lg scale-105'
-                : 'btn-admin-secondary opacity-50 cursor-not-allowed'
-            }`}
-          >
-            <IoSave size={18} />
-            {saving ? 'Kaydediliyor...' : 'Kaydet'}
-          </button>
+          <div className='flex gap-2'>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className='btn-admin btn-admin-secondary flex-1 sm:flex-none justify-center gap-2'
+            >
+              <IoAdd size={18} /> Ürün Seç
+            </button>
+
+            <button
+              onClick={handleBulkSave}
+              disabled={saving || !isDirty}
+              className={`btn-admin flex items-center gap-2 px-6 flex-1 sm:flex-none justify-center transition-all ${
+                isDirty
+                  ? 'btn-admin-primary shadow-lg scale-105'
+                  : 'btn-admin-secondary opacity-50 cursor-not-allowed'
+              }`}
+            >
+              <IoSave size={18} />
+              {saving ? 'Kaydediliyor...' : 'Kaydet'}
+            </button>
+          </div>
         </div>
       </div>
 
