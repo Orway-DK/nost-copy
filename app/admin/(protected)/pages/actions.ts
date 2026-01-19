@@ -18,7 +18,7 @@ export async function getPagesListAction () {
   try {
     await checkAuth()
     const { data, error } = await adminSupabase
-      .from('pages')
+      .from('nost-corporate-pages')
       .select('*')
       .order('id', { ascending: true })
 
@@ -34,8 +34,8 @@ export async function getPageDetailAction (slug: string) {
   try {
     await checkAuth()
     const { data, error } = await adminSupabase
-      .from('pages')
-      .select('*, page_translations(*)')
+      .from('nost-corporate-pages')
+      .select('*, nost_corporate_page_translations(*)')
       .eq('slug', slug)
       .single()
 
@@ -47,11 +47,14 @@ export async function getPageDetailAction (slug: string) {
       slug: data.slug,
       image_url: data.image_url,
       active: data.active,
-      // Çevirileri { tr: {title, content}, en: {title, content} } formatına çevir
-      translations: data.page_translations.reduce((acc: any, curr: any) => {
+      page_type: data.page_type || 'standard',
+      template: data.template || '',
+      // Çevirileri { tr: {title, content, slug}, en: {title, content, slug} } formatına çevir
+      translations: data.nost_corporate_page_translations.reduce((acc: any, curr: any) => {
         acc[curr.lang_code] = {
           title: curr.title || '',
-          content: curr.content || ''
+          content: curr.content || '',
+          slug: curr.slug || ''
         }
         return acc
       }, {})
@@ -68,34 +71,47 @@ export async function updatePageAction (pageId: number, formData: any) {
   try {
     await checkAuth()
 
-    // 1. Ana Tabloyu (Resim/Durum) Güncelle
+    // 1. Ana Tabloyu (Resim/Durum/Page Type/Template) Güncelle
     const { error: mainError } = await adminSupabase
-      .from('pages')
+      .from('nost-corporate-pages')
       .update({
         image_url: formData.image_url,
-        active: formData.active
+        active: formData.active,
+        page_type: formData.page_type || 'standard',
+        template: formData.template || ''
       })
       .eq('id', pageId)
 
     if (mainError) throw mainError
 
-    // 2. Çevirileri Güncelle
+    // 2. Çevirileri Güncelle (slug dahil)
     const languages = ['tr', 'en', 'de']
     const translationUpdates = languages.map(lang => ({
       page_id: pageId,
       lang_code: lang,
       title: formData.translations[lang]?.title || '',
-      content: formData.translations[lang]?.content || ''
+      content: formData.translations[lang]?.content || '',
+      slug: formData.translations[lang]?.slug || ''
     }))
 
     const { error: transError } = await adminSupabase
-      .from('page_translations')
+      .from('nost_corporate_page_translations')
       .upsert(translationUpdates, { onConflict: 'page_id, lang_code' })
 
     if (transError) throw transError
 
+    // 3. Ana tablo slug'ını güncelle (Türkçe slug)
+    const { error: slugError } = await adminSupabase
+      .from('nost-corporate-pages')
+      .update({
+        slug: formData.translations.tr?.slug || formData.slug
+      })
+      .eq('id', pageId)
+
+    if (slugError) throw slugError
+
     revalidatePath('/admin/pages')
-    revalidatePath(`/${formData.slug}`) // Frontend'deki sayfayı da yenile
+    revalidatePath(`/${formData.translations.tr?.slug || formData.slug}`) // Frontend'deki sayfayı da yenile
 
     return { success: true, message: 'Sayfa başarıyla güncellendi.' }
   } catch (error: any) {

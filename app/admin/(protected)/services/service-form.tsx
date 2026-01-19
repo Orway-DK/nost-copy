@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   IoSave,
   IoSparkles,
@@ -11,6 +11,7 @@ import { toast } from 'react-hot-toast'
 import { translateTextAction } from '@/app/actions/translate'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import ImageUploadModal from '../_components/image-upload-modal'
+import TemplateManagerModal from '../_components/template-manager-modal'
 import Image from 'next/image'
 
 // Slug oluşturucu yardımcı fonksiyon
@@ -41,11 +42,35 @@ export default function ServiceForm ({
   const [loading, setLoading] = useState(false)
   const [translating, setTranslating] = useState(false)
   const [isUploadOpen, setIsUploadOpen] = useState(false)
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false)
+  const [templates, setTemplates] = useState<{ slug: string; name: string }[]>([])
+  const supabase = createSupabaseBrowserClient()
+
+  // Template'leri veritabanından çek
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      const { data, error } = await supabase
+        .from('manual_page_templates')
+        .select('slug, name')
+        .eq('active', true)
+        .order('name')
+
+      if (error) {
+        console.error('Template\'ler yüklenemedi:', error)
+      } else {
+        setTemplates(data || [])
+      }
+    }
+
+    fetchTemplates()
+  }, [supabase])
 
   // State yapısına slug eklendi
   const [formData, setFormData] = useState({
     image_url: initialData?.image_url || '',
     active: initialData?.active ?? true,
+    page_type: initialData?.page_type || 'standard',
+    template: initialData?.template || '',
     translations: initialData?.service_translations?.reduce(
       (acc: any, t: any) => {
         acc[t.lang_code] = {
@@ -130,6 +155,8 @@ export default function ServiceForm ({
           id: initialData?.id,
           image_url: formData.image_url,
           active: formData.active,
+          page_type: formData.page_type,
+          template: formData.template,
           // Ana tabloda slug (TR slug'ı kullan)
           slug: formData.translations.tr.slug
         })
@@ -289,6 +316,57 @@ export default function ServiceForm ({
                 Sitede Yayında
               </label>
             </div>
+            {/* Sayfa Tipi ve Template */}
+            <div className='space-y-4'>
+              <div>
+                <label className='text-xs font-bold uppercase opacity-60 mb-1 block'>
+                  Sayfa Tipi
+                </label>
+                <select
+                  value={formData.page_type}
+                  onChange={e => setFormData({ ...formData, page_type: e.target.value })}
+                  className='admin-input w-full text-sm'
+                >
+                  <option value='standard'>Standart (Rich Text)</option>
+                  <option value='manual'>Manuel (Özel Template)</option>
+                </select>
+                <p className='text-[9px] mt-1 text-[var(--admin-muted)]'>
+                  Manuel sayfalar özel component'ler içerir.
+                </p>
+              </div>
+              {formData.page_type === 'manual' && (
+                <div>
+                  <div className='flex items-center justify-between mb-1'>
+                    <label className='text-xs font-bold uppercase opacity-60'>
+                      Template Seçin
+                    </label>
+                    <button
+                      type='button'
+                      onClick={() => setIsTemplateModalOpen(true)}
+                      className='text-xs text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1'
+                    >
+                      <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 6v6m0 0v6m0-6h6m-6 0H6' />
+                      </svg>
+                      Yönet
+                    </button>
+                  </div>
+                  <select
+                    value={formData.template}
+                    onChange={e => setFormData({ ...formData, template: e.target.value })}
+                    className='admin-input w-full text-sm'
+                  >
+                    <option value=''>Template Seçin</option>
+                    {templates.map(t => (
+                      <option key={t.slug} value={t.slug}>{t.name}</option>
+                    ))}
+                  </select>
+                  <p className='text-[9px] mt-1 text-[var(--admin-muted)]'>
+                    Template, sayfanın görünümünü belirler.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -333,6 +411,15 @@ export default function ServiceForm ({
           onSelect={url => setFormData({ ...formData, image_url: url })}
         />
       )}
+
+      {/* Template Yönetim Modalı */}
+      <TemplateManagerModal
+        isOpen={isTemplateModalOpen}
+        onClose={() => setIsTemplateModalOpen(false)}
+        onSelectTemplate={(slug) => {
+          setFormData({ ...formData, template: slug })
+        }}
+      />
     </div>
   )
 }

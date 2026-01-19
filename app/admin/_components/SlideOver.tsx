@@ -33,7 +33,7 @@ export default function SlideOver ({
     md: 'max-w-md',
     lg: 'max-w-lg',
     xl: 'max-w-2xl', // %50 civarı
-    '2xl': 'max-w-4xl', // %70 civarı (istediğin bu)
+    '2xl': 'max-w-[60vw]', // %60 ekran genişliği
     full: 'max-w-full'
   }
 

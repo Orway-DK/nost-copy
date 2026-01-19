@@ -20,7 +20,10 @@ const modules = {
     [{ list: 'ordered' }, { list: 'bullet' }], // Toolbar'da butonlar kalsın
     ['link', 'image'],
     ['clean']
-  ]
+  ],
+  clipboard: {
+    matchVisual: false // Satır aralıklarını koru
+  }
 }
 
 const formats = [
@@ -32,7 +35,8 @@ const formats = [
   'blockquote',
   'list', // DÜZELTME: 'bullet' sildik, çünkü 'list' ikisini de kapsar
   'link',
-  'image'
+  'image',
+  'break' // <br> tag'ini destekle
 ]
 
 type Props = {
@@ -67,4 +71,3 @@ export default function RichTextEditor ({ value, onChange }: Props) {
     </div>
   )
 }
-

@@ -43,63 +43,161 @@ type FooterLink = {
   url: string
 }
 
+type FooterData = {
+  settings: SiteSettings
+  socials: SocialLink[]
+  links: FooterLink[]
+  columnTitles: Record<string, string> // section -> column title
+}
+
 // --- FETCHER ---
-const fetchFooterData = async (lang: string) => {
+const fetchFooterData = async (lang: string): Promise<FooterData> => {
   const supabase = createSupabaseBrowserClient()
 
-  const [settingsRes, socialRes, linksRes] = await Promise.all([
+  const [settingsRes, socialRes, footerRes] = await Promise.all([
     supabase.from('site_settings').select('*').limit(1).maybeSingle(),
     supabase
       .from('site_social_links')
       .select('*')
       .eq('active', true)
       .order('sort', { ascending: true }),
+    // Yeni footer tablolarından veri çek
     supabase
-      .from('footer_links')
-      .select('*')
-      .eq('active', true)
+      .from('footer_columns')
+      .select(`
+        id,
+        sort_order,
+        footer_column_translations!inner (
+          title,
+          lang_code
+        ),
+        footer_column_links (
+          id,
+          sort_order,
+          url,
+          footer_column_link_translations!inner (
+            text,
+            lang_code
+          )
+        )
+      `)
       .order('sort_order', { ascending: true })
   ])
 
   let finalSettings = settingsRes.data as SiteSettings
-  let finalLinks = (linksRes.data as any[]) || []
   const socials = (socialRes.data as SocialLink[]) || []
+  const columns = footerRes.data || []
 
-  if (finalSettings && lang) {
-    const { data: settingTrans } = await supabase
-      .from('site_settings_translations')
-      .select('site_name, footer_text, address')
-      .eq('settings_id', finalSettings.id)
-      .eq('lang_code', lang)
-      .maybeSingle()
+  // Footer settings'i çek (logo, description, social links)
+  const { data: footerSettings } = await supabase
+    .from('footer_settings')
+    .select('*')
+    .limit(1)
+    .maybeSingle()
 
-    if (settingTrans) {
-      finalSettings = {
-        ...finalSettings,
-        ...settingTrans
-      }
+  // Eğer footer settings varsa, site_settings ile birleştir
+  if (footerSettings) {
+    finalSettings = {
+      ...finalSettings,
+      footer_text: footerSettings.description?.[lang] || footerSettings.description?.['tr'] || finalSettings.footer_text,
+      logo_url: footerSettings.logo_url || finalSettings.logo_url
     }
+    // Social links'i footer settings'den al
+    if (footerSettings.social_links && Array.isArray(footerSettings.social_links)) {
+      // Mevcut socials ile birleştir (footer settings öncelikli)
+      const footerSocials = footerSettings.social_links.map((s: any) => ({
+        code: s.platform,
+        url: s.url
+      }))
+      // Socials'i güncelle (footer'dan gelenler öncelikli)
+      socials.length = 0
+      socials.push(...footerSocials)
+    }
+  }
 
-    const { data: linkTrans } = await supabase
-      .from('footer_links_translations')
-      .select('link_id, title')
-      .eq('lang_code', lang)
+  // Columns'ı footer link formatına çevir
+  let finalLinks: FooterLink[] = []
+  const columnTitles: Record<string, string> = {} // section -> column title
+  console.log('Raw columns data:', JSON.stringify(columns, null, 2))
+  columns.forEach((column: any) => {
+    const columnTranslation = column.footer_column_translations.find((t: any) => t.lang_code === lang) ||
+                             column.footer_column_translations.find((t: any) => t.lang_code === 'en') ||
+                             column.footer_column_translations[0]
+    const section = `column-${column.id}`
 
-    if (linkTrans && linkTrans.length > 0) {
-      finalLinks = finalLinks.map(link => {
-        const tr = linkTrans.find((t: any) => t.link_id === link.id)
-        return {
-          ...link,
-          title: tr?.title || link.title
-        }
+    // Column başlığı
+    const columnTitle = columnTranslation?.title || `Kolon ${column.id}`
+    columnTitles[section] = columnTitle
+
+    // Linkleri ekle
+    if (column.footer_column_links && Array.isArray(column.footer_column_links)) {
+      console.log(`Column ${column.id} has ${column.footer_column_links.length} links`)
+      column.footer_column_links.forEach((link: any) => {
+        const linkTranslation = link.footer_column_link_translations.find((t: any) => t.lang_code === lang) ||
+                               link.footer_column_link_translations.find((t: any) => t.lang_code === 'en') ||
+                               link.footer_column_link_translations[0]
+        
+        finalLinks.push({
+          section,
+          title: linkTranslation?.text || columnTitle,
+          url: link.url || '#'
+        })
       })
     }
+  })
+
+  console.log('Before dedupe, finalLinks count:', finalLinks.length)
+  // Duplicate'leri kaldır (aynı section, title ve url'ye sahip)
+  const seen = new Set()
+  finalLinks = finalLinks.filter(link => {
+    const key = `${link.section}|${link.title}|${link.url}`
+    if (seen.has(key)) {
+      console.log('Duplicate removed:', key)
+      return false
+    }
+    seen.add(key)
+    return true
+  })
+  console.log('After dedupe, finalLinks count:', finalLinks.length)
+
+  // Eğer hiç link yoksa, eski sisteme dön (backward compatibility)
+  if (finalLinks.length === 0) {
+    const { data: linksRes } = await supabase
+      .from('old_footer_links')
+      .select('*')
+      .eq('active', true)
+      .order('sort_order', { ascending: true })
+    
+    let footerLinks = linksRes || []
+    // Dil bazlı çeviri için old_footer_links_translations tablosunu kullan
+    if (footerLinks.length > 0 && lang) {
+      const { data: linkTrans } = await supabase
+        .from('old_footer_links_translations')
+        .select('link_id, title, url, lang_code')
+        .eq('lang_code', lang)
+
+      if (linkTrans && linkTrans.length > 0) {
+        footerLinks = footerLinks.map(link => {
+          const tr = linkTrans.find((t: any) => t.link_id === link.id)
+          if (tr) {
+            return {
+              ...link,
+              title: tr.title || link.title,
+              url: tr.url || link.url
+            }
+          }
+          return link
+        })
+      }
+    }
+    finalLinks = footerLinks as FooterLink[]
   }
 
   return {
     settings: finalSettings,
     socials: socials,
-    links: finalLinks as FooterLink[]
+    links: finalLinks,
+    columnTitles
   }
 }
 
@@ -119,7 +217,7 @@ export default function Footer () {
     { revalidateOnFocus: false }
   )
 
-  const { settings, socials, links } = data || {}
+  const { settings, socials, links, columnTitles } = data || {}
 
   const [email, setEmail] = useState('')
   const [subStatus, setSubStatus] = useState<
@@ -345,40 +443,42 @@ export default function Footer () {
           </div>
         </div>
 
-        {/* Link Kolonları */}
-        {['information', 'useful', 'about'].map(sectionKey => {
-          const sectionLinks = links?.filter(l => l.section === sectionKey)
-          let sectionTitle = 'Menu'
-          if (sectionKey === 'information')
-            sectionTitle = lang === 'tr' ? 'Bilgi' : 'Information'
-          if (sectionKey === 'useful')
-            sectionTitle = lang === 'tr' ? 'Faydalı Linkler' : 'Useful Links'
-          if (sectionKey === 'about')
-            sectionTitle = lang === 'tr' ? 'Hakkımızda' : 'About Us'
+        {/* Link Kolonları - Dinamik Section'lar */}
+        {(() => {
+          // Tüm unique section'ları bul
+          const sections = Array.from(new Set(links?.map(l => l.section) || []))
+          // Eğer hiç section yoksa varsayılan
+          if (sections.length === 0) return null
+          
+          return sections.map(sectionKey => {
+            const sectionLinks = links?.filter(l => l.section === sectionKey)
+            // Section başlığını columnTitles'dan al, yoksa sectionKey göster
+            const sectionTitle = columnTitles?.[sectionKey] || sectionKey
 
-          return (
-            <div key={sectionKey} className='text-center md:text-left'>
-              <h3 className='text-gray-900 dark:text-white font-bold mb-6 text-lg tracking-wide'>
-                {sectionTitle}
-              </h3>
-              <ul className='space-y-3 text-sm text-gray-500 dark:text-gray-400'>
-                {sectionLinks?.map((l, i) => (
-                  <li key={i}>
-                    <Link
-                      href={l.url}
-                      className='hover:text-primary hover:pl-2 transition-all duration-200 block'
-                    >
-                      {l.title}
-                    </Link>
-                  </li>
-                ))}
-                {(!sectionLinks || sectionLinks.length === 0) && !isLoading && (
-                  <li>-</li>
-                )}
-              </ul>
-            </div>
-          )
-        })}
+            return (
+              <div key={sectionKey} className='text-center md:text-left'>
+                <h3 className='text-gray-900 dark:text-white font-bold mb-6 text-lg tracking-wide'>
+                  {sectionTitle}
+                </h3>
+                <ul className='space-y-3 text-sm text-gray-500 dark:text-gray-400 max-h-60 overflow-y-auto pr-2'>
+                  {sectionLinks?.map((l, i) => (
+                    <li key={i}>
+                      <Link
+                        href={l.url}
+                        className='hover:text-primary hover:pl-2 transition-all duration-200 block'
+                      >
+                        {l.title}
+                      </Link>
+                    </li>
+                  ))}
+                  {(!sectionLinks || sectionLinks.length === 0) && !isLoading && (
+                    <li>-</li>
+                  )}
+                </ul>
+              </div>
+            )
+          })
+        })()}
       </div>
 
       {/* 4. İLETİŞİM & ALT BİLGİ */}

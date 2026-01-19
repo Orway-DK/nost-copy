@@ -115,7 +115,8 @@ export default function AdminSidebar ({
         icon: IoSettingsOutline,
         children: [
           { key: 'gen', label: 'Genel', href: '/admin/settings' },
-          { key: 'loc', label: 'Lokasyonlar', href: '/admin/locations' }
+          { key: 'loc', label: 'Lokasyonlar', href: '/admin/locations' },
+          { key: 'footer', label: 'Footer', href: '/admin/footer' }
         ]
       },
       {

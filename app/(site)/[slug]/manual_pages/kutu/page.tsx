@@ -1,14 +1,9 @@
-// app/services/printing/page.tsx
+'use client'
+
 import React from 'react'
 import Image from 'next/image'
-import type { Metadata } from 'next'
 
-export const metadata: Metadata = {
-  title: 'Özel Baskı Hizmetleri - Nost Copy',
-  description: 'En gelişmiş ofset ve dijital baskı çözümlerimizle tanışın.'
-}
-
-export default async function PrintingPage () {
+export default function PrintingPage () {
   return (
     <div className='w-full min-h-screen bg-background text-foreground transition-colors duration-300'>
       {/* --- HERO BÖLÜMÜ --- */}

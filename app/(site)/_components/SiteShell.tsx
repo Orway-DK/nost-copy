@@ -62,10 +62,21 @@ export default function SiteShell ({ children }: { children: React.ReactNode }) 
       setTimeout(() => {
         setOverlayVisible(false)
       }, 700)
-    }, 1500)
+    }, 2500) // 1500ms -> 2500ms, navbar'ın yüklenmesi için ekstra süre
 
     return () => clearTimeout(timer)
   }, [])
+
+  // Navbar stil bilgisi yüklendikten sonra loading'i biraz daha geciktir
+  useEffect(() => {
+    if (navbarStyle !== undefined) {
+      // Navbar stil bilgisi geldi, navbar'ın kendisi yüklenene kadar bekle
+      const timer = setTimeout(() => {
+        // LoadingCompleter zaten çalışacak, ekstra bir şey yapma
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [navbarStyle])
 
   return (
     <>
@@ -80,7 +91,13 @@ export default function SiteShell ({ children }: { children: React.ReactNode }) 
           <TopHorizontalBanner />
 
           {/* --- NAVBAR SEÇİM MANTIĞI --- */}
-          {navbarStyle === 'v2' ? <MegaNavbar /> : <NavigationBar />}
+          {navbarStyle === undefined ? (
+            <div className='h-16 bg-[var(--admin-input-bg)] animate-pulse' />
+          ) : navbarStyle === 'v2' ? (
+            <MegaNavbar />
+          ) : (
+            <NavigationBar />
+          )}
 
           <main className='flex-1 w-full flex flex-col items-center'>
             {children}

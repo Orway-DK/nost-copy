@@ -3,22 +3,21 @@
 import React, { useState } from 'react'
 import {
   IoAdd,
-  IoCubeOutline,
-  IoConstructOutline,
+  IoBusinessOutline,
   IoPencil,
-  IoImageOutline,
+  IoEyeOutline,
   IoClose
 } from 'react-icons/io5'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import ServiceForm from './service-form'
+import PageForm from './[slug]/page-form'
 
-export default function ServicesManager ({
-  services,
+export default function PagesManager ({
+  pages,
   filter,
   pageTitle
 }: {
-  services: any[]
+  pages: any[]
   filter?: string
   pageTitle: string
 }) {
@@ -33,20 +32,14 @@ export default function ServicesManager ({
 
   return (
     <div className='flex flex-col gap-6'>
-      {' '}
-      {/* overflow-hidden ve h-full kaldırıldı */}
       <div className='flex justify-between items-end'>
         <div>
           <h1 className='text-2xl font-bold flex items-center gap-3'>
-            {filter === 'products' ? (
-              <IoCubeOutline className='text-blue-500' />
-            ) : (
-              <IoConstructOutline className='text-orange-500' />
-            )}
+            {filter === 'corporate' && <IoBusinessOutline className='text-blue-500' />}
             {pageTitle}
           </h1>
           <p className='text-[var(--admin-muted)] text-xs mt-1'>
-            {services.length} kayıt listeleniyor.
+            {pages.length} kayıt listeleniyor.
           </p>
         </div>
         <button
@@ -64,59 +57,75 @@ export default function ServicesManager ({
           <table className='w-full text-left'>
             <thead className='bg-[var(--admin-input-bg)] text-xs uppercase font-semibold text-[var(--admin-muted)] border-b border-[var(--admin-card-border)]'>
               <tr>
-                <th className='p-4 w-16 text-center'>Görsel</th>
-                <th className='p-4'>İsim / URL</th>
+                <th className='p-4'>Slug (URL)</th>
+                <th className='p-4 w-24'>Hero Görsel</th>
                 <th className='p-4 w-24 text-center'>Durum</th>
-                <th className='p-4 w-20 text-right'>İşlem</th>
+                <th className='p-4 w-32 text-right'>İşlem</th>
               </tr>
             </thead>
             <tbody className='divide-y divide-[var(--admin-card-border)]'>
-              {services.map(item => (
-                <tr key={item.id} className='hover:bg-black/5 transition-colors'>
-                  <td className='p-3'>
-                    <div className='w-12 h-12 relative rounded-lg overflow-hidden bg-gray-100 mx-auto'>
-                      {item.image_url && (
+              {pages.map(page => (
+                <tr key={page.id} className='hover:bg-black/5 transition-colors'>
+                  <td className='p-4'>
+                    <div className='font-bold text-sm'>/{page.slug}</div>
+                    <div className='text-[10px] font-mono opacity-50'>
+                      ID: {page.id}
+                    </div>
+                  </td>
+                  <td className='p-4'>
+                    {page.image_url ? (
+                      <div className='w-16 h-10 relative rounded-md overflow-hidden border border-[var(--admin-card-border)]'>
                         <Image
-                          src={item.image_url}
-                          alt=''
+                          src={page.image_url}
+                          alt='Hero'
                           fill
                           className='object-cover'
-                          sizes='48px'
+                          sizes='64px'
                         />
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      <span className='text-[var(--admin-muted)] text-xs'>-</span>
+                    )}
                   </td>
-                  <td className='p-3'>
-                    <div className='font-bold text-sm'>
-                      {item.service_translations?.find(
-                        (t: any) => t.lang_code === 'tr'
-                      )?.title || item.slug}
-                    </div>
-                    <div className='text-[10px] font-mono opacity-50'>
-                      /{item.slug}
-                    </div>
-                  </td>
-                  <td className='p-3 text-center'>
+                  <td className='p-4 text-center'>
                     <span
                       className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        item.active
+                        page.active
                           ? 'bg-green-100 text-green-700'
                           : 'bg-red-100 text-red-700'
                       }`}
                     >
-                      {item.active ? 'AKTİF' : 'PASİF'}
+                      {page.active ? 'AKTİF' : 'PASİF'}
                     </span>
                   </td>
-                  <td className='p-3 text-right'>
-                    <button
-                      onClick={() => handleEdit(item)}
-                      className='p-2 text-[var(--primary)]'
-                    >
-                      <IoPencil size={18} />
-                    </button>
+                  <td className='p-4 text-right'>
+                    <div className='flex justify-end gap-2'>
+                      <a
+                        href={`/${page.slug}`}
+                        target='_blank'
+                        className='p-2 text-[var(--admin-muted)] hover:text-[var(--admin-fg)]'
+                        title='Sitede Gör'
+                      >
+                        <IoEyeOutline size={18} />
+                      </a>
+                      <button
+                        onClick={() => handleEdit(page)}
+                        className='p-2 text-[var(--primary)]'
+                        title='Düzenle'
+                      >
+                        <IoPencil size={18} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
+              {pages.length === 0 && (
+                <tr>
+                  <td colSpan={4} className='p-8 text-center text-[var(--admin-muted)]'>
+                    Henüz hiç sayfa oluşturulmamış.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -128,20 +137,29 @@ export default function ServicesManager ({
             className='absolute inset-0 bg-black/40 backdrop-blur-sm'
             onClick={() => setIsPanelOpen(false)}
           />
-          <div className='absolute inset-y-0 right-0 w-full max-w-[60vw] bg-[var(--admin-card)] shadow-2xl animate-in slide-in-from-right'>
+          <div className='absolute inset-y-0 right-0 w-[60%] bg-[var(--admin-card)] shadow-2xl animate-in slide-in-from-right'>
             <div className='h-full flex flex-col'>
               <div className='p-6 border-b flex justify-between items-center bg-[var(--admin-input-bg)]'>
                 <h2 className='font-bold text-xl'>
-                  {editingItem ? 'Düzenle' : 'Yeni Ekle'}
+                  {editingItem ? 'Sayfa Düzenle' : 'Yeni Sayfa Ekle'}
                 </h2>
                 <button onClick={() => setIsPanelOpen(false)}>
                   <IoClose size={24} />
                 </button>
               </div>
               <div className='flex-1 overflow-y-auto p-6'>
-                <ServiceForm
-                  initialData={editingItem}
-                  filter={filter}
+                <PageForm
+                  initialData={editingItem || {
+                    id: null,
+                    slug: '',
+                    image_url: '',
+                    active: true,
+                    translations: {
+                      tr: { title: '', content: '' },
+                      en: { title: '', content: '' },
+                      de: { title: '', content: '' }
+                    }
+                  }}
                   onSuccess={() => {
                     setIsPanelOpen(false)
                     router.refresh()

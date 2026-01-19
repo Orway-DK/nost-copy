@@ -21,7 +21,7 @@ export default async function ServicesPage ({
     translationsTable = 'nost_product_page_translations'
   }
   
-  console.log('DEBUG services/page.tsx:', { filter, tableName, translationsTable })
+  //console.log('DEBUG services/page.tsx:', { filter, tableName, translationsTable })
   
   // Sadece active = true olanları getir
   const { data: allServices } = await supabase
@@ -30,7 +30,7 @@ export default async function ServicesPage ({
     .eq('active', true)
   const rawServices = allServices || []
   
-  console.log('DEBUG rawServices count:', rawServices.length)
+  //console.log('DEBUG rawServices count:', rawServices.length)
   
   // Property adını normalize et: translationsTable -> service_translations
   const services = rawServices.map((s: any) => ({

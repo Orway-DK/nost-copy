@@ -68,9 +68,9 @@ export default function NavigationBar () {
         .maybeSingle()
 
       if (settings) setSiteName(settings.site_name)
-      console.log('serviceItems:', serviceItems)
+      /*console.log('serviceItems:', serviceItems)
       console.log('productItems:', productItems)
-      console.log('corporateItems:', corporateItems)
+      console.log('corporateItems:', corporateItems)*/
       if (serviceItems) setServicePages(serviceItems)
       if (corporateItems) setCorporatePages(corporateItems)
       if (productItems) setProductPages(productItems)
