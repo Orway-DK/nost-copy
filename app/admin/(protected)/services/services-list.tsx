@@ -218,7 +218,7 @@ export default function ServicesList({ initialData }: { initialData: any[] }) {
             <div className="flex-1 overflow-hidden">
               <ServiceForm
                 initialData={editingItem}
-                onClose={() => setIsModalOpen(false)}
+                onCancel={() => setIsModalOpen(false)}
                 onSuccess={handleSuccess}
               />
             </div>

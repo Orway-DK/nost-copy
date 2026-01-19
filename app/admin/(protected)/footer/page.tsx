@@ -170,7 +170,7 @@ export default function FooterAdminPage () {
         const { error: deleteError } = await supabase
           .from('footer_columns')
           .delete()
-          .in('id', existingColumns.map(c => c.id))
+          .in('id', existingColumns.map((c: any) => c.id))
         
         if (deleteError) throw new Error(`Delete error: ${deleteError.message}`)
       }
@@ -234,7 +234,7 @@ export default function FooterAdminPage () {
   }
 
   const handleAddColumn = () => {
-    const newId = columns.length > 0 ? Math.max(...columns.map(c => c.id)) + 1 : 1
+    const newId = columns.length > 0 ? Math.max(...columns.map((c: any) => c.id)) + 1 : 1
     setColumns([
       ...columns,
       {
@@ -246,13 +246,13 @@ export default function FooterAdminPage () {
   }
 
   const handleDeleteColumn = (id: number) => {
-    setColumns(columns.filter(c => c.id !== id))
+    setColumns(columns.filter((c: any) => c.id !== id))
   }
 
   const handleAddLink = (columnId: number) => {
     setColumns(columns.map(column => {
       if (column.id === columnId) {
-        const newLinkId = column.links.length > 0 ? Math.max(...column.links.map(l => l.id)) + 1 : 1
+        const newLinkId = column.links.length > 0 ? Math.max(...column.links.map((l: any) => l.id)) + 1 : 1
         return {
           ...column,
           links: [...column.links, { id: newLinkId, text: 'Yeni Link', url: '/', sort_order: 0 }]
@@ -267,7 +267,7 @@ export default function FooterAdminPage () {
       if (column.id === columnId) {
         return {
           ...column,
-          links: column.links.filter(l => l.id !== linkId)
+          links: column.links.filter((l: any) => l.id !== linkId)
         }
       }
       return column
@@ -279,7 +279,7 @@ export default function FooterAdminPage () {
       if (column.id === columnId) {
         return {
           ...column,
-          links: column.links.map(link => {
+          links: column.links.map((link: any) => {
             if (link.id === linkId) {
               return { ...link, [field]: value }
             }
@@ -292,7 +292,7 @@ export default function FooterAdminPage () {
   }
 
   const handleColumnTitleChange = (columnId: number, value: string) => {
-    setColumns(columns.map(column => {
+    setColumns(columns.map((column: any) => {
       if (column.id === columnId) {
         return { ...column, title: value }
       }
@@ -433,7 +433,7 @@ export default function FooterAdminPage () {
               </div>
 
               <div className='space-y-3'>
-                {column.links.map(link => (
+                {column.links.map((link: any) => (
                   <div key={link.id} className='flex items-center gap-2 p-3 bg-background rounded-lg border border-border'>
                     <div className='flex-1'>
                       <div className='flex gap-2 mb-1'>

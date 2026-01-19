@@ -13,7 +13,7 @@ export default async function AdminMenuEdit ({ params }: Props) {
 
   // Formda "Parent" seçebilmek için tüm menüyü de çekmemiz lazım
   const allItemsRes = await getMenuItemsAction()
-  const allItems = allItemsRes.success ? allItemsRes.data : []
+  const allItems = (allItemsRes.success && allItemsRes.data) ? allItemsRes.data : []
 
   let initialData = null
 
@@ -28,6 +28,14 @@ export default async function AdminMenuEdit ({ params }: Props) {
     }
   }
 
+  // Dummy functions for MenuForm props (empty for server component)
+  const dummyOnClose = () => {
+    // Do nothing, will be handled by client-side in MenuForm
+  }
+  const dummyOnSuccess = () => {
+    // Do nothing, will be handled by client-side in MenuForm
+  }
+
   return (
     <div className='h-full w-full flex flex-col p-4'>
       <div className='mb-6'>
@@ -40,6 +48,8 @@ export default async function AdminMenuEdit ({ params }: Props) {
         <MenuForm
           initialData={initialData}
           parentOptions={allItems} // Parent seçimi için listeyi gönder
+          onClose={dummyOnClose}
+          onSuccess={dummyOnSuccess}
         />
       </div>
     </div>
