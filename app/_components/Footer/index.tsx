@@ -322,6 +322,9 @@ export default function Footer () {
 
   if (!mounted) return null
 
+  // Tüm unique section'ları bul
+  const sections = Array.from(new Set(links?.map(l => l.section) || []))
+
   return (
     // DEĞİŞİKLİK 1: Footer Ana Rengi (Light: Gray-100, Dark: #111)
     <footer className='w-full bg-gray-100 dark:bg-[#111] text-gray-800 dark:text-[#e5e5e5] font-sans relative mt-20 transition-colors duration-300'>
@@ -401,9 +404,9 @@ export default function Footer () {
       </div>
 
       {/* 3. ANA LİNKLER & BİLGİ */}
-      <div className='max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10'>
+      <div className={`max-w-7xl mx-auto px-6 py-16 flex flex-col md:grid md:grid-cols-2 lg:flex lg:flex-row lg:flex-nowrap gap-8 ${sections?.length === 2 ? 'md:justify-items-center md:gap-x-16' : ''}`}>
         {/* Logo & Sosyal Medya */}
-        <div className='lg:col-span-2 space-y-6 text-center md:text-left'>
+        <div className='lg:flex-[2] space-y-6 text-center md:text-left'>
           {isLoading ? (
             <div className='h-10 w-32 bg-gray-200 dark:bg-white/10 animate-pulse rounded mx-auto md:mx-0'></div>
           ) : settings?.logo_url ? (
@@ -444,41 +447,34 @@ export default function Footer () {
         </div>
 
         {/* Link Kolonları - Dinamik Section'lar */}
-        {(() => {
-          // Tüm unique section'ları bul
-          const sections = Array.from(new Set(links?.map(l => l.section) || []))
-          // Eğer hiç section yoksa varsayılan
-          if (sections.length === 0) return null
-          
-          return sections.map(sectionKey => {
-            const sectionLinks = links?.filter(l => l.section === sectionKey)
-            // Section başlığını columnTitles'dan al, yoksa sectionKey göster
-            const sectionTitle = columnTitles?.[sectionKey] || sectionKey
+        {sections.length === 0 ? null : sections.map(sectionKey => {
+          const sectionLinks = links?.filter(l => l.section === sectionKey)
+          // Section başlığını columnTitles'dan al, yoksa sectionKey göster
+          const sectionTitle = columnTitles?.[sectionKey] || sectionKey
 
-            return (
-              <div key={sectionKey} className='text-center md:text-left'>
-                <h3 className='text-gray-900 dark:text-white font-bold mb-6 text-lg tracking-wide'>
-                  {sectionTitle}
-                </h3>
-                <ul className='space-y-3 text-sm text-gray-500 dark:text-gray-400 max-h-60 overflow-y-auto pr-2'>
-                  {sectionLinks?.map((l, i) => (
-                    <li key={i}>
-                      <Link
-                        href={l.url}
-                        className='hover:text-primary hover:pl-2 transition-all duration-200 block'
-                      >
-                        {l.title}
-                      </Link>
-                    </li>
-                  ))}
-                  {(!sectionLinks || sectionLinks.length === 0) && !isLoading && (
-                    <li>-</li>
-                  )}
-                </ul>
-              </div>
-            )
-          })
-        })()}
+          return (
+            <div key={sectionKey} className='text-center md:text-left lg:flex-1'>
+              <h3 className='text-gray-900 dark:text-white font-bold mb-6 text-lg tracking-wide'>
+                {sectionTitle}
+              </h3>
+              <ul className='space-y-3 text-sm text-gray-500 dark:text-gray-400 max-h-60 overflow-y-auto pr-2'>
+                {sectionLinks?.map((l, i) => (
+                  <li key={i}>
+                    <Link
+                      href={l.url}
+                      className='hover:text-primary hover:pl-2 transition-all duration-200 block'
+                    >
+                      {l.title}
+                    </Link>
+                  </li>
+                ))}
+                {(!sectionLinks || sectionLinks.length === 0) && !isLoading && (
+                  <li>-</li>
+                )}
+              </ul>
+            </div>
+          )
+        })}
       </div>
 
       {/* 4. İLETİŞİM & ALT BİLGİ */}

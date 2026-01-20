@@ -53,7 +53,7 @@ export default function ContactPage () {
   }, [])
 
   return (
-    <div className='relative w-full bg-background text-foreground transition-colors duration-300 overflow-x-hidden'>
+    <div className='relative w-full text-foreground transition-colors duration-300 overflow-x-hidden'>
       <div className='absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden'>
         <div className='absolute top-0 left-0'>
           <Image
